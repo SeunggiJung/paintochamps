@@ -1,10 +1,10 @@
 {
   "tiers": {
-    "local":   { "mean": 300, "sd": 45 },
-    "amateur": { "mean": 420, "sd": 40 },
-    "pro2":    { "mean": 520, "sd": 40 },
-    "pro1":    { "mean": 620, "sd": 45 },
-    "intl":    { "mean": 660, "sd": 50 }
+    "local":   { "mean": 330, "sd": 45 },
+    "amateur": { "mean": 480, "sd": 40 },
+    "pro2":    { "mean": 600, "sd": 40 },
+    "pro1":    { "mean": 830, "sd": 75 },
+    "intl":    { "mean": 850, "sd": 60 }
   },
   "stages": {
     "basement": [],
