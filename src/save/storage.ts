@@ -1,0 +1,112 @@
+import { STAT_KEYS } from '../engine/types.ts'
+import type { EndingId, GameState, StageId } from '../engine/state.ts'
+
+/** localStorage와 같은 모양. 테스트에서는 메모리 구현을 넘긴다. */
+export interface KeyValueStorage {
+  getItem(key: string): string | null
+  setItem(key: string, value: string): void
+  removeItem(key: string): void
+}
+
+export const SAVE_KEY = 'paintochamps:save'
+export const META_KEY = 'paintochamps:meta'
+export const CURRENT_SAVE_VERSION = 1
+
+/** 이전 버전 저장 데이터를 현재 버전으로 올리는 함수들. 버전이 올라갈 때 여기에 추가한다. */
+const MIGRATIONS: Record<number, (raw: Record<string, unknown>) => Record<string, unknown>> = {}
+
+function migrate(raw: Record<string, unknown>): Record<string, unknown> | null {
+  if (typeof raw.saveVersion !== 'number' || raw.saveVersion > CURRENT_SAVE_VERSION) return null
+  let version: number = raw.saveVersion
+  let data = raw
+  while (version < CURRENT_SAVE_VERSION) {
+    const step = MIGRATIONS[version]
+    if (!step) return null
+    data = step(data)
+    version = data.saveVersion as number
+  }
+  return data
+}
+
+function looksLikeState(raw: Record<string, unknown>): boolean {
+  const stats = raw.stats as Record<string, unknown> | undefined
+  return (
+    typeof raw.seed === 'number' &&
+    typeof raw.age === 'number' &&
+    typeof raw.stage === 'string' &&
+    !!stats &&
+    STAT_KEYS.every((k) => typeof stats[k] === 'number')
+  )
+}
+
+function safe<T>(fn: () => T, fallback: T): T {
+  try {
+    return fn()
+  } catch {
+    return fallback
+  }
+}
+
+/** 저장한다. 저장소를 쓸 수 없으면(시크릿 모드 등) false. */
+export function saveGame(storage: KeyValueStorage, state: GameState): boolean {
+  return safe(() => (storage.setItem(SAVE_KEY, JSON.stringify(state)), true), false)
+}
+
+/** 이어하기용으로 불러온다. 없거나 깨졌거나 모르는 버전이면 null. */
+export function loadGame(storage: KeyValueStorage): GameState | null {
+  return safe(() => {
+    const text = storage.getItem(SAVE_KEY)
+    if (!text) return null
+    const parsed = JSON.parse(text) as Record<string, unknown>
+    const data = parsed && typeof parsed === 'object' ? migrate(parsed) : null
+    return data && looksLikeState(data) ? (data as unknown as GameState) : null
+  }, null)
+}
+
+export function clearGame(storage: KeyValueStorage): void {
+  safe(() => storage.removeItem(SAVE_KEY), undefined)
+}
+
+/** 판을 넘어 유지되는 기록: 엔딩 도감, 튜토리얼 완료 여부 */
+export interface MetaSave {
+  version: 1
+  tutorialDone: boolean
+  endings: Partial<Record<EndingId, { count: number }>>
+  bestStage: StageId
+  finishedRuns: number
+}
+
+const STAGE_RANK: StageId[] = ['basement', 'local_cup', 'amateur_team', 'pro2', 'pro1']
+
+export function emptyMeta(): MetaSave {
+  return { version: 1, tutorialDone: false, endings: {}, bestStage: 'basement', finishedRuns: 0 }
+}
+
+export function loadMeta(storage: KeyValueStorage): MetaSave {
+  return safe(() => {
+    const text = storage.getItem(META_KEY)
+    if (!text) return emptyMeta()
+    const m = JSON.parse(text) as Partial<MetaSave>
+    return m && m.version === 1 && typeof m.endings === 'object' ? { ...emptyMeta(), ...m } : emptyMeta()
+  }, emptyMeta())
+}
+
+/** 판이 끝났을 때 호출한다. 엔딩 도감·튜토리얼 완료·최고 단계를 갱신해 저장하고 새 기록을 돌려준다. */
+export function recordFinish(storage: KeyValueStorage, state: GameState): MetaSave {
+  if (!state.finished) throw new Error('끝나지 않은 판이다')
+  const meta = loadMeta(storage)
+  const prev = meta.endings[state.finished]?.count ?? 0
+  // 강등당해도 지금까지 오른 가장 높은 단계를 기록한다
+  const reached = [state.stage, meta.bestStage, ...state.history.map((h) => h.stage)]
+  const bestStage = reached.reduce((a, b) => (STAGE_RANK.indexOf(b) > STAGE_RANK.indexOf(a) ? b : a))
+  const next: MetaSave = {
+    ...meta,
+    tutorialDone: meta.tutorialDone || state.mode === 'tutorial',
+    endings: { ...meta.endings, [state.finished]: { count: prev + 1 } },
+    bestStage,
+    finishedRuns: meta.finishedRuns + 1,
+  }
+  safe(() => storage.setItem(META_KEY, JSON.stringify(next)), undefined)
+  clearGame(storage)
+  return next
+}

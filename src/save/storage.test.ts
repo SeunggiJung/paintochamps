@@ -1,0 +1,98 @@
+import { beforeEach, describe, expect, it } from 'vitest'
+import { createInitialState, type GameState } from '../engine/state.ts'
+import { clearGame, loadGame, loadMeta, recordFinish, saveGame, SAVE_KEY, type KeyValueStorage } from './storage.ts'
+
+class MemoryStorage implements KeyValueStorage {
+  data = new Map<string, string>()
+  getItem(k: string) {
+    return this.data.get(k) ?? null
+  }
+  setItem(k: string, v: string) {
+    this.data.set(k, v)
+  }
+  removeItem(k: string) {
+    this.data.delete(k)
+  }
+}
+
+const stats = { reaction: 100, accuracy: 100, focus: 100, judgment: 100, mental: 100, teamwork: 100 }
+function make(o: Partial<GameState> = {}): GameState {
+  return {
+    ...createInitialState({
+      name: '테스트',
+      genre: 'fps',
+      mode: 'tutorial',
+      seed: 9,
+      gacha: { stats, trait: { id: 'grit', name: '끈기', stat: 'focus' }, grade: 'R', power: 100 },
+    }),
+    ...o,
+  }
+}
+
+let storage: MemoryStorage
+beforeEach(() => {
+  storage = new MemoryStorage()
+})
+
+describe('세이브', () => {
+  it('저장한 상태를 그대로 불러온다', () => {
+    const s = make({ age: 21, fame: 33, team: { id: 'org_2', name: '미스트워커' } })
+    expect(saveGame(storage, s)).toBe(true)
+    expect(loadGame(storage)).toEqual(s)
+  })
+
+  it('저장이 없으면 null', () => {
+    expect(loadGame(storage)).toBeNull()
+  })
+
+  it('깨진 데이터, 모르는 버전, 필드가 빠진 데이터는 null', () => {
+    storage.setItem(SAVE_KEY, '{not json')
+    expect(loadGame(storage)).toBeNull()
+    storage.setItem(SAVE_KEY, JSON.stringify({ ...make(), saveVersion: 99 }))
+    expect(loadGame(storage)).toBeNull()
+    storage.setItem(SAVE_KEY, JSON.stringify({ saveVersion: 1, age: 16 }))
+    expect(loadGame(storage)).toBeNull()
+  })
+
+  it('저장소가 예외를 던져도 게임이 멈추지 않는다 (시크릿 모드 등)', () => {
+    const broken: KeyValueStorage = {
+      getItem() {
+        throw new Error('denied')
+      },
+      setItem() {
+        throw new Error('denied')
+      },
+      removeItem() {
+        throw new Error('denied')
+      },
+    }
+    expect(saveGame(broken, make())).toBe(false)
+    expect(loadGame(broken)).toBeNull()
+    expect(loadMeta(broken).finishedRuns).toBe(0)
+    expect(() => clearGame(broken)).not.toThrow()
+  })
+})
+
+describe('엔딩 도감·기록', () => {
+  it('끝난 판을 기록하면 도감이 쌓이고, 튜토리얼 완료가 켜지고, 저장 데이터는 지워진다', () => {
+    saveGame(storage, make())
+    const meta = recordFinish(storage, make({ finished: 'hobbyist', stage: 'local_cup' }))
+    expect(meta.tutorialDone).toBe(true)
+    expect(meta.endings.hobbyist?.count).toBe(1)
+    expect(meta.finishedRuns).toBe(1)
+    expect(loadGame(storage)).toBeNull()
+    const again = recordFinish(storage, make({ finished: 'hobbyist' }))
+    expect(again.endings.hobbyist?.count).toBe(2)
+    expect(loadMeta(storage).finishedRuns).toBe(2)
+  })
+
+  it('강등당해도 가장 높이 오른 단계를 기록한다', () => {
+    const history = [{ season: 5, age: 20, stage: 'pro2' as const, events: [] }]
+    const meta = recordFinish(storage, make({ finished: 'pro2_veteran', stage: 'amateur_team', history }))
+    expect(meta.bestStage).toBe('pro2')
+  })
+
+  it('끝나지 않은 판은 기록할 수 없다', () => {
+    expect(() => recordFinish(storage, make())).toThrow()
+  })
+})
