@@ -1,0 +1,126 @@
+import gacha from '../data/gacha.json'
+import genres from '../data/genres.json'
+import { createInitialState } from '../engine/state.ts'
+import { STAT_KEYS, type GachaResult } from '../engine/types.ts'
+import { saveGame } from '../save/storage.ts'
+import type { Ctx } from './app.ts'
+import type { NewGameDraft } from './create.ts'
+import { h } from './dom.ts'
+import { GRADE_COMMENT, GRADE_LABEL, MODE_INFO, STAT_LABEL } from './labels.ts'
+import { REROLL_LIMIT, rollAt } from './newGame.ts'
+
+const STEP_MS = 380
+/** 한 능력치가 가질 수 있는 최댓값 (나머지가 모두 최솟값일 때) */
+const BAR_MAX = gacha.statTotal - gacha.statMin * (STAT_KEYS.length - 1)
+/** 장르 가중치가 이 값 이상인 능력치를 핵심 능력치로 표시한다 */
+const KEY_WEIGHT = 20
+
+export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
+  const genre = genres[draft.genre]
+  let rollIndex = 0
+  let timers: number[] = []
+
+  const stage = h('div', { class: 'gacha-card', role: 'status', 'aria-live': 'polite' })
+  const rerollBtn = h('button', { class: 'btn' })
+  const startBtn = h('button', { class: 'btn primary' }, '이 캐릭터로 시작')
+
+  const clearTimers = () => {
+    timers.forEach(clearTimeout)
+    timers = []
+  }
+
+  const show = (result: GachaResult, animate: boolean) => {
+    clearTimers()
+    const rows = STAT_KEYS.map((k) => {
+      const fill = h('div', { class: 'bar-fill' })
+      const value = h('span', { class: 'stat-value' }, animate ? '' : String(result.stats[k]))
+      const isTrait = result.trait.stat === k
+      const row = h(
+        'div',
+        { class: `stat-row${animate ? ' hidden' : ''}` },
+        h('span', { class: 'stat-name' }, STAT_LABEL[k], genre.weights[k] >= KEY_WEIGHT && h('b', { title: '이 장르의 핵심 능력치' }, ' ★')),
+        h('div', { class: 'bar' }, fill),
+        value,
+        isTrait && h('span', { class: 'tag' }, '특성'),
+      )
+      const reveal = () => {
+        row.classList.remove('hidden')
+        value.textContent = String(result.stats[k])
+        fill.style.width = `${(result.stats[k] / BAR_MAX) * 100}%`
+      }
+      return { row, reveal, fill }
+    })
+    const traitLine = h('p', { class: `trait${animate ? ' hidden' : ''}` }, `시작 특성 · ${result.trait.name} (${STAT_LABEL[result.trait.stat]} 성장 ↑)`)
+    const grade = h(
+      'div',
+      { class: `grade grade-${result.grade}${animate ? ' hidden' : ''}` },
+      h('span', { class: 'grade-letter' }, GRADE_LABEL[result.grade]),
+      h('span', { class: 'muted' }, `${genre.name} 실력치 ${Math.round(result.power)} · ${GRADE_COMMENT[result.grade]}`),
+    )
+    stage.replaceChildren(...rows.map((r) => r.row), traitLine, grade)
+
+    const finish = () => {
+      clearTimers()
+      rows.forEach((r) => r.reveal())
+      traitLine.classList.remove('hidden')
+      grade.classList.remove('hidden')
+      setBusy(false)
+    }
+
+    if (!animate) {
+      rows.forEach((r) => r.reveal())
+      setBusy(false)
+      return
+    }
+    setBusy(true)
+    // 능력치를 위에서부터 차례로 채운 뒤 특성, 등급 순으로 공개한다. 카드를 누르면 건너뛴다.
+    rows.forEach((r, i) => timers.push(window.setTimeout(r.reveal, (i + 1) * STEP_MS)))
+    timers.push(window.setTimeout(() => traitLine.classList.remove('hidden'), (rows.length + 1) * STEP_MS))
+    timers.push(
+      window.setTimeout(() => {
+        grade.classList.remove('hidden')
+        setBusy(false)
+      }, (rows.length + 2) * STEP_MS + 200),
+    )
+    stage.onclick = finish
+  }
+
+  const setBusy = (busy: boolean) => {
+    const left = REROLL_LIMIT - rollIndex
+    rerollBtn.textContent = left > 0 ? `다시 뽑기 (${left}회 남음)` : '더 이상 다시 뽑을 수 없음'
+    rerollBtn.disabled = busy || left <= 0
+    startBtn.disabled = busy
+    stage.title = busy ? '눌러서 건너뛰기' : ''
+  }
+
+  const roll = () => show(rollAt(draft.seed, draft.genre, rollIndex), true)
+
+  rerollBtn.onclick = () => {
+    if (rollIndex >= REROLL_LIMIT) return
+    rollIndex++
+    roll()
+  }
+  startBtn.onclick = () => {
+    clearTimers()
+    const state = createInitialState({
+      name: draft.name,
+      genre: draft.genre,
+      mode: draft.mode,
+      gacha: rollAt(draft.seed, draft.genre, rollIndex),
+      seed: draft.seed,
+    })
+    saveGame(ctx.storage, state)
+    ctx.toHome(state)
+  }
+
+  const screen = h(
+    'main',
+    { class: 'screen' },
+    h('h2', {}, `${draft.name}의 재능`),
+    h('p', { class: 'muted small' }, `${genre.name} · ${MODE_INFO[draft.mode].name} 모드 · 합계 ${gacha.statTotal}`),
+    stage,
+    h('div', { class: 'stack' }, startBtn, rerollBtn, h('button', { class: 'btn ghost', onclick: () => ctx.toCreate() }, '처음부터')),
+  )
+  roll()
+  return screen
+}

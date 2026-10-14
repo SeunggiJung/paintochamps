@@ -1,0 +1,93 @@
+:root {
+  --bg: #12141c;
+  --panel: #1c2030;
+  --line: #2e3450;
+  --text: #eceef7;
+  --muted: #9aa1bd;
+  --accent: #5b8cff;
+  --accent-text: #fff;
+  --danger: #ff6b7a;
+  --grade-N: #8b93ad;
+  --grade-R: #4cc38a;
+  --grade-SR: #4fa3ff;
+  --grade-SSR: #b980ff;
+  --grade-UR: #ffb740;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
+  line-height: 1.5;
+}
+
+#app { max-width: 480px; margin: 0 auto; }
+
+.screen { padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px; min-height: 100dvh; }
+.title { justify-content: center; text-align: center; }
+.title h1 { font-size: 1.7rem; line-height: 1.3; margin: 0; }
+.eyebrow { color: var(--accent); margin: 0; font-weight: 600; }
+h2 { margin: 0; font-size: 1.3rem; }
+h3 { margin: 0 0 8px; font-size: 0.95rem; color: var(--muted); font-weight: 600; }
+.muted { color: var(--muted); margin: 0; }
+.small { font-size: 0.85rem; }
+.error { color: var(--danger); margin: -8px 0 0; min-height: 1.2em; font-size: 0.9rem; }
+ul.plain { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
+
+.stack { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+
+.btn {
+  min-height: 48px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--text); font: inherit; font-weight: 600; cursor: pointer;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+.btn:disabled, .choice:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:focus-visible, .choice:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field span { color: var(--muted); font-size: 0.9rem; }
+input[type='text'] {
+  min-height: 48px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--text); font: inherit;
+}
+
+.choices { display: flex; gap: 10px; }
+.choices.vertical { flex-direction: column; }
+.choice {
+  flex: 1; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left;
+  padding: 12px 14px; min-height: 48px; border-radius: 12px; border: 2px solid var(--line);
+  background: var(--panel); color: var(--text); font: inherit; cursor: pointer;
+}
+.choice.selected { border-color: var(--accent); background: #232a47; }
+
+/* 뽑기 카드 */
+.gacha-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+  padding: 16px; display: flex; flex-direction: column; gap: 12px; cursor: pointer;
+}
+.stat-row { display: grid; grid-template-columns: 5.5em 1fr 2.5em auto; align-items: center; gap: 8px; transition: opacity 0.3s; }
+.stat-name { font-size: 0.9rem; }
+.stat-name b { color: var(--grade-UR); }
+.stat-value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.bar { height: 10px; background: #12141c; border-radius: 5px; overflow: hidden; }
+.bar-fill { height: 100%; width: 0; background: var(--accent); border-radius: 5px; transition: width 0.5s ease-out; }
+.tag { font-size: 0.7rem; padding: 1px 6px; border-radius: 6px; background: var(--grade-SR); color: #06162e; font-weight: 700; }
+.hidden { opacity: 0; }
+.trait { margin: 0; padding-top: 8px; border-top: 1px solid var(--line); transition: opacity 0.4s; }
+.grade { display: flex; align-items: center; gap: 12px; transition: opacity 0.4s, transform 0.4s; }
+.grade.hidden { transform: scale(0.8); }
+.grade-letter { font-size: 2.2rem; font-weight: 900; letter-spacing: 1px; }
+.grade-N .grade-letter { color: var(--grade-N); }
+.grade-R .grade-letter { color: var(--grade-R); }
+.grade-SR .grade-letter { color: var(--grade-SR); }
+.grade-SSR .grade-letter { color: var(--grade-SSR); }
+.grade-UR .grade-letter { color: var(--grade-UR); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-fill, .stat-row, .trait, .grade { transition: none; }
+}
