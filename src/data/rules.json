@@ -40,5 +40,7 @@
     "fameWin": 3,
     "powerNoise": 30
   },
-  "slumpGrowthFactor": 0.5
+  "slumpGrowthFactor": 0.5,
+  "slumpMentalFactor": { "base": 1.4, "perMental": 0.0008, "min": 0.5, "max": 1.5 },
+  "vice": { "riskPerPoint": 0.08, "decayPerBase": 0.5, "addictionAt": 4, "addictionCondition": -8, "addictionMental": -15 }
 }

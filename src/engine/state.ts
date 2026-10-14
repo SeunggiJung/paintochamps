@@ -2,7 +2,27 @@ import rules from '../data/rules.json'
 import type { GachaResult, GenreId, Stats, Trait } from './types.ts'
 
 export type ModeId = 'tutorial' | 'standard' | 'precise'
-export type ActionId = 'rank_practice' | 'basics' | 'video_review' | 'team_scrim' | 'rest' | 'part_time' | 'broadcast'
+export type ActionId =
+  | 'rank_practice'
+  | 'basics'
+  | 'video_review'
+  | 'team_scrim'
+  | 'rest'
+  | 'part_time'
+  | 'broadcast'
+  | 'hangout'
+  | 'drink'
+  | 'nightlife'
+  | 'gamble'
+  | 'donate'
+  | 'private_lesson'
+  | 'overtrain'
+  | 'meditation'
+  | 'impulse_shopping'
+  | 'community_flame'
+  | 'all_night_gaming'
+  | 'rehab'
+  | 'counseling'
 export type EquipmentId = 'keyboard' | 'mouse' | 'monitor' | 'pc'
 export type StageId = 'basement' | 'local_cup' | 'amateur_team' | 'pro2' | 'pro1'
 export type EndingId =
@@ -83,8 +103,10 @@ export interface GameState {
   worldTitles: number
   /** 슬럼프가 남은 개월 수. 0보다 크면 성장이 절반이 된다. */
   slumpMonths: number
-  /** 부상으로 쉬어야 하는 개월 수. 0보다 크면 휴식 행동만 할 수 있다. */
+  /** 부상으로 쉬어야 하는 개월 수. 0보다 크면 휴식·재활만 할 수 있다. */
   injuredMonths: number
+  /** 방탕 게이지. 술·유흥·도박으로 오르고 쉬면 내려간다. 높을수록 부작용이 잦고, 일정 수준을 넘으면 중독 패널티가 붙는다. */
+  vice: number
   pendingOffers: PendingOffers | null
   finished: EndingId | null
   history: SeasonRecord[]
@@ -124,6 +146,7 @@ export function createInitialState({ name, genre, mode, gacha, seed }: NewGameOp
     worldTitles: 0,
     slumpMonths: 0,
     injuredMonths: 0,
+    vice: 0,
     pendingOffers: null,
     finished: null,
     history: [],

@@ -4,21 +4,42 @@ import gacha from '../data/gacha.json'
 import genres from '../data/genres.json'
 import modes from '../data/modes.json'
 import rules from '../data/rules.json'
+import { applyEffects, type Effects } from './effects.ts'
 import { equipmentEfficiency, growthDelta } from './growth.ts'
+import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { ActionId, EquipmentId, GameState } from './state.ts'
 import { STAT_KEYS, type StatKey, type Stats } from './types.ts'
 
+interface Outcome {
+  chance: number
+  label: string
+  /** true면 방탕 게이지가 높을수록 일어날 확률이 올라간다 (부작용) */
+  viceRisk?: boolean
+  effects: Effects
+}
+
 interface ActionDef {
   name: string
+  /** 성장 공식(컨디션·장비·특성 반영)을 거쳐 오르는 능력치 */
   stats?: Partial<Record<StatKey, number>>
   topGenreStats?: { count: number; amount: number }
   condition?: number
   money?: number
   fame?: number
-  requires?: { inTeam?: boolean; minFame?: number }
+  vice?: number
+  /** 음수면 부상 회복을 앞당긴다 */
+  injuredMonths?: number
+  /** 음수면 슬럼프 회복을 앞당긴다 */
+  slumpMonths?: number
+  /** 한 번 굴려서 하나가 일어난다. 합이 1보다 작으면 나머지는 아무 일도 없다. */
+  outcomes?: Outcome[]
+  requires?: { inTeam?: boolean; minFame?: number; injured?: boolean; slump?: boolean }
+  allowWhenInjured?: boolean
+  /** 이 모드에서만 할 수 있다. 없으면 모든 모드. (정밀 모드는 선택지가 더 많다) */
+  modes?: GameState['mode'][]
 }
 
-const ACTIONS = actionData as Record<ActionId, ActionDef>
+export const ACTIONS = actionData as Record<ActionId, ActionDef>
 const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; costs: number[] }>
 
 /** 한 칸의 선택: 일반 행동, 또는 장비 구매(행동 1개를 쓴다) */
@@ -34,7 +55,7 @@ export interface Delta {
 }
 
 export type TurnResult =
-  | { ok: true; state: GameState; delta: Delta; seasonEnded: boolean }
+  | { ok: true; state: GameState; delta: Delta; seasonEnded: boolean; notes: string[] }
   | { ok: false; error: string }
 
 /** 턴 길이 배율: 6개월 2, 3개월 1, 1개월 1/3 */
@@ -53,6 +74,11 @@ export function eventChance(mode: GameState['mode']): number {
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
+/** 행동에 쓰는 돈 (양수). 돈을 버는 행동이면 0. */
+function costOf(action: ActionDef, scale: number): number {
+  return Math.max(0, -(action.money ?? 0)) * scale
+}
+
 /** 선택 가능한지 확인한다. 가능하면 null, 아니면 이유를 돌려준다. */
 export function checkSlot(state: GameState, slot: Slot): string | null {
   if (slot.id === 'buy_equipment') {
@@ -65,17 +91,22 @@ export function checkSlot(state: GameState, slot: Slot): string | null {
   }
   const action = ACTIONS[slot.id]
   if (!action) return '알 수 없는 행동이다'
-  if (state.injuredMonths > 0 && slot.id !== 'rest') return '부상 중이라 휴식만 할 수 있다'
-  const { inTeam, minFame } = action.requires ?? {}
+  if (action.modes && !action.modes.includes(state.mode)) return `${action.name}은(는) 정밀 모드에서만 할 수 있다`
+  if (state.injuredMonths > 0 && !action.allowWhenInjured) return '부상 중이라 휴식·재활만 할 수 있다'
+  const { inTeam, minFame, injured, slump } = action.requires ?? {}
   if (inTeam !== undefined && (state.team !== null) !== inTeam) {
     return inTeam ? `${action.name}은(는) 팀에 소속되어야 할 수 있다` : `${action.name}은(는) 팀에 들어가기 전에만 할 수 있다`
   }
   if (minFame !== undefined && state.fame < minFame) return `${action.name}은(는) 명성 ${minFame} 이상이어야 한다`
+  if (injured && state.injuredMonths <= 0) return `${action.name}은(는) 부상 중에만 할 수 있다`
+  if (slump && state.slumpMonths <= 0) return `${action.name}은(는) 슬럼프 중에만 할 수 있다`
+  const cost = costOf(action, turnScale(state.mode))
+  if (state.money < cost) return `돈이 부족하다 (${Math.ceil(cost)}만 원 필요)`
   return null
 }
 
 /** 선택 하나를 적용한 새 상태. 컨디션 계수는 이 행동을 하기 직전의 컨디션으로 계산한다. */
-function applySlot(state: GameState, slot: Slot, scale: number): GameState {
+function applySlot(state: GameState, slot: Slot, scale: number, rng: Rng, notes: string[]): GameState {
   if (slot.id === 'buy_equipment') {
     const level = state.equipment[slot.item]
     return {
@@ -110,13 +141,25 @@ function applySlot(state: GameState, slot: Slot, scale: number): GameState {
     stats[key] = clamp(state.stats[key] + delta, 0, gacha.statMax)
   }
 
-  return {
-    ...state,
-    stats,
-    condition: clamp(state.condition + (action.condition ?? 0) * scale, 0, 100),
-    money: state.money + (action.money ?? 0) * scale,
-    fame: state.fame + (action.fame ?? 0) * scale,
+  let next = applyEffects(
+    { ...state, stats },
+    { condition: action.condition, money: action.money, fame: action.fame, vice: action.vice, injuredMonths: action.injuredMonths, slumpMonths: action.slumpMonths },
+    scale,
+  )
+
+  if (action.outcomes) {
+    const roll = rng()
+    let acc = 0
+    for (const o of action.outcomes) {
+      acc += Math.min(0.95, o.chance + (o.viceRisk ? rules.vice.riskPerPoint * state.vice : 0))
+      if (roll < acc) {
+        next = applyEffects(next, o.effects, scale)
+        notes.push(o.label)
+        break
+      }
+    }
   }
+  return next
 }
 
 function diff(before: GameState, after: GameState): Delta {
@@ -130,21 +173,37 @@ function diff(before: GameState, after: GameState): Delta {
   }
 }
 
+/** 같은 상태·같은 턴이면 같은 결과가 나오는 행동 결과용 난수 */
+export function actionRng(state: GameState): Rng {
+  return createRng(mixSeed(state.seed, state.turnCount, 0xac71))
+}
+
 /**
- * 한 턴을 진행한다. 행동 두 개를 차례로 적용하고, 고등학교 시기의 학교·용돈을 반영한 뒤 턴을 센다.
+ * 한 턴을 진행한다. 행동 두 개를 차례로 적용하고(부작용·도박 같은 확률 결과 포함),
+ * 방탕 게이지와 학교·용돈을 반영한 뒤 턴을 센다.
  * 시즌의 마지막 턴이면 seasonEnded가 true이고, 결산을 마친 뒤 startNextSeason을 부른다.
+ * rng를 넘기지 않으면 상태에서 정해진 난수를 쓴다. (플레이어가 미리 결과를 알 수 없도록 AI가 점수를 매길 때는 다른 난수를 넘긴다.)
  */
-export function applyTurn(state: GameState, choice: TurnChoice): TurnResult {
+export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actionRng(state)): TurnResult {
   if (state.finished) return { ok: false, error: '이미 끝난 커리어다' }
   if (state.pendingOffers) return { ok: false, error: '받은 제안을 먼저 정해야 한다' }
   if (state.turnInSeason >= turnsPerSeason(state.mode)) return { ok: false, error: '시즌 결산이 필요하다' }
 
   const scale = turnScale(state.mode)
+  const notes: string[] = []
   let next = state
   for (const slot of choice) {
     const error = checkSlot(next, slot)
     if (error) return { ok: false, error }
-    next = applySlot(next, slot, scale)
+    next = applySlot(next, slot, scale, rng, notes)
+  }
+
+  // 방탕 게이지: 이번 턴에 술·유흥·도박을 안 했으면 내려가고, 높으면 중독 패널티가 붙는다
+  const usedVice = choice.some((s) => s.id !== 'buy_equipment' && (ACTIONS[s.id].vice ?? 0) > 0)
+  if (!usedVice) next = { ...next, vice: Math.max(0, next.vice - rules.vice.decayPerBase * scale) }
+  if (next.vice >= rules.vice.addictionAt) {
+    next = applyEffects(next, { condition: rules.vice.addictionCondition, stats: { mental: rules.vice.addictionMental } }, scale)
+    notes.push('중독 증세로 몸과 마음이 무너져 간다')
   }
 
   if (next.age <= rules.school.untilAge) {
@@ -163,7 +222,7 @@ export function applyTurn(state: GameState, choice: TurnChoice): TurnResult {
     turnInSeason: next.turnInSeason + 1,
     turnCount: next.turnCount + 1,
   }
-  return { ok: true, state: next, delta: diff(state, next), seasonEnded: next.turnInSeason === turnsPerSeason(next.mode) }
+  return { ok: true, state: next, delta: diff(state, next), seasonEnded: next.turnInSeason === turnsPerSeason(next.mode), notes }
 }
 
 /** 이번 시즌의 결산(settleSeason)을 이미 마쳤는지 */
