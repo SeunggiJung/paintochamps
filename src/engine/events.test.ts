@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { slumpDurationFactor } from './effects.ts'
 import { applyEventChoice, EVENTS, isEligible, rollEvent, turnRng } from './events.ts'
 import { createRng } from './rng.ts'
 import { createInitialState, type GameState, type ModeId } from './state.ts'
@@ -76,7 +77,7 @@ describe('rollEvent', () => {
       const e = rollEvent(make({ age: 22, condition: 10 }, 'tutorial'), rng)
       if (e) {
         total++
-        if (e.id === 'slump' || e.id === 'injury') bad++
+        if (e.id.startsWith('slump') || e.id === 'injury') bad++
       }
     }
     expect(bad / total).toBeGreaterThan(0.5)
@@ -114,8 +115,8 @@ describe('applyEventChoice', () => {
   })
 
   it('슬럼프: 성장이 절반이 되고 턴이 지나면 줄어든다', () => {
-    const slumped = applyEventChoice(make({ age: 20, condition: 20 }), byId('slump'), 1)
-    expect(slumped.slumpMonths).toBe(6)
+    const slumped = applyEventChoice(make({ age: 20, condition: 20 }), byId('slump'), 0)
+    expect(slumped.slumpMonths).toBeCloseTo(3 * slumpDurationFactor(100))
     const base = make({ age: 20, condition: 100 })
     const normal = applyTurn(base, [{ id: 'video_review' }, { id: 'rest' }])
     const slump = applyTurn({ ...base, slumpMonths: 6 }, [{ id: 'video_review' }, { id: 'rest' }])

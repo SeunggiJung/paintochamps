@@ -36,7 +36,27 @@
     "text": "손이 말을 듣지 않는다. 연습해도 늘지 않고, 모니터만 보면 한숨이 나온다. 슬럼프다.",
     "choices": [
       { "label": "며칠 푹 쉬며 재정비한다", "effects": { "condition": 20, "slumpMonths": 3 } },
-      { "label": "이를 악물고 버틴다", "effects": { "stats": { "mental": 30 }, "slumpMonths": 6 } }
+      {
+        "label": "이를 악물고 버틴다 (멘탈이 높을수록 성공)",
+        "check": {
+          "stat": "mental",
+          "success": { "stats": { "mental": 30 }, "slumpMonths": 2 },
+          "failure": { "stats": { "mental": -20 }, "slumpMonths": 8 }
+        }
+      },
+      { "label": "팀원·선배에게 털어놓는다", "requires": { "team": true }, "effects": { "stats": { "mental": 20, "teamwork": 10 }, "slumpMonths": 1 } },
+      { "label": "전문가의 상담을 받는다", "requires": { "minMoney": 10 }, "effects": { "money": -10, "stats": { "mental": 30 }, "slumpMonths": 1 } }
+    ]
+  },
+  {
+    "id": "slump_low_mental",
+    "when": { "stat": { "mental": { "max": 250 } }, "condition": { "max": 55 } },
+    "weight": 4,
+    "text": "작은 실수 하나에도 무너진다. 멘탈이 바닥나서 아무것도 손에 잡히지 않는다.",
+    "choices": [
+      { "label": "며칠 아무것도 안 하고 쉰다", "effects": { "condition": 15, "slumpMonths": 3 } },
+      { "label": "전문가의 상담을 받는다", "requires": { "minMoney": 10 }, "effects": { "money": -10, "stats": { "mental": 40 }, "slumpMonths": 1 } },
+      { "label": "팀원·선배에게 털어놓는다", "requires": { "team": true }, "effects": { "stats": { "mental": 25, "teamwork": 10 }, "slumpMonths": 1 } }
     ]
   },
   {
@@ -45,8 +65,16 @@
     "weight": 5,
     "text": "손목이 찌릿하다. 연습을 너무 무리해서 한 탓이다.",
     "choices": [
-      { "label": "병원에 가서 제대로 치료한다", "effects": { "money": -10, "condition": 10, "injuredMonths": 3 } },
-      { "label": "참고 계속 한다", "effects": { "injuredMonths": 6 } }
+      { "label": "병원에 가서 제대로 치료한다", "requires": { "minMoney": 10 }, "effects": { "money": -10, "condition": 10, "injuredMonths": 3 } },
+      {
+        "label": "집에서 쉬며 재활 운동을 한다 (멘탈이 높을수록 잘 회복)",
+        "check": {
+          "stat": "mental",
+          "success": { "condition": 5, "injuredMonths": 3 },
+          "failure": { "injuredMonths": 5, "stats": { "reaction": -15, "accuracy": -15 } }
+        }
+      },
+      { "label": "참고 계속 한다", "effects": { "injuredMonths": 6, "stats": { "reaction": -30, "accuracy": -30 } } }
     ]
   },
   {
@@ -158,6 +186,71 @@
     "choices": [
       { "label": "조언을 그대로 받아들인다", "effects": { "stats": { "judgment": 30, "focus": 10 } } },
       { "label": "내 방식을 고수한다", "effects": { "stats": { "accuracy": 20 }, "fame": 1 } }
+    ]
+  },
+  {
+    "id": "charity_event",
+    "when": { "fame": { "min": 15 }, "money": { "min": 20 } },
+    "weight": 2,
+    "text": "지역 청소년 e스포츠 자선 행사에서 초청장이 왔다. 이름이 알려진 덕이다.",
+    "choices": [
+      { "label": "크게 후원하고 무대에 오른다", "requires": { "minMoney": 50 }, "effects": { "money": -50, "fame": 10, "stats": { "mental": 10 } } },
+      { "label": "참석만 한다", "effects": { "fame": 2, "condition": -3 } },
+      { "label": "일정이 바빠 거절한다", "effects": { "stats": { "focus": 5 } } }
+    ]
+  },
+  {
+    "id": "party_invite",
+    "when": { "ageMin": 18 },
+    "weight": 2,
+    "text": "동료들이 연습이 끝나고 술자리를 가자고 한다. 분위기가 좋아 보인다.",
+    "choices": [
+      { "label": "끝까지 마시며 즐긴다", "requires": { "minMoney": 8 }, "effects": { "money": -8, "condition": 15, "stats": { "teamwork": 10 }, "vice": 1 } },
+      {
+        "label": "적당히 마시고 일찍 나온다 (멘탈이 높을수록 잘 절제)",
+        "requires": { "minMoney": 8 },
+        "check": {
+          "stat": "mental",
+          "success": { "money": -8, "condition": 10, "stats": { "teamwork": 15 } },
+          "failure": { "money": -8, "condition": -15, "vice": 1, "fame": -1 }
+        }
+      },
+      { "label": "거절하고 연습한다", "effects": { "stats": { "mental": 5, "focus": 10 } } }
+    ]
+  },
+  {
+    "id": "gambling_tip",
+    "when": { "money": { "min": 20 }, "ageMin": 18 },
+    "weight": 1,
+    "text": "친구가 \"이번엔 확실한 판이 있다\"며 같이 걸어 보자고 속삭인다.",
+    "choices": [
+      {
+        "label": "한 번만 걸어 본다",
+        "check": {
+          "chance": 0.3,
+          "success": { "money": 50, "vice": 1.5 },
+          "failure": { "money": -25, "stats": { "mental": -10 }, "vice": 1.5 }
+        }
+      },
+      { "label": "단호하게 거절한다", "effects": { "stats": { "mental": 5 } } }
+    ]
+  },
+  {
+    "id": "addiction_warning",
+    "when": { "vice": { "min": 3 } },
+    "weight": 8,
+    "text": "요즘 술과 유흥 없이는 하루가 안 간다. 동료가 걱정스러운 눈으로 쳐다본다.",
+    "choices": [
+      {
+        "label": "이번에는 정말 끊는다 (멘탈이 높을수록 성공)",
+        "check": {
+          "stat": "mental",
+          "success": { "vice": -99, "stats": { "mental": 20 } },
+          "failure": { "vice": -0.5, "stats": { "mental": -10 }, "condition": -10 }
+        }
+      },
+      { "label": "전문가의 도움을 받는다", "requires": { "minMoney": 15 }, "effects": { "money": -15, "vice": -3, "stats": { "mental": 10 } } },
+      { "label": "별일 아니라며 넘긴다", "effects": { "condition": -5 } }
     ]
   }
 ]

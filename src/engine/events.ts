@@ -1,9 +1,9 @@
 import eventData from '../data/events.json'
-import gacha from '../data/gacha.json'
+import { applyEffects, type Effects } from './effects.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { GameState, StageId } from './state.ts'
 import { eventChance } from './turn.ts'
-import { STAT_KEYS, type StatKey, type Stats } from './types.ts'
+import { STAT_KEYS, type StatKey } from './types.ts'
 
 interface Range {
   min?: number
@@ -18,17 +18,24 @@ export interface EventWhen {
   condition?: Range
   fame?: Range
   money?: Range
+  vice?: Range
   /** true면 팀 소속일 때만, false면 무소속일 때만 */
   team?: boolean
 }
 
-export interface EventEffects {
-  stats?: Partial<Stats>
-  condition?: number
-  money?: number
-  fame?: number
-  slumpMonths?: number
-  injuredMonths?: number
+export type EventEffects = Effects
+
+export interface EventChoice {
+  label: string
+  /** 확정 결과. check가 있으면 쓰지 않는다. */
+  effects?: Effects
+  /**
+   * 판정: stat을 주면 성공 확률 = 능력치 ÷ 1000 (5~95%), chance를 주면 그 확률 고정(운).
+   * 성공과 실패 결과가 다르다.
+   */
+  check?: { stat?: StatKey; chance?: number; success: Effects; failure: Effects }
+  /** 이 조건을 만족해야 고를 수 있다 */
+  requires?: { team?: boolean; minMoney?: number }
 }
 
 export interface GameEvent {
@@ -36,7 +43,7 @@ export interface GameEvent {
   when: EventWhen
   weight: number
   text: string
-  choices: { label: string; effects: EventEffects }[]
+  choices: EventChoice[]
 }
 
 export const EVENTS = eventData as GameEvent[]
@@ -49,7 +56,7 @@ export function isEligible(state: GameState, e: GameEvent): boolean {
   if (w.ageMin !== undefined && state.age < w.ageMin) return false
   if (w.ageMax !== undefined && state.age > w.ageMax) return false
   if (w.team !== undefined && (state.team !== null) !== w.team) return false
-  if (!inRange(state.condition, w.condition) || !inRange(state.fame, w.fame) || !inRange(state.money, w.money)) return false
+  if (!inRange(state.condition, w.condition) || !inRange(state.fame, w.fame) || !inRange(state.money, w.money) || !inRange(state.vice, w.vice)) return false
   for (const key of STAT_KEYS) if (!inRange(state.stats[key], w.stat?.[key])) return false
   return true
 }
@@ -59,7 +66,7 @@ export function turnRng(state: GameState): Rng {
   return createRng(mixSeed(state.seed, state.turnCount, 0xe7e47))
 }
 
-/** 턴 길이에 맞는 확률로 이벤트 하나를 뽑는다. 없으면 null. (이벤트가 이미 있으면 새로 뽑지 않는다) */
+/** 턴 길이에 맞는 확률로 이벤트 하나를 뽑는다. 없으면 null. */
 export function rollEvent(state: GameState, rng: Rng): GameEvent | null {
   if (state.finished || state.pendingOffers) return null
   if (rng() >= eventChance(state.mode)) return null
@@ -74,23 +81,43 @@ export function rollEvent(state: GameState, rng: Rng): GameEvent | null {
   return pool[pool.length - 1]
 }
 
-/** 이벤트 선택지의 효과를 반영한다. 능력치는 0~1000, 컨디션은 0~100, 돈·명성은 0 이상으로 제한한다. */
-export function applyEventChoice(state: GameState, event: GameEvent, choiceIndex: number): GameState {
-  const choice = event.choices[choiceIndex]
+/** 지금 고를 수 있는 선택지 번호 (팀 소속·보유 금액 조건을 만족하는 것) */
+export function availableChoices(state: GameState, event: GameEvent): number[] {
+  return event.choices.flatMap((c, i) => {
+    const r = c.requires
+    if (r?.team !== undefined && (state.team !== null) !== r.team) return []
+    if (r?.minMoney !== undefined && state.money < r.minMoney) return []
+    return [i]
+  })
+}
+
+/** 판정 성공 확률. 판정이 없으면 1. */
+export function checkChance(state: GameState, choice: EventChoice): number {
+  const check = choice.check
+  if (!check) return 1
+  if (check.chance !== undefined) return check.chance
+  return Math.min(0.95, Math.max(0.05, state.stats[check.stat!] / 1000))
+}
+
+/** 선택했을 때 일어날 수 있는 결과와 그 확률. (플레이어에게 보여 주거나 AI가 비교할 때 쓴다) */
+export function choiceOutcomes(state: GameState, event: GameEvent, index: number): { chance: number; state: GameState }[] {
+  const choice = event.choices[index]
   if (!choice) throw new Error('없는 선택지다')
-  const fx = choice.effects
-  const stats = { ...state.stats }
-  for (const key of STAT_KEYS) {
-    const d = fx.stats?.[key]
-    if (d !== undefined) stats[key] = Math.min(gacha.statMax, Math.max(0, stats[key] + d))
-  }
-  return {
-    ...state,
-    stats,
-    condition: Math.min(100, Math.max(0, state.condition + (fx.condition ?? 0))),
-    money: Math.max(0, state.money + (fx.money ?? 0)),
-    fame: Math.max(0, state.fame + (fx.fame ?? 0)),
-    slumpMonths: Math.max(state.slumpMonths, fx.slumpMonths ?? 0),
-    injuredMonths: Math.max(state.injuredMonths, fx.injuredMonths ?? 0),
-  }
+  if (!availableChoices(state, event).includes(index)) throw new Error('지금은 고를 수 없는 선택지다')
+  if (!choice.check) return [{ chance: 1, state: applyEffects(state, choice.effects ?? {}) }]
+  const p = checkChance(state, choice)
+  return [
+    { chance: p, state: applyEffects(state, choice.check.success) },
+    { chance: 1 - p, state: applyEffects(state, choice.check.failure) },
+  ]
+}
+
+/**
+ * 이벤트 선택지의 결과를 반영한다. 능력치 판정이 있으면 해당 능력치가 높을수록 성공하기 쉽다.
+ * rng를 넘기지 않으면 상태에서 정해진 난수를 쓴다.
+ */
+export function applyEventChoice(state: GameState, event: GameEvent, index: number, rng: Rng = createRng(mixSeed(state.seed, state.turnCount, 0xc4ec, index))): GameState {
+  const outcomes = choiceOutcomes(state, event, index)
+  if (outcomes.length === 1) return outcomes[0].state
+  return rng() < outcomes[0].chance ? outcomes[0].state : outcomes[1].state
 }
