@@ -1,6 +1,6 @@
 {
   "order": [
-    { "id": "hidden_loyal",   "name": "원클럽 레전드",          "when": { "minWorldTitles": 1, "debutTeam": true } },
+    { "id": "hidden_loyal",   "name": "원클럽 레전드",          "when": { "minWorldTitles": 1, "debutTeam": true, "notMode": "tutorial" } },
     { "id": "legend",         "name": "레전드",                 "when": { "minWorldTitles": 1 } },
     { "id": "world_finalist", "name": "월드 파이널리스트",      "when": { "minWorldAppearances": 1 } },
     { "id": "pro1_regular",   "name": "프로 1부 주전 은퇴",     "when": { "minSeasonsInPro1": 5 } },

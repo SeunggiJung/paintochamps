@@ -11,6 +11,8 @@ interface When {
   everPro?: boolean
   /** true면 지금 소속 팀이 1부에 처음 올라간 팀과 같아야 한다 */
   debutTeam?: boolean
+  /** 이 모드에서는 달성할 수 없다 (튜토리얼에서 히든이 열리지 않게 한다) */
+  notMode?: GameState['mode']
 }
 
 export const ENDINGS = endingData.order as { id: EndingId; name: string; when: When }[]
@@ -22,6 +24,7 @@ function matches(state: GameState, w: When): boolean {
   if (w.minTeamwork !== undefined && state.stats.teamwork < w.minTeamwork) return false
   if (w.minFame !== undefined && state.fame < w.minFame) return false
   if (w.stage !== undefined && state.stage !== w.stage) return false
+  if (w.notMode !== undefined && state.mode === w.notMode) return false
   if (w.everPro !== undefined && state.everPro !== w.everPro) return false
   if (w.debutTeam !== undefined && (state.team !== null && state.team.id === state.debutTeamId) !== w.debutTeam) return false
   return true

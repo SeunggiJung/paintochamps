@@ -195,6 +195,13 @@ describe('엔딩', () => {
     expect(evaluateEnding(make({ stage: 'pro2', everPro: true }))).toBe('pro2_veteran')
   })
 
+  it('튜토리얼에서는 데뷔 팀에서 우승해도 히든이 아니라 레전드다', () => {
+    const champion = { worldTitles: 1, team: TEAM, debutTeamId: 'org_0', everPro: true, stage: 'pro1' as const }
+    expect(evaluateEnding(make({ ...champion, mode: 'standard' }))).toBe('hidden_loyal')
+    expect(evaluateEnding(make({ ...champion, mode: 'precise' }))).toBe('hidden_loyal')
+    expect(evaluateEnding(make({ ...champion, mode: 'tutorial' }))).toBe('legend')
+  })
+
   it('프로 경력이 있으면 코치·감독, 아니면 명성이 높을 때 스트리머', () => {
     const strong = { ...stats(500), teamwork: 700 }
     expect(evaluateEnding(make({ stage: 'pro1', everPro: true, stats: strong, seasonsInPro1: 2 }))).toBe('coach')
