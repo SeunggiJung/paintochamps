@@ -25,3 +25,11 @@ export const MODE_INFO: Record<ModeId, { name: string; desc: string }> = {
   standard: { name: '표준', desc: '3개월씩 진행. 본 게임.' },
   precise: { name: '정밀', desc: '1개월씩 진행. 선택지가 많고 함정도 많다.' },
 }
+
+/** 행동 목록 묶음. 여기 없는 행동은 목록에 나오지 않으니 행동을 추가하면 여기도 넣는다. */
+export const ACTION_GROUPS: { title: string; ids: string[] }[] = [
+  { title: '훈련', ids: ['rank_practice', 'basics', 'video_review', 'team_scrim', 'private_lesson', 'overtrain', 'all_night_gaming'] },
+  { title: '회복', ids: ['rest', 'meditation', 'rehab', 'counseling', 'hangout'] },
+  { title: '돈·명성', ids: ['part_time', 'broadcast', 'donate'] },
+  { title: '유혹', ids: ['drink', 'nightlife', 'gamble', 'impulse_shopping', 'community_flame'] },
+]

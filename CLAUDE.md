@@ -8,9 +8,9 @@
 
 | 항목 | 내용 |
 |---|---|
-| 현재 단계 | **1단계(엔진·시뮬레이션) 완료**, 2단계(웹 화면) 시작 전 |
-| 지금 화면 | 없다. `src/main.ts`는 "준비 중" 한 줄뿐 |
-| 테스트 | 182개 통과 (`npm test`) |
+| 현재 단계 | 1단계(엔진·시뮬레이션) 완료, **2단계(웹 화면) 진행 중** — ①뽑기·캐릭터 생성, ②육성 메인·이벤트 완료 / ③시즌 결산·④엔딩·도감 남음 |
+| 지금 화면 | 타이틀 → 캐릭터 생성 → 뽑기(등급별 폭죽) → 육성 메인(행동 2개·미리보기·이벤트 팝업). 시즌 마지막 턴 뒤에는 "결산 준비 중" 안내만 나온다 |
+| 테스트 | 194개 통과 (`npm test`) |
 | 저장소 | `origin` = github.com/SeunggiJung/paintochamps.git, 브랜치 `master` |
 | 사용자 | 한국어 사용. 1인 개발, 기획·개발·밸런싱 담당 |
 
@@ -50,6 +50,8 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 - `match.ts` 승률·시리즈 확률·멘탈 보정 / `tournament.ts` 리그전, k패 탈락 토너먼트 / `field.ts` 상대 팀 생성
 - `season.ts` **시즌 결산**(`settleSeason`), 스카우트·이적(`acceptOffer`), `retire`
 - `events.ts` 이벤트 발생·선택지·능력치 판정 / `endings.ts` 엔딩 판정
+
+`src/ui/` — 웹 화면(바닐라 TS, 프레임워크 없음). `app.ts` 화면 전환, `title/create/gachaScreen/home.ts` 화면, `eventFlow.ts` 이벤트 팝업, `sheet.ts` 팝업, `preview.ts` 행동 미리보기(정밀 모드는 방향만 보여 줌, `modes.json`의 `preview`), `confetti.ts` 폭죽, `newGame.ts` 시드·뽑기 로직
 
 `src/save/storage.ts` — 저장·불러오기, 엔딩 도감(`MetaSave`), 판 종료 기록(`recordFinish`)
 
