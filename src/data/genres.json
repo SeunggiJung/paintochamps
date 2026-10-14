@@ -1,0 +1,6 @@
+{
+  "fps":      { "name": "FPS",  "stage": "mvp",    "weights": { "reaction": 25, "accuracy": 30, "focus": 15, "judgment": 10, "mental": 10, "teamwork": 10 } },
+  "aos":      { "name": "AOS",  "stage": "mvp",    "weights": { "reaction": 10, "accuracy": 10, "focus": 15, "judgment": 30, "mental": 15, "teamwork": 20 } },
+  "rts":      { "name": "RTS",  "stage": "expand", "weights": { "reaction": 15, "accuracy": 15, "focus": 25, "judgment": 30, "mental": 10, "teamwork": 5 } },
+  "fighting": { "name": "격투", "stage": "expand", "weights": { "reaction": 30, "accuracy": 20, "focus": 15, "judgment": 15, "mental": 15, "teamwork": 5 } }
+}

@@ -1,0 +1,21 @@
+{
+  "statTotal": 600,
+  "statMin": 50,
+  "statMax": 1000,
+  "traitMultiplier": 1.2,
+  "grades": [
+    { "grade": "UR",  "minPower": 122 },
+    { "grade": "SSR", "minPower": 115 },
+    { "grade": "SR",  "minPower": 107 },
+    { "grade": "R",   "minPower": 99 },
+    { "grade": "N",   "minPower": 0 }
+  ],
+  "traits": [
+    { "id": "quick_hands",   "name": "손이 빠름",   "stat": "reaction" },
+    { "id": "steady_wrist",  "name": "정밀 손목",   "stat": "accuracy" },
+    { "id": "grit",          "name": "끈기",        "stat": "focus" },
+    { "id": "sharp_eye",     "name": "눈썰미 좋음", "stat": "judgment" },
+    { "id": "steel_mind",    "name": "강철 멘탈",   "stat": "mental" },
+    { "id": "silver_tongue", "name": "말발",        "stat": "teamwork" }
+  ]
+}
