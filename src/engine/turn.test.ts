@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { conditionCoef, equipmentEfficiency, growthDelta } from './growth.ts'
+import { settleSeason } from './season.ts'
 import { createInitialState, type GameState, type ModeId } from './state.ts'
 import { applyTurn, eventChance, isCareerOver, startNextSeason, turnScale, type TurnChoice } from './turn.ts'
 import type { GenreId, Stats } from './types.ts'
 
+const TEAM = { id: 'org_0', name: '나이트호크' }
 const FLAT: Stats = { reaction: 100, accuracy: 100, focus: 100, judgment: 100, mental: 100, teamwork: 100 }
 
 function make(overrides: Partial<GameState> = {}, genre: GenreId = 'fps', mode: ModeId = 'standard'): GameState {
@@ -11,6 +13,7 @@ function make(overrides: Partial<GameState> = {}, genre: GenreId = 'fps', mode: 
     name: '테스트',
     genre,
     mode,
+    seed: 1,
     gacha: { stats: FLAT, trait: { id: 'quick_hands', name: '손이 빠름', stat: 'reaction' }, grade: 'R', power: 100 },
   })
   return { ...base, ...overrides }
@@ -108,8 +111,8 @@ describe('행동', () => {
 describe('조건과 비용', () => {
   it('팀 스크림은 팀 소속이 필요하고, 아르바이트는 팀 소속 전에만 가능하다', () => {
     expect(applyTurn(make({ age: 20 }), [{ id: 'team_scrim' }, { id: 'rest' }]).ok).toBe(false)
-    expect(applyTurn(make({ age: 20, inTeam: true }), [{ id: 'team_scrim' }, { id: 'rest' }]).ok).toBe(true)
-    expect(applyTurn(make({ age: 20, inTeam: true }), [{ id: 'part_time' }, { id: 'rest' }]).ok).toBe(false)
+    expect(applyTurn(make({ age: 20, team: TEAM }), [{ id: 'team_scrim' }, { id: 'rest' }]).ok).toBe(true)
+    expect(applyTurn(make({ age: 20, team: TEAM }), [{ id: 'part_time' }, { id: 'rest' }]).ok).toBe(false)
   })
 
   it('방송은 명성 20 이상이 필요하다', () => {
@@ -165,7 +168,8 @@ describe('시즌 진행', () => {
     expect(second.seasonEnded).toBe(true)
     s = second.state
     expect(applyTurn(s, [{ id: 'rest' }, { id: 'rest' }]).ok).toBe(false)
-    const next = startNextSeason(s)
+    expect(() => startNextSeason(s)).toThrow() // 결산 전에는 넘어갈 수 없다
+    const next = startNextSeason(settleSeason(s).state)
     expect(next.age).toBe(21)
     expect(next.season).toBe(2)
     expect(next.turnInSeason).toBe(0)
@@ -176,7 +180,8 @@ describe('시즌 진행', () => {
   })
 
   it('나이 곡선: 25세부터 반응속도·정확도만 시즌마다 10 내려간다', () => {
-    const end = (age: number) => make({ age, turnInSeason: 4 }) // 표준 모드 시즌 끝
+    // 표준 모드 시즌 끝, 결산을 마친 상태
+    const end = (age: number) => make({ age, turnInSeason: 4, history: [{ season: 1, age, stage: 'basement', events: [] }] })
     const young = startNextSeason(end(24))
     expect(young.stats.reaction).toBe(100)
     const old = startNextSeason(end(25))
@@ -201,7 +206,10 @@ describe('시즌 진행', () => {
         const r = run(s, [{ id: 'rest' }, { id: 'rest' }])
         s = r.state
         turns++
-        if (r.seasonEnded && !isCareerOver(s)) s = startNextSeason(s)
+        if (r.seasonEnded) {
+          s = settleSeason(s).state
+          if (!isCareerOver(s)) s = startNextSeason(s)
+        }
       }
       expect(turns).toBe(expected)
     }

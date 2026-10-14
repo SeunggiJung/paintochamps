@@ -65,8 +65,9 @@ export function checkSlot(state: GameState, slot: Slot): string | null {
   }
   const action = ACTIONS[slot.id]
   if (!action) return '알 수 없는 행동이다'
+  if (state.injuredMonths > 0 && slot.id !== 'rest') return '부상 중이라 휴식만 할 수 있다'
   const { inTeam, minFame } = action.requires ?? {}
-  if (inTeam !== undefined && state.inTeam !== inTeam) {
+  if (inTeam !== undefined && (state.team !== null) !== inTeam) {
     return inTeam ? `${action.name}은(는) 팀에 소속되어야 할 수 있다` : `${action.name}은(는) 팀에 들어가기 전에만 할 수 있다`
   }
   if (minFame !== undefined && state.fame < minFame) return `${action.name}은(는) 명성 ${minFame} 이상이어야 한다`
@@ -85,6 +86,7 @@ function applySlot(state: GameState, slot: Slot, scale: number): GameState {
   }
 
   const action = ACTIONS[slot.id]
+  const slumpFactor = state.slumpMonths > 0 ? rules.slumpGrowthFactor : 1
   const gains: Partial<Record<StatKey, number>> = { ...action.stats }
   if (action.topGenreStats) {
     const weights = genres[state.genre].weights
@@ -99,7 +101,7 @@ function applySlot(state: GameState, slot: Slot, scale: number): GameState {
     if (base === undefined) continue
     const delta = growthDelta({
       base,
-      scale,
+      scale: scale * slumpFactor,
       efficiency,
       condition: state.condition,
       traitMultiplier: state.trait.stat === key ? gacha.traitMultiplier : 1,
@@ -133,6 +135,8 @@ function diff(before: GameState, after: GameState): Delta {
  * 시즌의 마지막 턴이면 seasonEnded가 true이고, 결산을 마친 뒤 startNextSeason을 부른다.
  */
 export function applyTurn(state: GameState, choice: TurnChoice): TurnResult {
+  if (state.finished) return { ok: false, error: '이미 끝난 커리어다' }
+  if (state.pendingOffers) return { ok: false, error: '받은 제안을 먼저 정해야 한다' }
   if (state.turnInSeason >= turnsPerSeason(state.mode)) return { ok: false, error: '시즌 결산이 필요하다' }
 
   const scale = turnScale(state.mode)
@@ -151,13 +155,28 @@ export function applyTurn(state: GameState, choice: TurnChoice): TurnResult {
     }
   }
 
-  next = { ...next, turnInSeason: next.turnInSeason + 1, turnCount: next.turnCount + 1 }
+  const months = modes[next.mode].turnMonths
+  next = {
+    ...next,
+    slumpMonths: Math.max(0, next.slumpMonths - months),
+    injuredMonths: Math.max(0, next.injuredMonths - months),
+    turnInSeason: next.turnInSeason + 1,
+    turnCount: next.turnCount + 1,
+  }
   return { ok: true, state: next, delta: diff(state, next), seasonEnded: next.turnInSeason === turnsPerSeason(next.mode) }
 }
 
-/** 시즌 결산을 마친 뒤 다음 시즌으로 넘어간다. 25세부터 반응속도·정확도가 내려간다. */
+/** 이번 시즌의 결산(settleSeason)을 이미 마쳤는지 */
+export function isSettled(state: GameState): boolean {
+  return state.history.length > 0 && state.history[state.history.length - 1].season === state.season
+}
+
+/** 시즌 결산과 제안 선택을 마친 뒤 다음 시즌으로 넘어간다. 25세부터 반응속도·정확도가 내려간다. */
 export function startNextSeason(state: GameState): GameState {
+  if (state.finished) throw new Error('이미 끝난 커리어다')
   if (state.turnInSeason < turnsPerSeason(state.mode)) throw new Error('시즌이 아직 끝나지 않았다')
+  if (!isSettled(state)) throw new Error('시즌 결산이 필요하다')
+  if (state.pendingOffers) throw new Error('받은 제안을 먼저 정해야 한다')
   const stats = { ...state.stats }
   if (state.age >= rules.ageDecline.fromAge) {
     for (const key of rules.ageDecline.stats as StatKey[]) {

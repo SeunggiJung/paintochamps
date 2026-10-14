@@ -1,0 +1,125 @@
+{
+  "tiers": {
+    "local":   { "mean": 300, "sd": 45 },
+    "amateur": { "mean": 420, "sd": 40 },
+    "pro2":    { "mean": 520, "sd": 40 },
+    "pro1":    { "mean": 620, "sd": 45 },
+    "intl":    { "mean": 660, "sd": 50 }
+  },
+  "stages": {
+    "basement": [],
+    "local_cup": [
+      {
+        "id": "local_cup", "name": "지역 아마추어 대회", "format": "elimination",
+        "field": { "names": "amateur", "tier": "local", "size": 16 }, "k": 1, "bestOf": 1, "big": true,
+        "rewards": [
+          { "upTo": 1, "fame": 10, "money": 50 }, { "upTo": 2, "fame": 6, "money": 20 },
+          { "upTo": 4, "fame": 3, "money": 10 }, { "upTo": 99, "fame": 1, "money": 0 }
+        ]
+      }
+    ],
+    "amateur_team": [
+      {
+        "id": "amateur_league", "name": "아마추어 리그", "format": "league",
+        "field": { "names": "amateur", "tier": "amateur", "size": 6 }, "rounds": 2, "bestOf": 1, "rank": true,
+        "rewards": [{ "upTo": 1, "fame": 8, "money": 30 }, { "upTo": 3, "fame": 4, "money": 10 }, { "upTo": 99, "fame": 1, "money": 0 }]
+      }
+    ],
+    "pro2": [
+      {
+        "id": "pro2_league", "name": "프로 2부 리그", "format": "league",
+        "field": { "names": "academy", "tier": "pro2", "size": 6 }, "rounds": 2, "bestOf": 3, "rank": true,
+        "rewards": [{ "upTo": 1, "fame": 10, "money": 80 }, { "upTo": 3, "fame": 5, "money": 40 }, { "upTo": 99, "fame": 2, "money": 20 }]
+      }
+    ],
+    "pro1": {
+      "aos": [
+        {
+          "id": "split1", "name": "전반기 리그", "format": "league",
+          "field": { "names": "orgs", "tier": "pro1", "size": 10 }, "rounds": 2, "bestOf": 3,
+          "rewards": [{ "upTo": 3, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
+        },
+        {
+          "id": "mid_qualifier", "name": "미드시즌 선발전", "format": "elimination",
+          "from": { "event": "split1", "top": 6 }, "k": 1, "bestOf": 5, "big": true,
+          "qualifies": [{ "to": "midseason", "top": 1 }],
+          "rewards": [{ "upTo": 1, "fame": 6, "money": 40 }, { "upTo": 99, "fame": 1, "money": 0 }]
+        },
+        {
+          "id": "midseason", "name": "미드시즌 국제전", "format": "elimination", "needs": "midseason",
+          "field": { "names": "intl", "tier": "intl", "size": 12 }, "k": 2, "bestOf": 5, "big": true,
+          "qualifies": [{ "to": "world", "top": 1 }],
+          "points": [8, 5, 3, 2, 2, 1],
+          "rewards": [{ "upTo": 1, "fame": 20, "money": 200 }, { "upTo": 4, "fame": 10, "money": 80 }, { "upTo": 99, "fame": 4, "money": 30 }]
+        },
+        {
+          "id": "split2", "name": "후반기 리그", "format": "league",
+          "field": { "names": "orgs", "tier": "pro1", "size": 10 }, "rounds": 2, "bestOf": 3, "rank": true,
+          "rewards": [{ "upTo": 3, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
+        },
+        {
+          "id": "playoffs", "name": "플레이오프", "format": "elimination",
+          "from": { "event": "split2", "top": 6 }, "k": 2, "bestOf": 5, "big": true,
+          "qualifies": [{ "to": "world", "top": 3 }],
+          "points": [6, 4, 3, 2, 1, 1],
+          "rewards": [{ "upTo": 1, "fame": 15, "money": 150 }, { "upTo": 3, "fame": 8, "money": 80 }, { "upTo": 99, "fame": 3, "money": 30 }]
+        },
+        {
+          "id": "world", "name": "월드 챔피언십", "format": "elimination", "needs": "world", "world": true,
+          "field": { "names": "intl", "tier": "intl", "size": 16 }, "k": 2, "bestOf": 5, "big": true,
+          "rewards": [{ "upTo": 1, "fame": 50, "money": 500 }, { "upTo": 2, "fame": 30, "money": 250 }, { "upTo": 4, "fame": 20, "money": 120 }, { "upTo": 99, "fame": 8, "money": 50 }]
+        }
+      ],
+      "fps": [
+        {
+          "id": "kickoff", "name": "킥오프", "format": "elimination",
+          "field": { "names": "orgs", "tier": "pro1", "size": 12 }, "k": 3, "bestOf": 3, "big": true,
+          "qualifies": [{ "to": "masters1", "top": 3 }],
+          "rewards": [{ "upTo": 3, "fame": 5, "money": 50 }, { "upTo": 99, "fame": 1, "money": 20 }]
+        },
+        {
+          "id": "masters1", "name": "마스터즈 1", "format": "elimination", "needs": "masters1",
+          "field": { "names": "intl", "tier": "intl", "size": 12 }, "k": 2, "bestOf": 3, "big": true,
+          "points": [8, 5, 3, 2, 2, 1],
+          "rewards": [{ "upTo": 1, "fame": 18, "money": 180 }, { "upTo": 4, "fame": 9, "money": 70 }, { "upTo": 99, "fame": 4, "money": 30 }]
+        },
+        {
+          "id": "stage1", "name": "스테이지 1", "format": "league",
+          "field": { "names": "orgs", "tier": "pro1", "size": 12 }, "rounds": 1, "bestOf": 3,
+          "rewards": [{ "upTo": 4, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
+        },
+        {
+          "id": "stage1_playoffs", "name": "스테이지 1 플레이오프", "format": "elimination",
+          "from": { "event": "stage1", "top": 8 }, "k": 2, "bestOf": 3, "big": true,
+          "qualifies": [{ "to": "masters2", "top": 3 }],
+          "points": [6, 4, 3, 2, 1, 1],
+          "rewards": [{ "upTo": 1, "fame": 12, "money": 120 }, { "upTo": 3, "fame": 6, "money": 60 }, { "upTo": 99, "fame": 2, "money": 30 }]
+        },
+        {
+          "id": "masters2", "name": "마스터즈 2", "format": "elimination", "needs": "masters2",
+          "field": { "names": "intl", "tier": "intl", "size": 12 }, "k": 2, "bestOf": 3, "big": true,
+          "points": [8, 5, 3, 2, 2, 1],
+          "rewards": [{ "upTo": 1, "fame": 18, "money": 180 }, { "upTo": 4, "fame": 9, "money": 70 }, { "upTo": 99, "fame": 4, "money": 30 }]
+        },
+        {
+          "id": "stage2", "name": "스테이지 2", "format": "league",
+          "field": { "names": "orgs", "tier": "pro1", "size": 12 }, "rounds": 1, "bestOf": 3, "rank": true,
+          "rewards": [{ "upTo": 4, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
+        },
+        {
+          "id": "stage2_playoffs", "name": "스테이지 2 플레이오프", "format": "elimination",
+          "from": { "event": "stage2", "top": 8 }, "k": 2, "bestOf": 3, "big": true,
+          "qualifies": [{ "to": "world", "top": 2 }],
+          "points": [6, 4, 3, 2, 1, 1],
+          "pointsQualify": { "to": "world", "minPoints": 14 },
+          "rewards": [{ "upTo": 1, "fame": 15, "money": 150 }, { "upTo": 3, "fame": 8, "money": 80 }, { "upTo": 99, "fame": 3, "money": 30 }]
+        },
+        {
+          "id": "world", "name": "챔피언스", "format": "elimination", "needs": "world", "world": true,
+          "field": { "names": "intl", "tier": "intl", "size": 16 }, "k": 2, "bestOf": 5, "big": true,
+          "rewards": [{ "upTo": 1, "fame": 50, "money": 500 }, { "upTo": 2, "fame": 30, "money": 250 }, { "upTo": 4, "fame": 20, "money": 120 }, { "upTo": 99, "fame": 8, "money": 50 }]
+        }
+      ]
+    }
+  }
+}

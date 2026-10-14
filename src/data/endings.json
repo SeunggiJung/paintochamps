@@ -1,0 +1,13 @@
+{
+  "order": [
+    { "id": "hidden_loyal",   "name": "원클럽 레전드",          "when": { "minWorldTitles": 1, "debutTeam": true } },
+    { "id": "legend",         "name": "레전드",                 "when": { "minWorldTitles": 1 } },
+    { "id": "world_finalist", "name": "월드 파이널리스트",      "when": { "minWorldAppearances": 1 } },
+    { "id": "pro1_regular",   "name": "프로 1부 주전 은퇴",     "when": { "minSeasonsInPro1": 5 } },
+    { "id": "pro2_veteran",   "name": "2부 리그의 터주대감",    "when": { "stage": "pro2" } },
+    { "id": "coach",          "name": "코치·감독",              "when": { "everPro": true, "minTeamwork": 700 } },
+    { "id": "streamer",       "name": "스트리머",               "when": { "minFame": 70 } },
+    { "id": "hobbyist",       "name": "취미로 남은 겜돌이",     "when": { "everPro": false } }
+  ],
+  "fallbackIfPro": "pro2_veteran"
+}

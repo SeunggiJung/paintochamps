@@ -39,5 +39,6 @@
   "rival": {
     "fameWin": 3,
     "powerNoise": 30
-  }
+  },
+  "slumpGrowthFactor": 0.5
 }
