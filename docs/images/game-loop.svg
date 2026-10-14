@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 490" width="940" height="490" font-family="'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+  <title>게임 루프: 8단계, 판단 1개</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="940" height="490" fill="#ffffff"/>
+
+  <!-- 1 -->
+  <rect x="30" y="60" width="180" height="70" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <circle cx="30" cy="60" r="13" fill="#0284c7"/><text x="30" y="65" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">1</text>
+  <text x="120" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">행동 선택</text>
+  <text x="120" y="113" text-anchor="middle" font-size="12" fill="#475569">행동 2개 고르기</text>
+  <!-- 2 -->
+  <rect x="250" y="60" width="180" height="70" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <circle cx="250" cy="60" r="13" fill="#0284c7"/><text x="250" y="65" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">2</text>
+  <text x="340" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">결과 반영</text>
+  <text x="340" y="113" text-anchor="middle" font-size="12" fill="#475569">능력치·컨디션·자원</text>
+  <!-- 3 -->
+  <rect x="470" y="60" width="180" height="70" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <circle cx="470" cy="60" r="13" fill="#0284c7"/><text x="470" y="65" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">3</text>
+  <text x="560" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">이벤트 판정</text>
+  <text x="560" y="113" text-anchor="middle" font-size="12" fill="#475569">확률로 이벤트 1개</text>
+  <!-- 4 -->
+  <rect x="690" y="60" width="180" height="70" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <circle cx="690" cy="60" r="13" fill="#0284c7"/><text x="690" y="65" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">4</text>
+  <text x="780" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">경기·대회</text>
+  <text x="780" y="113" text-anchor="middle" font-size="12" fill="#475569">승률 P로 판정</text>
+
+  <!-- decision -->
+  <polygon points="780,190 880,250 780,310 680,250" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="780" y="246" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">시즌의</text>
+  <text x="780" y="265" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">마지막 턴?</text>
+
+  <!-- 5 -->
+  <rect x="470" y="215" width="180" height="70" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <circle cx="470" cy="215" r="13" fill="#16a34a"/><text x="470" y="220" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">5</text>
+  <text x="560" y="246" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">시즌 결산</text>
+  <text x="560" y="268" text-anchor="middle" font-size="12" fill="#475569">성적·순위 확정</text>
+  <!-- 6 -->
+  <rect x="250" y="215" width="180" height="70" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <circle cx="250" cy="215" r="13" fill="#16a34a"/><text x="250" y="220" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">6</text>
+  <text x="340" y="246" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">승급·강등</text>
+  <text x="340" y="268" text-anchor="middle" font-size="12" fill="#475569">실력치 R·명성 조건</text>
+  <!-- 7 -->
+  <rect x="30" y="215" width="180" height="70" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <circle cx="30" cy="215" r="13" fill="#16a34a"/><text x="30" y="220" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">7</text>
+  <text x="120" y="246" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">나이 +1</text>
+  <text x="120" y="268" text-anchor="middle" font-size="12" fill="#475569">새 시즌 시작</text>
+  <!-- 8 -->
+  <rect x="30" y="385" width="180" height="70" rx="10" fill="#fce7f3" stroke="#db2777" stroke-width="1.5"/>
+  <circle cx="30" cy="385" r="13" fill="#db2777"/><text x="30" y="390" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">8</text>
+  <text x="120" y="416" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">엔딩</text>
+  <text x="120" y="438" text-anchor="middle" font-size="12" fill="#475569">결과 카드·도감 기록</text>
+
+  <!-- arrows -->
+  <g stroke="#475569" stroke-width="1.8" fill="none" marker-end="url(#a)">
+    <path d="M210 95 H248"/>
+    <path d="M430 95 H468"/>
+    <path d="M650 95 H688"/>
+    <path d="M780 130 V188"/>
+    <path d="M680 250 H652"/>
+    <path d="M470 250 H432"/>
+    <path d="M250 250 H212"/>
+    <path d="M120 285 V383"/>
+    <path d="M120 213 V132"/>
+    <path d="M880 250 H915 V30 H120 V58"/>
+  </g>
+
+  <!-- edge labels -->
+  <text x="666" y="238" text-anchor="end" font-size="12" font-weight="700" fill="#16a34a">예</text>
+  <text x="907" y="150" text-anchor="end" font-size="12" font-weight="700" fill="#d97706">아니오</text>
+  <text x="500" y="22" text-anchor="middle" font-size="12" fill="#475569">아니오 → 다음 턴으로 (1단계로 돌아감)</text>
+  <text x="132" y="178" font-size="12" fill="#475569">30세 미만이면 다음 턴</text>
+  <text x="132" y="340" font-size="12" fill="#475569">30세 시즌 종료 또는 자진 은퇴</text>
+
+  <!-- notes -->
+  <text x="270" y="420" font-size="12" fill="#475569">매 턴: 1~4단계 반복 · 시즌(1년)의 마지막 턴에만 5~7단계가 열린다</text>
+  <text x="270" y="440" font-size="12" fill="#475569">튜토리얼 6개월 = 시즌 2턴 · 표준 3개월 = 4턴 · 정밀 1개월 = 12턴</text>
+</svg>
