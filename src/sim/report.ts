@@ -1,4 +1,5 @@
 import type { EndingId, GameState, ModeId, StageId } from '../engine/state.ts'
+import { genrePower } from '../engine/power.ts'
 import type { GenreId } from '../engine/types.ts'
 import { playCareer, type BotOptions } from './bot.ts'
 
@@ -16,6 +17,8 @@ export interface BatchReport {
   firstAge: Partial<Record<StageId, number>>
   /** 1부에서 보낸 평균 시즌 수 */
   avgPro1Seasons: number
+  /** 마지막 상태의 평균: 장르 실력치, 돈(만 원), 명성 */
+  avgFinal: { power: number; money: number; fame: number }
   /** 1부 시즌 하나당: 플레이오프에 든 비율, 월드에 나간 비율, 월드를 우승한 비율 */
   perSeason: { playoffs: number; world: number; title: number }
 }
@@ -50,7 +53,9 @@ function summarize(genre: GenreId, mode: ModeId, finals: GameState[]): BatchRepo
     }
   }
   const per = (v: number) => (pro1Seasons ? v / pro1Seasons : 0)
+  const mean = (f: (s: GameState) => number) => finals.reduce((sum, s) => sum + f(s), 0) / n
   return {
+    avgFinal: { power: mean((s) => genrePower(s.stats, genre)), money: mean((s) => s.money), fame: mean((s) => s.fame) },
     perSeason: { playoffs: per(playoffSeasons), world: per(worldSeasons), title: per(titleSeasons) },
     genre,
     mode,
@@ -81,5 +86,5 @@ export function formatReport(r: BatchReport, label: string): string {
   const ages = Object.entries(r.firstAge)
     .map(([k, v]) => `${k} ${v!.toFixed(1)}`)
     .join(', ')
-  return `${label} ${r.genre}/${r.mode} (${r.runs}판): 1부 도달 ${pct(r.reachedPro1)} | 월드 진출 ${pct(r.reachedWorld)} | 월드 우승 ${pct(r.worldTitle)} | 히든 ${pct(r.hidden)} | 1부 ${r.avgPro1Seasons.toFixed(1)}시즌 | 시즌당 플레이오프 ${pct(r.perSeason.playoffs)} 월드 ${pct(r.perSeason.world)} 우승 ${pct(r.perSeason.title)} | 첫 도달 나이 ${ages}\n   엔딩: ${endings}`
+  return `${label} ${r.genre}/${r.mode} (${r.runs}판): 1부 도달 ${pct(r.reachedPro1)} | 월드 진출 ${pct(r.reachedWorld)} | 월드 우승 ${pct(r.worldTitle)} | 히든 ${pct(r.hidden)} | 1부 ${r.avgPro1Seasons.toFixed(1)}시즌 | 최종 R ${r.avgFinal.power.toFixed(0)} 돈 ${r.avgFinal.money.toFixed(0)} 명성 ${r.avgFinal.fame.toFixed(0)} | 시즌당 플레이오프 ${pct(r.perSeason.playoffs)} 월드 ${pct(r.perSeason.world)} 우승 ${pct(r.perSeason.title)} | 첫 도달 나이 ${ages}\n   엔딩: ${endings}`
 }

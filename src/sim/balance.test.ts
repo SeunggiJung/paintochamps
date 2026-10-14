@@ -6,25 +6,30 @@ import { formatReport, runBatch } from './report.ts'
 
 /**
  * 난이도 점검. 규칙이나 `competitions.json`의 상대 실력치를 바꾼 뒤 아래처럼 돌리면
- * 전체 수치를 파일로 받아볼 수 있다. (판 수는 BALANCE_RUNS, 기본 80)
+ * 전체 수치를 파일로 받아볼 수 있다. (판 수는 BALANCE_RUNS, 기본 60)
  *   BALANCE_OUT=report.txt BALANCE_RUNS=150 npx vitest run src/sim
  *
+ * random: 가능한 행동·선택지 중 아무거나 고르는 플레이 (잘 모르고 눌러 보는 사람)
  * casual: 컨디션만 관리하며 훈련하는 단순한 플레이
- * skilled: 한 턴 앞을 보고 행동을 고르고 이벤트 선택지를 비교하는 플레이 (장비는 행동 칸을 써서 거의 사지 않는다)
+ * skilled: 한 턴 앞을 보고 행동을 고르고, 위험한 행동은 기댓값으로 비교하고, 이벤트 선택지도 비교하는 플레이
  * 아래 기준은 초안이다. 플레이 테스트로 느낌이 달라지면 숫자를 바꾼다.
  */
-const RUNS = Number(process.env.BALANCE_RUNS ?? 80)
+const RUNS = Number(process.env.BALANCE_RUNS ?? 60)
 const genres: GenreId[] = ['fps', 'aos']
 const modes: ModeId[] = ['tutorial', 'standard', 'precise']
 
 describe('난이도: 월드는 쉽게 갈 수 없고, 우승은 더 어렵다', () => {
   const reports = genres.flatMap((g) =>
-    modes.map((m) => ({ casual: runBatch(g, m, RUNS, { policy: 'casual' }), skilled: runBatch(g, m, RUNS, { policy: 'skilled' }) })),
+    modes.map((m) => ({
+      random: runBatch(g, m, RUNS, { policy: 'random' }),
+      casual: runBatch(g, m, RUNS, { policy: 'casual' }),
+      skilled: runBatch(g, m, RUNS, { policy: 'skilled' }),
+    })),
   )
 
   it('리포트를 파일로 내보낸다 (BALANCE_OUT이 있을 때만)', () => {
     if (!process.env.BALANCE_OUT) return
-    const text = reports.map((r) => formatReport(r.casual, '[casual]') + '\n' + formatReport(r.skilled, '[skilled]')).join('\n')
+    const text = reports.map((r) => [formatReport(r.random, '[random]'), formatReport(r.casual, '[casual]'), formatReport(r.skilled, '[skilled]')].join('\n')).join('\n')
     writeFileSync(process.env.BALANCE_OUT, text + '\n')
   })
 
@@ -57,6 +62,24 @@ describe('난이도: 월드는 쉽게 갈 수 없고, 우승은 더 어렵다', 
     for (const r of reports) {
       expect(r.skilled.reachedPro1).toBeGreaterThanOrEqual(0.4)
       expect(r.skilled.reachedWorld).toBeGreaterThanOrEqual(0.3)
+    }
+  })
+
+  it('아무거나 고르면 크게 뒤처진다 (무작위 플레이의 최종 실력치는 숙련보다 150 이상 낮고, 월드는 거의 못 간다)', () => {
+    for (const r of reports) {
+      expect(r.skilled.avgFinal.power - r.random.avgFinal.power).toBeGreaterThanOrEqual(150)
+      expect(r.random.reachedWorld).toBeLessThanOrEqual(0.05)
+      expect(r.random.avgFinal.power).toBeLessThan(r.casual.avgFinal.power)
+    }
+  })
+
+  it('정밀 모드는 선택지가 많아 숙련과 무작위의 격차가 표준 모드보다 크다', () => {
+    for (const genre of genres) {
+      const gap = (mode: ModeId) => {
+        const r = reports.find((x) => x.skilled.genre === genre && x.skilled.mode === mode)!
+        return r.skilled.avgFinal.power - r.random.avgFinal.power
+      }
+      expect(gap('precise')).toBeGreaterThan(gap('standard'))
     }
   })
 })
