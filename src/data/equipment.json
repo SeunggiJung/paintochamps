@@ -1,0 +1,6 @@
+{
+  "keyboard": { "name": "키보드", "costs": [10, 20, 40] },
+  "mouse":    { "name": "마우스", "costs": [10, 20, 40] },
+  "monitor":  { "name": "모니터", "costs": [20, 40, 80] },
+  "pc":       { "name": "PC",     "costs": [30, 60, 120] }
+}

@@ -1,0 +1,9 @@
+{
+  "rank_practice": { "name": "랭크전 연습", "topGenreStats": { "count": 2, "amount": 80 }, "condition": -15 },
+  "basics":        { "name": "기본기 훈련", "stats": { "reaction": 80, "accuracy": 80 }, "condition": -10 },
+  "video_review":  { "name": "영상 분석",   "stats": { "judgment": 100, "focus": 50 }, "condition": -8 },
+  "team_scrim":    { "name": "팀 스크림",   "stats": { "teamwork": 100, "judgment": 50 }, "condition": -12, "requires": { "inTeam": true } },
+  "rest":          { "name": "휴식·운동",   "stats": { "mental": 20 }, "condition": 25 },
+  "part_time":     { "name": "아르바이트",  "money": 30, "condition": -10, "requires": { "inTeam": false } },
+  "broadcast":     { "name": "방송",        "fame": 5, "money": 10, "condition": -10, "requires": { "minFame": 20 } }
+}
