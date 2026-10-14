@@ -9,15 +9,15 @@
 
   "hangout":   { "name": "친목 모임", "money": -10, "condition": 22, "fame": 1, "stats": { "mental": 25, "teamwork": 20 } },
   "drink":     {
-    "name": "술자리", "money": -8, "condition": 35, "stats": { "mental": 20 }, "vice": 1,
+    "name": "술자리", "money": -8, "condition": 35, "stats": { "mental": 20 }, "vice": 1, "modes": ["standard", "precise"],
     "outcomes": [{ "chance": 0.25, "viceRisk": true, "label": "과음으로 숙취에 시달렸다", "effects": { "condition": -30, "fame": -2 } }]
   },
   "nightlife": {
-    "name": "유흥", "money": -30, "condition": 20, "stats": { "mental": 35 }, "vice": 1.5,
+    "name": "유흥", "money": -30, "condition": 20, "stats": { "mental": 35 }, "vice": 1.5, "modes": ["standard", "precise"],
     "outcomes": [{ "chance": 0.2, "viceRisk": true, "label": "유흥가에서 찍힌 사진이 퍼졌다", "effects": { "fame": -8, "money": -10, "stats": { "mental": -15 } } }]
   },
   "gamble": {
-    "name": "도박", "money": -20, "vice": 1.5,
+    "name": "도박", "money": -20, "vice": 1.5, "modes": ["standard", "precise"],
     "outcomes": [
       { "chance": 0.3, "label": "운 좋게 크게 땄다", "effects": { "money": 55, "stats": { "mental": 10 } } },
       { "chance": 0.7, "label": "전부 잃고 말았다", "effects": { "condition": -5, "stats": { "mental": -15 } } }

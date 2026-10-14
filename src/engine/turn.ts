@@ -91,7 +91,10 @@ export function checkSlot(state: GameState, slot: Slot): string | null {
   }
   const action = ACTIONS[slot.id]
   if (!action) return '알 수 없는 행동이다'
-  if (action.modes && !action.modes.includes(state.mode)) return `${action.name}은(는) 정밀 모드에서만 할 수 있다`
+  if (action.modes && !action.modes.includes(state.mode)) {
+    // 튜토리얼은 1회차 전용이라, 튜토리얼만 빠진 행동은 "2회차부터"라고 알려 준다
+    return action.modes.includes('standard') ? `${action.name}은(는) 2회차부터 할 수 있다` : `${action.name}은(는) 정밀 모드에서만 할 수 있다`
+  }
   if (state.injuredMonths > 0 && !action.allowWhenInjured) return '부상 중이라 휴식·재활만 할 수 있다'
   const { inTeam, minFame, injured, slump } = action.requires ?? {}
   if (inTeam !== undefined && (state.team !== null) !== inTeam) {

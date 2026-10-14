@@ -81,6 +81,26 @@ describe('스트레스 해소: 돈을 쓰고 회복한다', () => {
   })
 })
 
+describe('위험 행동은 2회차부터 (튜토리얼은 1회차 전용)', () => {
+  it('튜토리얼에서는 술자리·유흥·도박을 고를 수 없다', () => {
+    for (const id of ['drink', 'nightlife', 'gamble'] as const) {
+      expect(checkSlot(make({}, 'tutorial'), { id })).toContain('2회차부터')
+      expect(checkSlot(make({}, 'standard'), { id })).toBeNull()
+      expect(checkSlot(make({}, 'precise'), { id })).toBeNull()
+    }
+  })
+
+  it('튜토리얼에서도 안전한 스트레스 해소(친목)와 기부는 할 수 있다', () => {
+    for (const id of ['hangout', 'donate'] as const) expect(checkSlot(make({}, 'tutorial'), { id })).toBeNull()
+  })
+
+  it('튜토리얼에서는 방탕 게이지가 오르지 않는다', () => {
+    let s = make({ money: 5000, condition: 100 }, 'tutorial')
+    for (let i = 0; i < 6; i++) s = { ...run(s, { id: 'hangout' }, REST).state, turnInSeason: 0 } // 시즌 결산 없이 반복
+    expect(s.vice).toBe(0)
+  })
+})
+
 describe('방탕 게이지(중독)', () => {
   it('술·유흥·도박을 안 하면 시간이 지나며 내려간다', () => {
     const r = run(make({ vice: 2 }), REST, REST)

@@ -19,6 +19,8 @@ export interface EventWhen {
   fame?: Range
   money?: Range
   vice?: Range
+  /** 이 모드에서만 나온다. 없으면 모든 모드. (튜토리얼에서는 위험한 유혹 이벤트를 막는다) */
+  modes?: GameState['mode'][]
   /** true면 팀 소속일 때만, false면 무소속일 때만 */
   team?: boolean
 }
@@ -53,6 +55,7 @@ const inRange = (v: number, r: Range | undefined) => !r || ((r.min === undefined
 export function isEligible(state: GameState, e: GameEvent): boolean {
   const w = e.when
   if (w.stages && !w.stages.includes(state.stage)) return false
+  if (w.modes && !w.modes.includes(state.mode)) return false
   if (w.ageMin !== undefined && state.age < w.ageMin) return false
   if (w.ageMax !== undefined && state.age > w.ageMax) return false
   if (w.team !== undefined && (state.team !== null) !== w.team) return false

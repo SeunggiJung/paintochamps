@@ -191,6 +191,17 @@ describe('기부 이벤트', () => {
   })
 })
 
+describe('유혹 이벤트는 2회차부터', () => {
+  it('튜토리얼에서는 술자리·도박·중독 이벤트가 나오지 않고, 표준·정밀에서는 나온다', () => {
+    const base = { age: 22, money: 100, vice: 4 }
+    for (const id of ['party_invite', 'gambling_tip', 'addiction_warning']) {
+      expect(isEligible({ ...make(500, base), mode: 'tutorial' }, byId(id))).toBe(false)
+      expect(isEligible({ ...make(500, base), mode: 'standard' }, byId(id))).toBe(true)
+      expect(isEligible({ ...make(500, base), mode: 'precise' }, byId(id))).toBe(true)
+    }
+  })
+})
+
 describe('유혹 이벤트', () => {
   it('술자리: 멘탈이 높으면 절제에 성공해 팀워크만 얻고, 낮으면 실수한다', () => {
     const e = byId('party_invite')

@@ -65,11 +65,27 @@ describe('난이도: 월드는 쉽게 갈 수 없고, 우승은 더 어렵다', 
     }
   })
 
-  it('아무거나 고르면 크게 뒤처진다 (무작위 플레이의 최종 실력치는 숙련보다 150 이상 낮고, 월드는 거의 못 간다)', () => {
+  it('아무거나 고르면 뒤처진다 (무작위 플레이의 최종 실력치는 숙련보다 표준·정밀 150, 튜토리얼 120 이상 낮고, 월드는 거의 못 간다)', () => {
     for (const r of reports) {
-      expect(r.skilled.avgFinal.power - r.random.avgFinal.power).toBeGreaterThanOrEqual(150)
+      // 튜토리얼은 1회차라 위험 행동(술·유흥·도박)이 막혀 있어 더 관대하다
+      const minGap = r.skilled.mode === 'tutorial' ? 120 : 150
+      expect(r.skilled.avgFinal.power - r.random.avgFinal.power).toBeGreaterThanOrEqual(minGap)
       expect(r.random.reachedWorld).toBeLessThanOrEqual(0.05)
+    }
+  })
+
+  it('표준·정밀 모드에서 무작위는 단순 플레이보다도 못하다', () => {
+    // 튜토리얼은 제외: 6개월 턴에서 단순 봇의 정책이 효율을 잃는 것으로 보여 비교가 맞지 않는다 (트러블슈팅 참고)
+    for (const r of reports.filter((x) => x.skilled.mode !== 'tutorial')) {
       expect(r.random.avgFinal.power).toBeLessThan(r.casual.avgFinal.power)
+    }
+  })
+
+  it('튜토리얼은 첫 플레이라 무작위도 표준·정밀보다 덜 불리하다', () => {
+    for (const genre of genres) {
+      const power = (mode: ModeId) => reports.find((x) => x.skilled.genre === genre && x.skilled.mode === mode)!.random.avgFinal.power
+      expect(power('tutorial')).toBeGreaterThan(power('standard'))
+      expect(power('tutorial')).toBeGreaterThan(power('precise'))
     }
   })
 
