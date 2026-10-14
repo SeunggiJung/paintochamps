@@ -1,11 +1,43 @@
 {
   "startAge": 16,
   "maxAge": 30,
-  "start": { "condition": 80, "money": 20, "fame": 0 },
+  "start": {
+    "condition": 80,
+    "money": 20,
+    "fame": 0
+  },
   "baseMonths": 3,
   "eventBase": 0.65,
-  "conditionCoef": { "full": 80, "floor": 40, "min": 0.5 },
-  "equipment": { "maxEfficiencyBonus": 0.2, "maxLevel": 3 },
-  "school": { "untilAge": 18, "conditionPerBase": -10, "allowancePerBase": 5 },
-  "ageDecline": { "fromAge": 25, "stats": ["reaction", "accuracy"], "amountPerSeason": 10 }
+  "conditionCoef": {
+    "full": 80,
+    "floor": 40,
+    "min": 0.5
+  },
+  "equipment": {
+    "maxEfficiencyBonus": 0.2,
+    "maxLevel": 3
+  },
+  "school": {
+    "untilAge": 18,
+    "conditionPerBase": -10,
+    "allowancePerBase": 5
+  },
+  "ageDecline": {
+    "fromAge": 25,
+    "stats": [
+      "reaction",
+      "accuracy"
+    ],
+    "amountPerSeason": 10
+  },
+  "match": {
+    "eloScale": 250,
+    "mentalBase": 500,
+    "mentalFactor": 0.1
+  },
+  "relegationRatio": 0.2,
+  "rival": {
+    "fameWin": 3,
+    "powerNoise": 30
+  }
 }

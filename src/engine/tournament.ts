@@ -1,0 +1,75 @@
+import { playSeries } from './match.ts'
+import type { Rng } from './rng.ts'
+
+export interface Team {
+  id: string
+  name: string
+  /** 이 대회에서 쓰는 실력치 R (플레이어 팀은 멘탈 보정까지 반영해서 넘긴다) */
+  power: number
+  isPlayer?: boolean
+}
+
+export interface Standing {
+  team: Team
+  wins: number
+  losses: number
+}
+
+/** 리그전: 모든 팀이 서로 rounds번씩 시리즈를 치르고, 승수 순으로 정렬한다 (동률은 무작위). */
+export function runLeague(rng: Rng, teams: readonly Team[], rounds: number, bestOf: number): Standing[] {
+  const table = new Map<string, Standing>(teams.map((team) => [team.id, { team, wins: 0, losses: 0 }]))
+  for (let a = 0; a < teams.length; a++) {
+    for (let b = a + 1; b < teams.length; b++) {
+      for (let r = 0; r < rounds; r++) {
+        const aWins = playSeries(rng, teams[a].power, teams[b].power, bestOf)
+        const [winner, loser] = aWins ? [teams[a], teams[b]] : [teams[b], teams[a]]
+        table.get(winner.id)!.wins++
+        table.get(loser.id)!.losses++
+      }
+    }
+  }
+  const tiebreak = new Map(teams.map((t) => [t.id, rng()]))
+  return [...table.values()].sort((x, y) => y.wins - x.wins || tiebreak.get(y.team.id)! - tiebreak.get(x.team.id)!)
+}
+
+/**
+ * k패 탈락 토너먼트 (k=1 단판, k=2 더블, k=3 트리플 엘리미네이션).
+ * 매 라운드 같은 패수끼리 시드 순(1위 대 꼴찌)으로 붙이고, 남는 팀은 다른 그룹 남는 팀과 붙인다.
+ * teams는 시드 순이고, 반환값은 최종 순위(0번이 우승)다.
+ */
+export function runElimination(rng: Rng, teams: readonly Team[], k: number, bestOf: number): Team[] {
+  const seed = new Map(teams.map((t, i) => [t.id, i]))
+  const losses = new Map(teams.map((t) => [t.id, 0]))
+  let alive = [...teams]
+  const eliminated: Team[][] = []
+
+  while (alive.length > 1) {
+    const byLosses = new Map<number, Team[]>()
+    for (const t of alive) byLosses.set(losses.get(t.id)!, [...(byLosses.get(losses.get(t.id)!) ?? []), t])
+
+    const pairs: [Team, Team][] = []
+    const carry: Team[] = []
+    for (const lossCount of [...byLosses.keys()].sort((a, b) => a - b)) {
+      const group = byLosses.get(lossCount)!.sort((a, b) => seed.get(a.id)! - seed.get(b.id)!)
+      if (group.length % 2 === 1) carry.push(group.shift()!)
+      while (group.length > 0) pairs.push([group.shift()!, group.pop()!])
+    }
+    while (carry.length >= 2) pairs.push([carry.shift()!, carry.shift()!])
+
+    const out: Team[] = []
+    for (const [a, b] of pairs) {
+      const aWins = playSeries(rng, a.power, b.power, bestOf)
+      const loser = aWins ? b : a
+      losses.set(loser.id, losses.get(loser.id)! + 1)
+      if (losses.get(loser.id)! >= k) out.push(loser)
+    }
+    if (out.length > 0) {
+      eliminated.push(out.sort((x, y) => seed.get(x.id)! - seed.get(y.id)!))
+      const gone = new Set(out.map((t) => t.id))
+      alive = alive.filter((t) => !gone.has(t.id))
+    }
+  }
+
+  // 나중에 탈락한 팀이 더 높은 순위. 같은 라운드 탈락끼리는 시드가 높은 쪽이 위.
+  return [...alive, ...eliminated.reverse().flat()]
+}
