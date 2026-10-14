@@ -91,3 +91,16 @@ input[type='text'] {
 @media (prefers-reduced-motion: reduce) {
   .bar-fill, .stat-row, .trait, .grade { transition: none; }
 }
+
+/* 폭죽 캔버스와 등급 공개 효과 */
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+.gacha-card { transition: box-shadow 0.4s, border-color 0.4s; }
+.gacha-card.glow-SR  { border-color: var(--grade-SR);  box-shadow: 0 0 18px #4fa3ff66; }
+.gacha-card.glow-SSR { border-color: var(--grade-SSR); box-shadow: 0 0 26px #b980ffaa; }
+.gacha-card.glow-UR  { border-color: var(--grade-UR);  box-shadow: 0 0 36px #ffb740cc; animation: pop 0.5s ease-out; }
+.grade:not(.hidden) .grade-letter { animation: stamp 0.45s cubic-bezier(0.2, 1.6, 0.4, 1); }
+@keyframes stamp { from { transform: scale(2.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .gacha-card, .grade-letter { animation: none !important; transition: none; }
+}

@@ -7,9 +7,12 @@ import type { Ctx } from './app.ts'
 import type { NewGameDraft } from './create.ts'
 import { h } from './dom.ts'
 import { GRADE_COMMENT, GRADE_LABEL, MODE_INFO, STAT_LABEL } from './labels.ts'
+import { celebrate } from './confetti.ts'
 import { REROLL_LIMIT, rollAt } from './newGame.ts'
 
-const STEP_MS = 380
+const STEP_MS = 130
+/** 등급 공개 직전 뜸 들이는 시간 */
+const SUSPENSE_MS = 350
 /** 한 능력치가 가질 수 있는 최댓값 (나머지가 모두 최솟값일 때) */
 const BAR_MAX = gacha.statTotal - gacha.statMin * (STAT_KEYS.length - 1)
 /** 장르 가중치가 이 값 이상인 능력치를 핵심 능력치로 표시한다 */
@@ -31,6 +34,7 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
 
   const show = (result: GachaResult, animate: boolean) => {
     clearTimers()
+    stage.classList.remove('glow', 'glow-N', 'glow-R', 'glow-SR', 'glow-SSR', 'glow-UR')
     const rows = STAT_KEYS.map((k) => {
       const fill = h('div', { class: 'bar-fill' })
       const value = h('span', { class: 'stat-value' }, animate ? '' : String(result.stats[k]))
@@ -59,11 +63,21 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
     )
     stage.replaceChildren(...rows.map((r) => r.row), traitLine, grade)
 
+    // 등급 공개: 카드 테두리가 등급색으로 빛나고 폭죽이 터진다. 건너뛰기와 겹쳐도 한 번만.
+    let gradeShown = false
+    const revealGrade = () => {
+      if (gradeShown) return
+      gradeShown = true
+      grade.classList.remove('hidden')
+      stage.classList.add('glow', `glow-${result.grade}`)
+      celebrate(result.grade)
+    }
+
     const finish = () => {
       clearTimers()
       rows.forEach((r) => r.reveal())
       traitLine.classList.remove('hidden')
-      grade.classList.remove('hidden')
+      revealGrade()
       setBusy(false)
     }
 
@@ -78,9 +92,9 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
     timers.push(window.setTimeout(() => traitLine.classList.remove('hidden'), (rows.length + 1) * STEP_MS))
     timers.push(
       window.setTimeout(() => {
-        grade.classList.remove('hidden')
+        revealGrade()
         setBusy(false)
-      }, (rows.length + 2) * STEP_MS + 200),
+      }, (rows.length + 2) * STEP_MS + SUSPENSE_MS),
     )
     stage.onclick = finish
   }
