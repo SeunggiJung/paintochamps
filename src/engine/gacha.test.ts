@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import gacha from '../data/gacha.json'
-import { gradeOf, rollGacha, rollStats } from './gacha.ts'
+import { gradeOdds, gradeOf, rollGacha, rollStats } from './gacha.ts'
 import { genrePower } from './power.ts'
 import { createRng } from './rng.ts'
 import { STAT_KEYS, type GenreId, type Grade } from './types.ts'
@@ -66,4 +66,31 @@ describe('등급 분포 (기획서: UR 1% / SSR 4% / SR 15% / R 30% / N 50%)', (
       expect(Math.abs(pct('N') - 50)).toBeLessThan(3)
     })
   }
+})
+
+describe('gradeOdds', () => {
+  const genres: GenreId[] = ['fps', 'aos', 'rts', 'fighting']
+  for (const genre of genres) {
+    it(`${genre}: 확률 합이 1이고 높은 등급일수록 드물다`, () => {
+      const odds = gradeOdds(genre)
+      const total = (Object.keys(odds) as Grade[]).reduce((s, g) => s + odds[g], 0)
+      expect(total).toBeCloseTo(1, 6)
+      expect(odds.UR).toBeLessThan(odds.SSR)
+      expect(odds.SSR).toBeLessThan(odds.SR)
+      expect(odds.SR).toBeLessThan(odds.R)
+      expect(odds.UR).toBeGreaterThan(0)
+    })
+  }
+
+  it('실제 뽑기 분포와 일치한다', () => {
+    const odds = gradeOdds('fps')
+    const rng = createRng(777)
+    const n = 20000
+    const hits: Record<string, number> = {}
+    for (let i = 0; i < n; i++) {
+      const g = rollGacha(rng, 'fps').grade
+      hits[g] = (hits[g] ?? 0) + 1
+    }
+    for (const g of Object.keys(odds) as Grade[]) expect(Math.abs((hits[g] ?? 0) / n - odds[g])).toBeLessThan(0.015)
+  })
 })

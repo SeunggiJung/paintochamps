@@ -1,7 +1,8 @@
 import gacha from '../data/gacha.json'
 import genres from '../data/genres.json'
+import { gradeOdds } from '../engine/gacha.ts'
 import { createInitialState } from '../engine/state.ts'
-import { STAT_KEYS, type GachaResult } from '../engine/types.ts'
+import { STAT_KEYS, type GachaResult, type Grade } from '../engine/types.ts'
 import { saveGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import type { NewGameDraft } from './create.ts'
@@ -30,6 +31,27 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   const clearTimers = () => {
     timers.forEach(clearTimeout)
     timers = []
+  }
+
+  /** 등급별 설명과 확률. 누르면 펼쳐지고, 지금 뽑은 등급에 표시가 붙는다. */
+  const oddsList = (current: Grade) => {
+    const odds = gradeOdds(draft.genre)
+    const rows = gacha.grades.map((g, i) => {
+      const above = gacha.grades[i - 1]
+      const range = above ? (g.minPower > 0 ? `${g.minPower} 이상 ${above.minPower} 미만` : `${above.minPower} 미만`) : `${g.minPower} 이상`
+      const id = g.grade as Grade
+      const p = odds[id] * 100
+      return h(
+        'li',
+        { class: `odds-row grade-${id}${id === current ? ' current' : ''}` },
+        h('span', { class: 'odds-letter' }, GRADE_LABEL[id]),
+        h('span', { class: 'odds-desc' }, GRADE_COMMENT[id], h('span', { class: 'muted small' }, `실력치 ${range}`)),
+        h('b', { class: 'odds-pct' }, p < 0.1 ? '<0.1%' : `${p.toFixed(1)}%`, id === current && h('span', { class: 'tag' }, '내 등급')),
+      )
+    })
+    const details = h('details', { class: 'odds' }, h('summary', {}, '등급별 확률 보기'), h('ul', { class: 'plain' }, ...rows), h('p', { class: 'muted small' }, `${genre.name} 기준, 표본 추정치 (±0.1%p)`))
+    details.addEventListener('click', (e) => e.stopPropagation()) // 건너뛰기 눌림으로 번지지 않게
+    return details
   }
 
   const show = (result: GachaResult, animate: boolean) => {
@@ -61,7 +83,9 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
       h('span', { class: 'grade-letter' }, GRADE_LABEL[result.grade]),
       h('span', { class: 'muted' }, `${genre.name} 실력치 ${Math.round(result.power)} · ${GRADE_COMMENT[result.grade]}`),
     )
-    stage.replaceChildren(...rows.map((r) => r.row), traitLine, grade)
+    const odds = oddsList(result.grade)
+    if (animate) odds.classList.add('hidden')
+    stage.replaceChildren(...rows.map((r) => r.row), traitLine, grade, odds)
 
     // 등급 공개: 카드 테두리가 등급색으로 빛나고 폭죽이 터진다. 건너뛰기와 겹쳐도 한 번만.
     let gradeShown = false
@@ -69,6 +93,7 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
       if (gradeShown) return
       gradeShown = true
       grade.classList.remove('hidden')
+      odds.classList.remove('hidden')
       stage.classList.add('glow', `glow-${result.grade}`)
       celebrate(result.grade)
     }
