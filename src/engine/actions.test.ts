@@ -121,10 +121,10 @@ describe('방탕 게이지(중독)', () => {
   })
 
   it('한계(4)를 넘으면 중독 패널티가 붙는다', () => {
-    const s = make({ vice: 5, condition: 70 })
+    const s = make({ vice: 5, condition: 20 })
     const r = run(s, REST, REST)
     expect(r.notes.some((n) => n.includes('중독'))).toBe(true)
-    const clean = run(make({ vice: 0, condition: 70 }), REST, REST)
+    const clean = run(make({ vice: 0, condition: 20 }), REST, REST)
     expect(r.state.condition).toBeLessThan(clean.state.condition)
     expect(r.state.stats.mental).toBeLessThan(clean.state.stats.mental)
   })

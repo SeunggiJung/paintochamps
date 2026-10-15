@@ -20,6 +20,8 @@ import { ACTION_GROUPS, MODE_INFO, STAT_LABEL } from './labels.ts'
 import { actionCost, actionRisks, actionTags, describeChange, previewTurn } from './preview.ts'
 import { openSheet } from './sheet.ts'
 import { playTimeline, scheduleBar } from './calendarUi.ts'
+import { conditionHelp, conditionText } from './conditionHelp.ts'
+import { conditionTier } from '../engine/growth.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
 import { teamIcon } from './teamIcon.ts'
@@ -156,6 +158,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     }
     const max = turnsPerSeason(state.mode)
     const power = Math.round(genrePower(state.stats, state.genre))
+    const tier = conditionTier(state.condition)
     const preview = picked.length === 2 ? previewTurn(state, [picked[0], picked[1]]) : null
 
     const slotChip = (i: number) =>
@@ -197,7 +200,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         h(
           'div',
           { class: 'meters' },
-          h('div', {}, h('span', { class: 'muted small' }, '컨디션'), h('div', { class: 'bar' }, h('div', { class: `bar-fill${state.condition < 40 ? ' low' : ''}`, style: `width:${state.condition}%` })), h('b', {}, String(Math.round(state.condition)))),
+          h('div', {}, h('span', { class: 'muted small cond-label' }, '컨디션', conditionHelp(state)), h('div', { class: 'bar' }, h('div', { class: `bar-fill${tier.max <= 30 ? ' low' : tier.label === '완벽' ? ' perfect' : ''}`, style: `width:${state.condition}%` })), h('b', {}, conditionText(state))),
           h('div', { class: 'kv' }, h('span', { class: 'muted small' }, '돈'), h('b', {}, `${Math.round(state.money)}만`)),
           h('div', { class: 'kv' }, h('span', { class: 'muted small' }, '명성'), h('b', {}, String(Math.round(state.fame)))),
         ),
@@ -219,7 +222,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
           ),
         ),
       ),
-      h('section', { class: 'card' }, h('h3', {}, `이번 ${modes[state.mode].turnMonths}개월, 행동 2개를 고르세요`), h('div', { class: 'slots' }, slotChip(0), slotChip(1))),
+      h('section', { class: 'card' }, h('h3', {}, `이번 ${modes[state.mode].turnMonths}개월, 행동 2개를 고르세요`), h('div', { class: 'slots' }, slotChip(0), slotChip(1)), h('p', { class: `muted small cond-hint tier-${tier.label}` }, `컨디션 ${tier.label}: ${tier.desc} (×${tier.coef})`)),
       state.injuredMonths > 0 && h('p', { class: 'notice' }, '부상 중이라 휴식·재활만 할 수 있다.'),
       ...groups.map((g) => h('section', {}, h('h3', {}, g.title), g.title === '훈련' && h('p', { class: 'muted small' }, '훈련은 매 턴 무작위로 후보가 바뀝니다. 한 번에 능력치 3개가 오릅니다.'), h('div', { class: 'actions' }, ...g.items.map((id) => actionButton({ id: id as ActionId } as Slot, ACTIONS[id as ActionId].name))))),
       h('section', {}, h('h3', {}, '장비'), h('p', { class: 'muted small' }, '행동을 쓰지 않고 한 턴에 하나까지 살 수 있습니다.'), h('div', { class: 'actions' }, ...equipRows)),

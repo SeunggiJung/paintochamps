@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import modes from '../data/modes.json'
 import rules from '../data/rules.json'
-import { conditionCoef, equipmentEfficiency, growthDelta } from './growth.ts'
+import { conditionCoef, conditionTier, equipmentEfficiency, growthDelta } from './growth.ts'
 import { settleSeason } from './season.ts'
 import { createInitialState, type GameState, type ModeId } from './state.ts'
 import { applyTurn, buyEquipment, eventChance, isCareerOver, startNextSeason, turnScale, type TurnChoice } from './turn.ts'
@@ -31,16 +31,27 @@ function run(state: GameState, choice: TurnChoice) {
 
 describe('성장 공식', () => {
   it('기획서 예시: 정확도 400, b=80, e=1.0, c=1.0, t=1.2 → 80 × 성장 속도 × 1.2 × 0.6^감쇠 지수', () => {
-    const d = growthDelta({ base: 80, scale: 1, efficiency: 1, condition: 100, traitMultiplier: 1.2, current: 400 })
+    const d = growthDelta({ base: 80, scale: 1, efficiency: 1, condition: 70, traitMultiplier: 1.2, current: 400 })
     expect(d).toBeCloseTo(80 * rules.growthRate * 1.2 * 0.6 ** rules.growthExponent)
   })
 
-  it('컨디션 계수: 80 이상 1.0, 40 이하 0.5, 사이는 직선', () => {
-    expect(conditionCoef(100)).toBe(1)
-    expect(conditionCoef(80)).toBe(1)
-    expect(conditionCoef(60)).toBeCloseTo(0.75)
-    expect(conditionCoef(40)).toBe(0.5)
-    expect(conditionCoef(0)).toBe(0.5)
+  it('컨디션 단계: 0~30 부진, 31~60 평범, 61~80 좋음, 81~100 완벽', () => {
+    expect([0, 30].map((c) => conditionTier(c).label)).toEqual(['부진', '부진'])
+    expect([31, 60].map((c) => conditionTier(c).label)).toEqual(['평범', '평범'])
+    expect([61, 80].map((c) => conditionTier(c).label)).toEqual(['좋음', '좋음'])
+    expect([81, 100].map((c) => conditionTier(c).label)).toEqual(['완벽', '완벽'])
+    // 단계가 오를수록 훈련 성과가 좋아진다
+    expect(conditionCoef(20)).toBeLessThan(conditionCoef(50))
+    expect(conditionCoef(50)).toBeLessThan(conditionCoef(70))
+    expect(conditionCoef(70)).toBeLessThan(conditionCoef(90))
+    expect(conditionCoef(70)).toBe(1)
+  })
+
+  it('턴마다 컨디션이 조금씩 저절로 회복되고(턴 길이에 비례), 0~100을 넘지 않는다', () => {
+    const rested = run(make({ age: 20, condition: 40 }), [{ id: 'part_time' }, { id: 'part_time' }])
+    const noRecoveryExpected = 40 - 20 // 아르바이트 두 번의 컨디션 비용
+    expect(rested.state.condition).toBeCloseTo(noRecoveryExpected + rules.conditionRecoveryPerBase)
+    expect(run(make({ age: 20, condition: 99 }), [{ id: 'rest' }, { id: 'rest' }]).state.condition).toBe(100)
   })
 
   it('장비를 모두 최고 단계로 올리면 효율 1.2', () => {
@@ -117,7 +128,7 @@ describe('행동', () => {
     expect(tired.delta.stats.judgment).toBeLessThan(fresh.delta.stats.judgment)
     expect(fresh.state.condition).toBeLessThanOrEqual(100)
     const crash = run(make({ age: 20, condition: 5 }), [{ id: 'rank_practice' }, { id: 'rank_practice' }])
-    expect(crash.state.condition).toBe(0)
+    expect(crash.state.condition).toBeCloseTo(rules.conditionRecoveryPerBase) // 바닥까지 떨어진 뒤 턴 회복분만 남는다
   })
 
   it('두 번째 행동은 첫 번째 행동으로 줄어든 컨디션 기준으로 계산한다', () => {
@@ -183,8 +194,8 @@ describe('조건과 비용', () => {
 describe('학교와 부모님 (16~18세)', () => {
   it('18세까지는 컨디션 -10, 용돈 +5만 원이 붙고 19세부터는 사라진다', () => {
     const choice: TurnChoice = [{ id: 'rest' }, { id: 'rest' }]
-    const hs = run(make({ age: 18, condition: 50 }), choice)
-    const adult = run(make({ age: 19, condition: 50 }), choice)
+    const hs = run(make({ age: 18, condition: 20 }), choice)
+    const adult = run(make({ age: 19, condition: 20 }), choice)
     expect(hs.delta.money).toBeCloseTo(5)
     expect(adult.delta.money).toBe(0)
     expect(adult.delta.condition - hs.delta.condition).toBeCloseTo(10)

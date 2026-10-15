@@ -233,3 +233,20 @@ input[type='text'] {
 .schedule-row.done .sstate { color: var(--text); }
 .schedule-row.done.top .sstate { color: var(--grade-UR); font-weight: 700; }
 .schedule-row.skipped { opacity: 0.5; }
+
+/* 컨디션 도움말 */
+.cond-label { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+.help { position: relative; display: inline-block; }
+.help-btn { width: 16px; height: 16px; padding: 0; border-radius: 50%; border: 1px solid var(--muted); background: transparent; color: var(--muted); font-size: 0.7rem; line-height: 1; cursor: help; }
+.help-btn:hover, .help-btn:focus-visible { color: var(--text); border-color: var(--text); outline: none; }
+.help-pop { display: none; position: absolute; left: -8px; top: 22px; z-index: 15; width: 280px; max-width: calc(100vw - 48px); padding: 10px 12px; background: #232a47; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 20px #0008; color: var(--text); font-size: 0.85rem; text-align: left; }
+.help:hover .help-pop, .help:focus-within .help-pop, .help.open .help-pop { display: block; }
+.help-pop p { margin: 6px 0 0; color: var(--text); }
+.help-pop .risk { color: #ffb3bd; }
+.tiers { margin: 6px 0; gap: 2px; }
+.tier { display: grid; grid-template-columns: 4.2em 2.6em 1fr; gap: 6px; padding: 3px 6px; border-radius: 6px; }
+.tier.current { background: #36407a; font-weight: 700; }
+.tier-range { color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar-fill.perfect { background: var(--grade-UR); }
+.cond-hint.tier-부진 { color: var(--danger); }
+.cond-hint.tier-완벽 { color: var(--grade-UR); }

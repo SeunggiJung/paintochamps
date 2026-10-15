@@ -2,12 +2,26 @@ import gacha from '../data/gacha.json'
 import rules from '../data/rules.json'
 import type { EquipmentId } from './state.ts'
 
-/** 컨디션 계수 c: 80 이상 1.0, 40 이하 0.5, 그 사이는 직선으로 잇는다. */
+export interface ConditionTier {
+  /** 이 단계의 컨디션 하한·상한 (정수 기준) */
+  min: number
+  max: number
+  coef: number
+  label: string
+  desc: string
+}
+
+/** 컨디션 단계: 0~30 부진, 31~60 평범, 61~80 좋음, 81~100 완벽 (rules.conditionTiers). 단계마다 훈련 성과 계수가 다르다. */
+export const CONDITION_TIERS: ConditionTier[] = rules.conditionTiers.map((t, i, all) => ({ ...t, min: i === 0 ? 0 : all[i - 1].max + 1 }))
+
+export function conditionTier(condition: number): ConditionTier {
+  const c = Math.round(condition)
+  return CONDITION_TIERS.find((t) => c <= t.max) ?? CONDITION_TIERS[CONDITION_TIERS.length - 1]
+}
+
+/** 컨디션 계수 c: 컨디션 단계에 따른 훈련 성과 배율 */
 export function conditionCoef(condition: number): number {
-  const { full, floor, min } = rules.conditionCoef
-  if (condition >= full) return 1
-  if (condition <= floor) return min
-  return min + ((1 - min) * (condition - floor)) / (full - floor)
+  return conditionTier(condition).coef
 }
 
 /** 장비 효율 e: 12단계(4종 × 3단계)를 모두 채우면 1.2 */

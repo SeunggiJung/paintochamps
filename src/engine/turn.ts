@@ -244,6 +244,9 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
   // 팀에 소속되어 있으면 월급이 꾸준히 들어온다 (3개월 기준 금액에 턴 길이 배율)
   if (next.team) next = { ...next, money: next.money + salaryOf(next) * scale }
 
+  // 턴이 지나면 컨디션이 조금씩 저절로 회복된다 (3개월 기준 금액에 턴 길이 배율)
+  next = { ...next, condition: clamp(next.condition + rules.conditionRecoveryPerBase * scale, 0, 100) }
+
   const months = modes[next.mode].turnMonths
   next = {
     ...next,
