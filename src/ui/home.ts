@@ -5,8 +5,9 @@ import modes from '../data/modes.json'
 import rules from '../data/rules.json'
 import { rollEvent, turnRng } from '../engine/events.ts'
 import { genrePower } from '../engine/power.ts'
-import { eventsFor, stageName } from '../engine/season.ts'
+import { acceptOffer, eventsFor, rollMidSeasonOffer, stageName } from '../engine/season.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
+import { trainingMenuOf } from '../engine/training.ts'
 import { ACTIONS, applyTurn, buyEquipment, checkEquipment, checkSlot, turnsPerSeason, type Slot } from '../engine/turn.ts'
 import { STAT_KEYS } from '../engine/types.ts'
 import { saveGame } from '../save/storage.ts'
@@ -24,6 +25,7 @@ const BAR_MAX = gacha.statMax
 /** 이 행동을 목록에 보여 줄지. 모드·팀·부상 같은 구조적 이유로 못 하는 행동은 아예 숨기고, 돈·명성 부족은 이유와 함께 비활성으로 보여 준다. */
 function listed(state: GameState, id: ActionId): boolean {
   const a = ACTIONS[id]
+  if (a.pool && !trainingMenuOf(state).includes(id)) return false
   if (a.modes && !a.modes.includes(state.mode)) return false
   const { inTeam, injured, slump } = a.requires ?? {}
   if (inTeam !== undefined && (state.team !== null) !== inTeam) return false
@@ -80,6 +82,27 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     return chips.map((c) => h('span', { class: 'chip warn' }, c))
   }
 
+  /** 시즌 도중 다른 팀에서 온 이적 제안. 하나를 골라 옮기거나 남는다. */
+  const askMidSeasonOffer = async (s: GameState): Promise<GameState> => {
+    const pending = s.pendingOffers
+    if (!pending) return s
+    const index = await openSheet<number | null>((close) =>
+      h(
+        'div',
+        { class: 'stack-tight' },
+        h('p', { class: 'eyebrow' }, '이적 제안'),
+        h('p', { class: 'event-text' }, `시즌 도중에 다른 팀에서 연락이 왔다. 지금 ${s.team?.name ?? '팀'}을(를) 떠날까?`),
+        h(
+          'div',
+          { class: 'choices vertical' },
+          ...pending.offers.map((o, i) => h('button', { class: 'choice', onclick: () => close(i) }, h('b', {}, `${o.team.name}으로 이적`), h('span', { class: 'muted small' }, o.perk === 'salary' ? '연봉 보너스 (돈)' : '출전 기회 (명성)'))),
+        ),
+        h('button', { class: 'btn ghost small', onclick: () => close(null) }, '지금 팀에 남는다'),
+      ),
+    )
+    return acceptOffer(s, index)
+  }
+
   const playTurn = async () => {
     if (picked.length !== 2 || busy) return
     const r = applyTurn(state, [picked[0], picked[1]])
@@ -104,6 +127,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     )
     const event = rollEvent(next, turnRng(next))
     if (event) next = await runEvent(next, event)
+    next = await askMidSeasonOffer(rollMidSeasonOffer(next))
     state = next
     picked = []
     busy = false
@@ -176,7 +200,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       ),
       h('section', { class: 'card' }, h('h3', {}, `이번 ${modes[state.mode].turnMonths}개월, 행동 2개를 고르세요`), h('div', { class: 'slots' }, slotChip(0), slotChip(1))),
       state.injuredMonths > 0 && h('p', { class: 'notice' }, '부상 중이라 휴식·재활만 할 수 있다.'),
-      ...groups.map((g) => h('section', {}, h('h3', {}, g.title), h('div', { class: 'actions' }, ...g.items.map((id) => actionButton({ id: id as ActionId } as Slot, ACTIONS[id as ActionId].name))))),
+      ...groups.map((g) => h('section', {}, h('h3', {}, g.title), g.title === '훈련' && h('p', { class: 'muted small' }, '훈련은 매 턴 무작위로 후보가 바뀝니다. 한 번에 능력치 3개가 오릅니다.'), h('div', { class: 'actions' }, ...g.items.map((id) => actionButton({ id: id as ActionId } as Slot, ACTIONS[id as ActionId].name))))),
       h('section', {}, h('h3', {}, '장비'), h('p', { class: 'muted small' }, '행동을 쓰지 않고 한 턴에 하나까지 살 수 있습니다.'), h('div', { class: 'actions' }, ...equipRows)),
       h(
         'div',

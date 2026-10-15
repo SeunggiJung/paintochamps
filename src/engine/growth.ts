@@ -29,7 +29,7 @@ export interface GrowthInput {
   current: number
 }
 
-/** 훈련 한 번의 능력치 상승폭 Δs = b × e × c × t × (1 − s/1000) (턴 길이 배율을 곱한다) */
+/** 훈련 한 번의 능력치 상승폭 Δs = b × 성장 속도(rules.growthRate) × e × c × t × (1 − s/1000)^growthExponent (턴 길이 배율을 곱한다) */
 export function growthDelta(i: GrowthInput): number {
-  return i.base * i.scale * i.efficiency * conditionCoef(i.condition) * i.traitMultiplier * (1 - i.current / gacha.statMax)
+  return i.base * rules.growthRate * i.scale * i.efficiency * conditionCoef(i.condition) * i.traitMultiplier * (1 - i.current / gacha.statMax) ** rules.growthExponent
 }

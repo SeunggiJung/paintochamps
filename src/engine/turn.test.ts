@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import modes from '../data/modes.json'
+import rules from '../data/rules.json'
 import { conditionCoef, equipmentEfficiency, growthDelta } from './growth.ts'
 import { settleSeason } from './season.ts'
 import { createInitialState, type GameState, type ModeId } from './state.ts'
 import { applyTurn, buyEquipment, eventChance, isCareerOver, startNextSeason, turnScale, type TurnChoice } from './turn.ts'
+import { TRAINING_POOL } from './training.ts'
 import type { GenreId, Stats } from './types.ts'
 
 const TEAM = { id: 'org_0', name: '나이트호크' }
@@ -16,7 +19,8 @@ function make(overrides: Partial<GameState> = {}, genre: GenreId = 'fps', mode: 
     seed: 1,
     gacha: { stats: FLAT, trait: { id: 'quick_hands', name: '손이 빠름', stat: 'reaction' }, grade: 'R', power: 100 },
   })
-  return { ...base, ...overrides }
+  // 훈련 후보는 매 턴 무작위로 뽑히지만, 테스트에서는 모든 훈련을 고를 수 있게 둔다
+  return { ...base, trainingMenu: TRAINING_POOL, ...overrides }
 }
 
 function run(state: GameState, choice: TurnChoice) {
@@ -26,9 +30,9 @@ function run(state: GameState, choice: TurnChoice) {
 }
 
 describe('성장 공식', () => {
-  it('기획서 예시: 정확도 400, b=80, e=1.0, c=1.0, t=1.2 → 57.6', () => {
+  it('기획서 예시: 정확도 400, b=80, e=1.0, c=1.0, t=1.2 → 80 × 성장 속도 × 1.2 × 0.6^감쇠 지수', () => {
     const d = growthDelta({ base: 80, scale: 1, efficiency: 1, condition: 100, traitMultiplier: 1.2, current: 400 })
-    expect(d).toBeCloseTo(57.6)
+    expect(d).toBeCloseTo(80 * rules.growthRate * 1.2 * 0.6 ** rules.growthExponent)
   })
 
   it('컨디션 계수: 80 이상 1.0, 40 이하 0.5, 사이는 직선', () => {
@@ -62,13 +66,13 @@ describe('턴 길이', () => {
     const choice: TurnChoice = [{ id: 'video_review' }, { id: 'rest' }]
     const std = run(make({ age: 20 }, 'fps', 'standard'), choice)
     const tut = run(make({ age: 20 }, 'fps', 'tutorial'), choice)
-    // 영상 분석은 판단력 +100: 컨디션 계수가 둘 다 1.0이므로 정확히 2배
-    expect(tut.delta.stats.judgment).toBeCloseTo(std.delta.stats.judgment * 2)
+    // 컨디션 계수가 둘 다 1.0이므로 정확히 2배 (튜토리얼은 입문용 성장 보너스가 붙는다)
+    expect(tut.delta.stats.judgment).toBeCloseTo(std.delta.stats.judgment * 2 * modes.tutorial.growthBonus)
   })
 })
 
 describe('행동', () => {
-  it('랭크전 연습은 장르 가중치 상위 2개 능력치를 올린다 (FPS: 정확도·반응속도)', () => {
+  it('랭크전 연습은 장르 가중치 상위 3개 능력치를 올린다 (FPS: 정확도·반응속도 등)', () => {
     const r = run(make({ age: 20 }), [{ id: 'rank_practice' }, { id: 'rest' }])
     expect(r.delta.stats.accuracy).toBeGreaterThan(0)
     expect(r.delta.stats.reaction).toBeGreaterThan(0)
@@ -81,8 +85,24 @@ describe('행동', () => {
 
   it('시작 특성은 해당 능력치만 1.2배로 키운다', () => {
     const r = run(make({ age: 20 }), [{ id: 'basics' }, { id: 'rest' }])
-    // basics: 반응속도(특성 대상) +80, 정확도 +80. 같은 s=100이므로 비율이 정확히 1.2
-    expect(r.delta.stats.reaction / r.delta.stats.accuracy).toBeCloseTo(1.2)
+    // basics: 반응속도(특성 대상) 70, 정확도 50. 같은 s=100이므로 비율은 (70 × 1.2) ÷ 50
+    expect(r.delta.stats.reaction / r.delta.stats.accuracy).toBeCloseTo((70 * 1.2) / 50)
+  })
+
+  it('훈련은 능력치를 세 개 올린다', () => {
+    const r = run(make({ age: 20 }), [{ id: 'video_review' }, { id: 'rest' }])
+    const raised = Object.entries(r.delta.stats).filter(([k, v]) => v > 0 && k !== 'mental')
+    expect(raised.length + (r.delta.stats.mental > 0 ? 1 : 0)).toBe(3)
+  })
+
+  it('훈련 후보에 없는 훈련은 고를 수 없고, 턴이 끝나면 후보가 새로 뽑힌다', () => {
+    const s = make({ age: 20, trainingMenu: ['basics', 'video_review', 'aim_lab', 'concentration'] })
+    expect(applyTurn(s, [{ id: 'sparring' }, { id: 'rest' }]).ok).toBe(false)
+    const next = run(s, [{ id: 'basics' }, { id: 'rest' }]).state
+    expect(next.trainingMenu).toHaveLength(rules.trainingMenuSize)
+    expect(next.trainingMenu).not.toEqual(s.trainingMenu)
+    // 같은 시드·같은 턴이면 같은 후보
+    expect(run(s, [{ id: 'basics' }, { id: 'rest' }]).state.trainingMenu).toEqual(next.trainingMenu)
   })
 
   it('능력치가 높을수록 덜 오른다', () => {

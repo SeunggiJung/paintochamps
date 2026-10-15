@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createRng } from './rng.ts'
 import { createInitialState, type GameState, type ModeId } from './state.ts'
 import { applyTurn, checkSlot, type Slot, type TurnChoice } from './turn.ts'
+import { TRAINING_POOL } from './training.ts'
 import type { GenreId, Stats } from './types.ts'
 
 const FLAT: Stats = { reaction: 300, accuracy: 300, focus: 300, judgment: 300, mental: 300, teamwork: 300 }
@@ -14,7 +15,7 @@ function make(o: Partial<GameState> = {}, mode: ModeId = 'standard', genre: Genr
     seed: 3,
     gacha: { stats: FLAT, trait: { id: 'quick_hands', name: '손이 빠름', stat: 'reaction' }, grade: 'R', power: 300 },
   })
-  return { ...base, age: 21, condition: 60, money: 500, ...o }
+  return { ...base, trainingMenu: TRAINING_POOL, age: 21, condition: 60, money: 500, ...o }
 }
 
 const REST: Slot = { id: 'rest' }

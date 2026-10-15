@@ -8,6 +8,7 @@ import { applyEffects, type Effects } from './effects.ts'
 import { equipmentEfficiency, growthDelta } from './growth.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { ActionId, EquipmentId, GameState } from './state.ts'
+import { drawTrainingMenu, trainingMenuOf } from './training.ts'
 import { STAT_KEYS, type StatKey, type Stats } from './types.ts'
 
 interface Outcome {
@@ -35,6 +36,8 @@ interface ActionDef {
   outcomes?: Outcome[]
   requires?: { inTeam?: boolean; minFame?: number; injured?: boolean; slump?: boolean }
   allowWhenInjured?: boolean
+  /** true면 매 턴 무작위로 뽑힌 후보(trainingMenu)에 있을 때만 고를 수 있는 훈련 */
+  pool?: boolean
   /** 이 모드에서만 할 수 있다. 없으면 모든 모드. (정밀 모드는 선택지가 더 많다) */
   modes?: GameState['mode'][]
 }
@@ -83,6 +86,7 @@ function costOf(action: ActionDef, scale: number): number {
 export function checkSlot(state: GameState, slot: Slot): string | null {
   const action = ACTIONS[slot.id]
   if (!action) return '알 수 없는 행동이다'
+  if (action.pool && !trainingMenuOf(state).includes(slot.id)) return '이번 턴에는 나오지 않은 훈련이다'
   if (action.modes && !action.modes.includes(state.mode)) {
     // 튜토리얼은 1회차 전용이라, 튜토리얼만 빠진 행동은 "2회차부터"라고 알려 준다
     return action.modes.includes('standard') ? `${action.name}은(는) 2회차부터 할 수 있다` : `${action.name}은(는) 정밀 모드에서만 할 수 있다`
@@ -146,7 +150,7 @@ function applySlot(state: GameState, slot: Slot, scale: number, rng: Rng, notes:
     if (base === undefined) continue
     const delta = growthDelta({
       base,
-      scale: scale * slumpFactor,
+      scale: scale * slumpFactor * ((modes[state.mode] as { growthBonus?: number }).growthBonus ?? 1),
       efficiency,
       condition: state.condition,
       traitMultiplier: state.trait.stat === key ? gacha.traitMultiplier : 1,
@@ -236,6 +240,7 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
     turnInSeason: next.turnInSeason + 1,
     turnCount: next.turnCount + 1,
   }
+  next = { ...next, trainingMenu: drawTrainingMenu(next.seed, next.turnCount, next.team !== null) }
   return { ok: true, state: next, delta: diff(state, next), seasonEnded: next.turnInSeason === turnsPerSeason(next.mode), notes }
 }
 

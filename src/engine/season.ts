@@ -8,7 +8,7 @@ import { genrePower } from './power.ts'
 import { createRng, gaussian, mixSeed, type Rng } from './rng.ts'
 import type { EndingId, EventRecord, GameState, ModeId, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
 import { runElimination, runLeague, type Team } from './tournament.ts'
-import { isCareerOver, isSettled, turnsPerSeason } from './turn.ts'
+import { isCareerOver, isSettled, turnScale, turnsPerSeason } from './turn.ts'
 import type { GenreId } from './types.ts'
 
 interface Reward {
@@ -145,6 +145,23 @@ function makeScoutOffers(rng: Rng, kind: 'amateur' | 'pro', exclude: Set<string>
     perk: rng() < 0.5 ? 'salary' : 'playtime',
   }))
   return { kind: 'scout', offers }
+}
+
+/**
+ * 시즌 중간 이적 제안. 팀에 소속된 선수가 명성을 쌓으면 한 턴을 마칠 때마다 다른 팀에서 연락이 올 수 있다.
+ * 시즌당 한 번, 마지막 턴 뒤에는 오지 않는다(결산이 따로 있다). 거절할 수 있다(kind: 'transfer').
+ */
+export function rollMidSeasonOffer(state: GameState): GameState {
+  if (state.finished || state.pendingOffers || !state.team) return state
+  if (state.midOfferSeason === state.season) return state
+  if (state.turnInSeason >= turnsPerSeason(state.mode)) return state
+  if (state.fame < OFFERS.midMinFame) return state
+  const kind = state.stage === 'amateur_team' ? 'amateur' : state.stage === 'pro2' || state.stage === 'pro1' ? 'pro' : null
+  if (!kind) return state
+  const rng = createRng(mixSeed(state.seed, state.turnCount, 0x0ff3))
+  if (rng() >= 1 - (1 - OFFERS.midChance) ** turnScale(state.mode)) return state
+  const offers = makeScoutOffers(rng, kind, new Set([state.team.id])).offers.slice(0, 2)
+  return { ...state, pendingOffers: { kind: 'transfer', offers }, midOfferSeason: state.season }
 }
 
 /** 하위 20%(최소 1팀)에 들면 강등 */

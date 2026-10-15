@@ -1,8 +1,19 @@
 {
-  "rank_practice": { "name": "랭크전 연습", "topGenreStats": { "count": 2, "amount": 80 }, "condition": -15 },
-  "basics":        { "name": "기본기 훈련", "stats": { "reaction": 80, "accuracy": 80 }, "condition": -10 },
-  "video_review":  { "name": "영상 분석",   "stats": { "judgment": 100, "focus": 50 }, "condition": -8 },
-  "team_scrim":    { "name": "팀 스크림",   "stats": { "teamwork": 100, "judgment": 50 }, "condition": -12, "requires": { "inTeam": true } },
+  "rank_practice": { "name": "랭크전 연습", "topGenreStats": { "count": 3, "amount": 55 }, "condition": -15 },
+
+  "basics":          { "name": "기본기 훈련",   "pool": true, "stats": { "reaction": 70, "accuracy": 50, "focus": 40 }, "condition": -10 },
+  "video_review":    { "name": "영상 분석",     "pool": true, "stats": { "judgment": 70, "focus": 50, "mental": 40 }, "condition": -8 },
+  "team_scrim":      { "name": "팀 스크림",     "pool": true, "stats": { "teamwork": 70, "judgment": 50, "reaction": 40 }, "condition": -12, "requires": { "inTeam": true } },
+  "aim_lab":         { "name": "에임 연습",     "pool": true, "stats": { "accuracy": 70, "reaction": 50, "focus": 40 }, "condition": -10 },
+  "reflex_drill":    { "name": "반응 훈련",     "pool": true, "stats": { "reaction": 70, "focus": 50, "accuracy": 40 }, "condition": -10 },
+  "strategy_study":  { "name": "전략 공부",     "pool": true, "stats": { "judgment": 70, "teamwork": 50, "focus": 40 }, "condition": -8 },
+  "comms_practice":  { "name": "콜 연습",       "pool": true, "stats": { "teamwork": 70, "judgment": 50, "mental": 40 }, "condition": -10, "requires": { "inTeam": true } },
+  "concentration":   { "name": "집중력 훈련",   "pool": true, "stats": { "focus": 70, "mental": 50, "accuracy": 40 }, "condition": -8 },
+  "mental_training": { "name": "멘탈 단련",     "pool": true, "stats": { "mental": 70, "focus": 50, "teamwork": 40 }, "condition": -8 },
+  "vs_pros":         { "name": "고수 경기 관전", "pool": true, "stats": { "judgment": 70, "reaction": 50, "accuracy": 40 }, "condition": -8 },
+  "sparring":        { "name": "스파링 매치",   "pool": true, "stats": { "reaction": 70, "judgment": 50, "teamwork": 40 }, "condition": -12 },
+  "marathon_match":  { "name": "연속 매치",     "pool": true, "stats": { "focus": 70, "reaction": 50, "mental": 40 }, "condition": -14 },
+
   "rest":          { "name": "휴식·운동",   "stats": { "mental": 20 }, "condition": 25, "allowWhenInjured": true },
   "part_time":     { "name": "아르바이트",  "money": 30, "condition": -10, "requires": { "inTeam": false } },
   "broadcast":     { "name": "방송",        "fame": 5, "money": 10, "condition": -10, "requires": { "minFame": 20 } },
@@ -27,7 +38,7 @@
 
   "private_lesson": { "name": "개인 레슨", "topGenreStats": { "count": 3, "amount": 70 }, "money": -40, "condition": -5 },
   "overtrain": {
-    "name": "강행군 훈련", "topGenreStats": { "count": 2, "amount": 150 }, "condition": -35, "modes": ["precise"],
+    "name": "강행군 훈련", "topGenreStats": { "count": 3, "amount": 100 }, "condition": -35, "modes": ["precise"],
     "outcomes": [{ "chance": 0.25, "label": "무리한 훈련으로 부상을 입었다", "effects": { "injuredMonths": 3, "condition": -10 } }]
   },
   "meditation":     { "name": "명상·요가", "condition": 8, "stats": { "mental": 25 }, "slumpMonths": -1, "modes": ["precise"] },

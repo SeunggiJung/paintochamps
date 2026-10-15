@@ -4,6 +4,7 @@ import { applyEventChoice, EVENTS, isEligible, rollEvent, turnRng } from './even
 import { createRng } from './rng.ts'
 import { createInitialState, type GameState, type ModeId } from './state.ts'
 import { applyTurn } from './turn.ts'
+import { TRAINING_POOL } from './training.ts'
 import type { Stats } from './types.ts'
 
 const FLAT: Stats = { reaction: 100, accuracy: 100, focus: 100, judgment: 100, mental: 100, teamwork: 100 }
@@ -17,7 +18,7 @@ function make(o: Partial<GameState> = {}, mode: ModeId = 'standard'): GameState 
     seed: 5,
     gacha: { stats: FLAT, trait: { id: 'quick_hands', name: '손이 빠름', stat: 'reaction' }, grade: 'R', power: 100 },
   })
-  return { ...base, ...o }
+  return { ...base, trainingMenu: TRAINING_POOL, ...o }
 }
 
 const byId = (id: string) => EVENTS.find((e) => e.id === id)!

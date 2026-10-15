@@ -1,4 +1,5 @@
 import rules from '../data/rules.json'
+import { drawTrainingMenu } from './training.ts'
 import type { GachaResult, GenreId, Stats, Trait } from './types.ts'
 
 export type ModeId = 'tutorial' | 'standard' | 'precise'
@@ -7,6 +8,15 @@ export type ActionId =
   | 'basics'
   | 'video_review'
   | 'team_scrim'
+  | 'aim_lab'
+  | 'reflex_drill'
+  | 'strategy_study'
+  | 'comms_practice'
+  | 'concentration'
+  | 'mental_training'
+  | 'vs_pros'
+  | 'sparring'
+  | 'marathon_match'
   | 'rest'
   | 'part_time'
   | 'broadcast'
@@ -94,6 +104,10 @@ export interface GameState {
   equipment: Record<EquipmentId, number>
   /** 마지막으로 장비를 산 턴(turnCount). 한 턴에 하나만 살 수 있다. */
   equipBoughtTurn: number
+  /** 이번 턴에 나온 무작위 훈련 후보. 턴이 끝날 때마다 새로 뽑는다. (옛 세이브에는 없을 수 있다 — trainingMenuOf) */
+  trainingMenu: ActionId[]
+  /** 시즌 중간 제안을 마지막으로 받은 시즌. 시즌당 한 번만 온다. */
+  midOfferSeason: number
 
   stage: StageId
   /** 소속 팀. 아마추어 팀 단계부터 생긴다. */
@@ -149,6 +163,8 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     fame: rules.start.fame,
     equipment: { keyboard: 0, mouse: 0, monitor: 0, pc: 0 },
     equipBoughtTurn: -1,
+    trainingMenu: drawTrainingMenu(seed, 0, false),
+    midOfferSeason: 0,
     stage: 'basement',
     team: null,
     debutTeamId: null,

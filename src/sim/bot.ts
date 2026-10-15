@@ -3,9 +3,10 @@ import { rollGacha } from '../engine/gacha.ts'
 import { conditionCoef } from '../engine/growth.ts'
 import { genrePower } from '../engine/power.ts'
 import { createRng, mixSeed, type Rng } from '../engine/rng.ts'
-import { acceptOffer, settleSeason } from '../engine/season.ts'
+import { acceptOffer, rollMidSeasonOffer, settleSeason } from '../engine/season.ts'
 import { createInitialState, type ActionId, type EquipmentId, type GameState, type ModeId } from '../engine/state.ts'
-import { ACTIONS, applyTurn, buyEquipment, startNextSeason, type Slot, type TurnChoice } from '../engine/turn.ts'
+import { trainingMenuOf } from '../engine/training.ts'
+import { ACTIONS, applyTurn, buyEquipment, checkSlot, startNextSeason, type Slot, type TurnChoice } from '../engine/turn.ts'
 import type { GenreId } from '../engine/types.ts'
 
 /**
@@ -19,11 +20,14 @@ export interface BotOptions {
   policy: BotPolicy
   /** 1부 이적 제안을 받아들일지 (히든 엔딩은 데뷔 팀에 남아야 한다) */
   acceptTransfers?: boolean
+  /** 매 턴이 끝날 때마다 불린다 (성장 속도 같은 측정용) */
+  onTurn?: (s: GameState) => void
 }
 
 const ACTION_IDS = Object.keys(ACTIONS) as ActionId[]
 const ACTION_SLOTS: Slot[] = ACTION_IDS.map((id) => ({ id }))
-const ALL_SLOTS: Slot[] = ACTION_SLOTS
+/** 지금 고를 수 있는 행동만 (무작위로 나오는 훈련은 이번 턴 후보만) */
+const slotsFor = (s: GameState): Slot[] => ACTION_SLOTS.filter((slot) => checkSlot(s, slot) === null)
 const EQUIPMENT_IDS: EquipmentId[] = ['keyboard', 'mouse', 'monitor', 'pc']
 
 const isRisky = (slot: Slot) => !!ACTIONS[slot.id].outcomes
@@ -75,11 +79,12 @@ function shop(s: GameState, policy: BotPolicy, rng: Rng): GameState {
 }
 
 function skilledChoice(s: GameState, rng: Rng): TurnChoice {
+  const slots = slotsFor(s)
   let best: TurnChoice = [{ id: 'rest' }, { id: 'rest' }]
   let bestValue = -Infinity
-  for (let i = 0; i < ALL_SLOTS.length; i++) {
-    for (let j = i; j < ALL_SLOTS.length; j++) {
-      const choice: TurnChoice = [ALL_SLOTS[i], ALL_SLOTS[j]]
+  for (let i = 0; i < slots.length; i++) {
+    for (let j = i; j < slots.length; j++) {
+      const choice: TurnChoice = [slots[i], slots[j]]
       const v = expectedValue(s, choice, rng)
       if (v !== null && v > bestValue) {
         bestValue = v
@@ -92,18 +97,21 @@ function skilledChoice(s: GameState, rng: Rng): TurnChoice {
 
 function randomChoice(s: GameState, rng: Rng): TurnChoice {
   const valid: TurnChoice[] = []
-  for (let i = 0; i < ALL_SLOTS.length; i++) {
-    for (let j = i; j < ALL_SLOTS.length; j++) {
-      const choice: TurnChoice = [ALL_SLOTS[i], ALL_SLOTS[j]]
+  const slots = slotsFor(s)
+  for (let i = 0; i < slots.length; i++) {
+    for (let j = i; j < slots.length; j++) {
+      const choice: TurnChoice = [slots[i], slots[j]]
       if (applyTurn(s, choice, rng).ok) valid.push(choice)
     }
   }
   return valid.length ? valid[Math.floor(rng() * valid.length)] : [{ id: 'rest' }, { id: 'rest' }]
 }
 
-function casualChoice(s: GameState, genre: GenreId, turn: number): TurnChoice {
-  const train: Slot[] = genre === 'fps' || genre === 'fighting' ? [{ id: 'basics' }, { id: 'rank_practice' }] : [{ id: 'video_review' }, { id: 'rank_practice' }]
-  const work: Slot = turn % 2 ? train[0] : s.team ? { id: 'team_scrim' } : train[1]
+function casualChoice(s: GameState, turn: number): TurnChoice {
+  // 나온 훈련 후보 중 앞의 것을 고르고(어떤 게 좋은지 따지지 않는다), 나머지는 랭크전 연습
+  const menu = trainingMenuOf(s).map((id): Slot => ({ id })).filter((slot) => checkSlot(s, slot) === null)
+  const train: Slot[] = [menu[0] ?? { id: 'rank_practice' }, { id: 'rank_practice' }]
+  const work: Slot = turn % 2 ? train[0] : s.team ? (menu[1] ?? train[1]) : train[1]
   if (s.injuredMonths > 0 || s.condition < 45) return [{ id: 'rest' }, { id: 'rest' }]
   if (s.condition < 65) return [work, { id: 'rest' }]
   return [work, train[(turn + 1) % 2]]
@@ -133,7 +141,7 @@ export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: Bot
   let turn = 0
   while (!s.finished) {
     s = shop(s, opts.policy, botRng)
-    const choice = opts.policy === 'skilled' ? skilledChoice(s, botRng) : opts.policy === 'random' ? randomChoice(s, botRng) : casualChoice(s, genre, turn)
+    const choice = opts.policy === 'skilled' ? skilledChoice(s, botRng) : opts.policy === 'random' ? randomChoice(s, botRng) : casualChoice(s, turn)
     let r = applyTurn(s, choice)
     if (!r.ok) r = applyTurn(s, [{ id: 'rest' }, { id: 'rest' }])
     if (!r.ok) throw new Error(`${genre}/${mode}/${seed} turn ${turn}: ${r.error}`)
@@ -142,6 +150,9 @@ export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: Bot
 
     const event = rollEvent(s, turnRng(s))
     if (event) s = applyEventChoice(s, event, pickEventChoice(s, event, opts.policy, botRng))
+    s = rollMidSeasonOffer(s)
+    if (s.pendingOffers) s = acceptOffer(s, opts.acceptTransfers ? 0 : null)
+    opts.onTurn?.(s)
 
     if (r.seasonEnded) {
       s = settleSeason(s).state

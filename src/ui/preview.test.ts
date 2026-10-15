@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
+import { TRAINING_POOL } from '../engine/training.ts'
 import { createInitialState } from '../engine/state.ts'
 import { applyTurn } from '../engine/turn.ts'
 import { rollAt } from './newGame.ts'
 import { actionCost, actionRisks, actionTags, describeChange, previewDetail, previewTurn } from './preview.ts'
 
 const make = (mode: 'tutorial' | 'standard' | 'precise') =>
-  createInitialState({ name: 't', genre: 'fps', mode, gacha: rollAt(1, 'fps', 0), seed: 1 })
+  ({ ...createInitialState({ name: 't', genre: 'fps', mode, gacha: rollAt(1, 'fps', 0), seed: 1 }), trainingMenu: TRAINING_POOL })
 
 describe('턴 미리보기', () => {
   it('정밀 모드만 방향 표시(hint)를 쓴다', () => {
