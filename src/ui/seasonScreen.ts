@@ -9,6 +9,8 @@ import { recordFinish, saveGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
 import { STAT_LABEL } from './labels.ts'
+import { showContract } from './contractScene.ts'
+import { offerButton } from './offerView.ts'
 
 const ENDING_NAME = Object.fromEntries(endings.order.map((e) => [e.id, e.name]))
 
@@ -64,9 +66,11 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     scrollTo(0, 0)
   }
 
-  const choose = (index: number | null) => {
+  const choose = async (index: number | null) => {
     const offer = index === null ? null : state.pendingOffers?.offers[index]
+    const pending = state
     state = acceptOffer(state, index)
+    if (offer && pending.pendingOffers) await showContract(pending, offer, pending.pendingOffers.kind === 'transfer' ? 'transfer' : 'join')
     joined = offer ? `${offer.team.name}에 합류했다.` : '제안을 거절했다.'
     render()
   }
@@ -81,9 +85,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
       h(
         'div',
         { class: 'choices vertical' },
-        ...pending.offers.map((o, i) =>
-          h('button', { class: 'choice', onclick: () => choose(i) }, h('b', {}, o.team.name), h('span', { class: 'muted small' }, o.perk === 'salary' ? '연봉 보너스 (돈)' : '출전 기회 (명성)')),
-        ),
+        ...pending.offers.map((o, i) => offerButton(state, o, () => choose(i))),
       ),
       pending.kind === 'transfer' && h('button', { class: 'btn ghost small', onclick: () => choose(null) }, '이적하지 않는다'),
     )

@@ -8,6 +8,7 @@ import { genrePower } from './power.ts'
 import { createRng, gaussian, mixSeed, type Rng } from './rng.ts'
 import type { EndingId, EventRecord, GameState, ModeId, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
 import { pathOf, routeStep, type TestResult } from './routes.ts'
+import { teamBoost } from './teams.ts'
 import { runElimination, runLeague, type Team } from './tournament.ts'
 import { isCareerOver, isSettled, turnScale, turnsPerSeason } from './turn.ts'
 import type { GenreId } from './types.ts'
@@ -116,7 +117,8 @@ function playerTeam(state: GameState, ev: EventDef, power: number): Team {
 
 function runEvent(state: GameState, ev: EventDef, ctx: Ctx): Outcome | null {
   if (ev.needs && !ctx.qualified.has(ev.needs)) return null
-  const power = playerPower(state, ev.big ?? false)
+  // 소속 팀이 리그 평균보다 강하면 전력이 오르고 약하면 내려간다 (PC방 대회처럼 팀 없이 나가는 대회는 제외)
+  const power = playerPower(state, ev.big ?? false) + (ev.field?.names === 'cafe' ? 0 : teamBoost(state))
 
   let teams: Team[]
   if (ev.from) {
@@ -128,7 +130,7 @@ function runEvent(state: GameState, ev: EventDef, ctx: Ctx): Outcome | null {
   } else {
     const f = ev.field!
     const me = playerTeam(state, ev, power)
-    teams = [me, ...makeOpponents(ctx.rng, f.names, f.tier, f.size - 1, new Set([me.id]))]
+    teams = [me, ...makeOpponents(ctx.rng, f.names, f.tier, f.size - 1, new Set([me.id]), f.names === 'cafe' || f.names === 'intl' ? undefined : { seed: state.seed, season: state.season })]
   }
 
   const order =

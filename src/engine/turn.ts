@@ -9,6 +9,7 @@ import { applyEffects, type Effects } from './effects.ts'
 import { equipmentEfficiency, growthDelta } from './growth.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { ActionId, EquipmentId, GameState } from './state.ts'
+import { salaryOf } from './teams.ts'
 import { drawTrainingMenu, trainingMenuOf } from './training.ts'
 import { STAT_KEYS, type StatKey, type Stats } from './types.ts'
 
@@ -238,6 +239,9 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
       money: next.money + rules.school.allowancePerBase * scale,
     }
   }
+
+  // 팀에 소속되어 있으면 월급이 꾸준히 들어온다 (3개월 기준 금액에 턴 길이 배율)
+  if (next.team) next = { ...next, money: next.money + salaryOf(next) * scale }
 
   const months = modes[next.mode].turnMonths
   next = {

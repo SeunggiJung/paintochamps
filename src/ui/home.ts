@@ -19,6 +19,10 @@ import { runEvent } from './eventFlow.ts'
 import { ACTION_GROUPS, MODE_INFO, STAT_LABEL } from './labels.ts'
 import { actionCost, actionRisks, actionTags, describeChange, previewTurn } from './preview.ts'
 import { openSheet } from './sheet.ts'
+import { showContract } from './contractScene.ts'
+import { offerButton } from './offerView.ts'
+import { teamIcon } from './teamIcon.ts'
+import { salaryOf } from '../engine/teams.ts'
 
 const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; costs: number[] }>
 const BAR_MAX = gacha.statMax
@@ -96,11 +100,12 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         h(
           'div',
           { class: 'choices vertical' },
-          ...pending.offers.map((o, i) => h('button', { class: 'choice', onclick: () => close(i) }, h('b', {}, `${o.team.name}으로 이적`), h('span', { class: 'muted small' }, o.perk === 'salary' ? '연봉 보너스 (돈)' : '출전 기회 (명성)'))),
+          ...pending.offers.map((o, i) => offerButton(s, o, () => close(i))),
         ),
         h('button', { class: 'btn ghost small', onclick: () => close(null) }, '지금 팀에 남는다'),
       ),
     )
+    if (index !== null) await showContract(s, pending.offers[index], 'transfer')
     return acceptOffer(s, index)
   }
 
@@ -174,7 +179,14 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         'header',
         { class: 'status' },
         h('div', { class: 'row' }, h('h2', {}, `${state.name} · ${state.age}세`), h('span', { class: 'muted small' }, `${state.season}시즌 ${state.turnInSeason + 1}/${max}턴`)),
-        h('p', { class: 'muted small' }, `${genres[state.genre].name} · ${MODE_INFO[state.mode].name} · ${stageName(state.stage)} · ${state.team?.name ?? '무소속'}`),
+        h(
+          'p',
+          { class: 'muted small team-line' },
+          `${genres[state.genre].name} · ${MODE_INFO[state.mode].name} · ${stageName(state.stage)} · `,
+          state.team && teamIcon(state.team.id, 18),
+          `${state.team?.name ?? '무소속'}`,
+          state.team && salaryOf(state) > 0 ? ` · 월급 ${salaryOf(state)}만` : null,
+        ),
         h(
           'div',
           { class: 'meters' },
