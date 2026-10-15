@@ -7,7 +7,7 @@ import { rollEvent, turnRng } from '../engine/events.ts'
 import { genrePower } from '../engine/power.ts'
 import { eventsFor, stageName } from '../engine/season.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
-import { ACTIONS, applyTurn, checkSlot, turnsPerSeason, type Slot } from '../engine/turn.ts'
+import { ACTIONS, applyTurn, buyEquipment, checkEquipment, checkSlot, turnsPerSeason, type Slot } from '../engine/turn.ts'
 import { STAT_KEYS } from '../engine/types.ts'
 import { saveGame } from '../save/storage.ts'
 import { cleanTeamName, TEAM_NAME_MAX } from './newGame.ts'
@@ -41,7 +41,16 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
 
   const seasonOver = () => state.turnInSeason >= turnsPerSeason(state.mode)
 
-  const slotName = (s: Slot) => (s.id === 'buy_equipment' ? `${EQUIPMENT[s.item].name} 구매` : ACTIONS[s.id].name)
+  const slotName = (s: Slot) => ACTIONS[s.id].name
+
+  /** 장비는 행동 칸을 쓰지 않고 바로 산다. (한 턴에 하나까지) */
+  const buy = (item: EquipmentId) => {
+    const r = buyEquipment(state, item)
+    if (!r.ok) return render(r.error)
+    state = r.state
+    saveGame(ctx.storage, state)
+    render()
+  }
 
   const pick = (slot: Slot) => {
     // 빈 칸부터 채우고, 둘 다 찼으면 두 번째 칸을 바꾼다
@@ -125,14 +134,13 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     const equipRows = (Object.keys(EQUIPMENT) as EquipmentId[]).map((item) => {
       const level = state.equipment[item]
       const maxed = level >= rules.equipment.maxLevel
-      const slot: Slot = { id: 'buy_equipment', item }
       const title = maxed ? `${EQUIPMENT[item].name} (최고)` : `${EQUIPMENT[item].name} Lv${level} → ${level + 1}`
-      const reason = checkSlot(state, slot)
+      const reason = checkEquipment(state, item)
       return h(
         'button',
-        { class: 'action', disabled: !!reason || busy, onclick: () => pick(slot) },
+        { class: 'action', disabled: !!reason || busy, onclick: () => buy(item) },
         h('span', { class: 'action-title' }, title, !maxed && h('em', {}, ` ${EQUIPMENT[item].costs[level]}만`)),
-        h('span', { class: 'muted small' }, reason ?? '훈련 효율↑'),
+        h('span', { class: 'muted small' }, reason ?? '훈련 효율↑ · 바로 구매 (턴 소모 없음)'),
       )
     })
 
@@ -169,7 +177,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       h('section', { class: 'card' }, h('h3', {}, `이번 ${modes[state.mode].turnMonths}개월, 행동 2개를 고르세요`), h('div', { class: 'slots' }, slotChip(0), slotChip(1))),
       state.injuredMonths > 0 && h('p', { class: 'notice' }, '부상 중이라 휴식·재활만 할 수 있다.'),
       ...groups.map((g) => h('section', {}, h('h3', {}, g.title), h('div', { class: 'actions' }, ...g.items.map((id) => actionButton({ id: id as ActionId } as Slot, ACTIONS[id as ActionId].name))))),
-      h('section', {}, h('h3', {}, '장비'), h('div', { class: 'actions' }, ...equipRows)),
+      h('section', {}, h('h3', {}, '장비'), h('p', { class: 'muted small' }, '행동을 쓰지 않고 한 턴에 하나까지 살 수 있습니다.'), h('div', { class: 'actions' }, ...equipRows)),
       h(
         'div',
         { class: 'turn-bar' },

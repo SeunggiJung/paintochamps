@@ -49,7 +49,7 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
         h('b', { class: 'odds-pct' }, p < 0.1 ? '<0.1%' : `${p.toFixed(1)}%`, id === current && h('span', { class: 'tag' }, '내 등급')),
       )
     })
-    const details = h('details', { class: 'odds' }, h('summary', {}, '등급별 확률 보기'), h('ul', { class: 'plain' }, ...rows), h('p', { class: 'muted small' }, `${genre.name} 기준, 표본 추정치 (±0.1%p)`))
+    const details = h('details', { class: 'odds' }, h('summary', {}, '등급별 확률 보기'), h('p', { class: 'odds-note' }, '재능은 초반에 치고 나가기 위한 발판일 뿐, 후반의 고점을 정하지 않습니다. 이후의 성장은 훈련과 선택에 달려 있으니, 뽑기 결과에 너무 연연하지 마세요.'), h('ul', { class: 'plain' }, ...rows), h('p', { class: 'muted small' }, `${genre.name} 기준, 표본 추정치 (±0.1%p)`))
     details.addEventListener('click', (e) => e.stopPropagation()) // 건너뛰기 눌림으로 번지지 않게
     return details
   }

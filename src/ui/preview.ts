@@ -52,7 +52,6 @@ export function previewTurn(state: GameState, choice: TurnChoice): TurnPreview {
 
 /** 행동 하나가 건드리는 것을 숫자 없이 요약한다. (목록에서 뭘 하는 행동인지 알려 주는 용도) */
 export function actionTags(slot: Slot, state: GameState): string[] {
-  if (slot.id === 'buy_equipment') return ['훈련 효율↑']
   const a = ACTIONS[slot.id]
   const tags: string[] = []
   const statKeys = new Set(Object.keys(a.stats ?? {}))
@@ -78,7 +77,6 @@ export function actionTags(slot: Slot, state: GameState): string[] {
 
 /** 행동에 붙은 확률 부작용 설명. hint면 숫자 없이 "위험 있음"만 알려 준다. */
 export function actionRisks(slot: Slot, state: GameState): string[] {
-  if (slot.id === 'buy_equipment') return []
   const outcomes = ACTIONS[slot.id].outcomes ?? []
   if (outcomes.length === 0) return []
   if (previewDetail(state.mode) === 'hint') return ['위험 있음']
@@ -87,6 +85,5 @@ export function actionRisks(slot: Slot, state: GameState): string[] {
 
 /** 행동 하나의 돈 비용(만 원, 올림). 벌기만 하는 행동이면 0. */
 export function actionCost(slot: Slot, state: GameState): number {
-  if (slot.id === 'buy_equipment') return 0
   return Math.ceil(Math.max(0, -(ACTIONS[slot.id].money ?? 0)) * turnScale(state.mode))
 }

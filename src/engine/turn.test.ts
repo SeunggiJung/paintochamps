@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { conditionCoef, equipmentEfficiency, growthDelta } from './growth.ts'
 import { settleSeason } from './season.ts'
 import { createInitialState, type GameState, type ModeId } from './state.ts'
-import { applyTurn, eventChance, isCareerOver, startNextSeason, turnScale, type TurnChoice } from './turn.ts'
+import { applyTurn, buyEquipment, eventChance, isCareerOver, startNextSeason, turnScale, type TurnChoice } from './turn.ts'
 import type { GenreId, Stats } from './types.ts'
 
 const TEAM = { id: 'org_0', name: '나이트호크' }
@@ -127,16 +127,28 @@ describe('조건과 비용', () => {
     expect(run(make({ age: 20 }, 'fps', 'tutorial'), [{ id: 'part_time' }, { id: 'rest' }]).delta.money).toBeCloseTo(60)
   })
 
-  it('장비 구매는 돈을 쓰고 행동 칸 하나를 차지한다', () => {
-    const r = run(make({ age: 20, money: 50 }), [{ id: 'buy_equipment', item: 'keyboard' }, { id: 'rest' }])
+  it('장비 구매는 돈만 쓰고 턴과 행동 칸을 쓰지 않는다', () => {
+    const s = make({ age: 20, money: 50 })
+    const r = buyEquipment(s, 'keyboard')
+    if (!r.ok) throw new Error(r.error)
     expect(r.state.equipment.keyboard).toBe(1)
     expect(r.state.money).toBe(40)
+    expect(r.state.turnCount).toBe(s.turnCount)
+    expect(r.state.turnInSeason).toBe(s.turnInSeason)
+  })
+
+  it('장비는 한 턴에 하나만 살 수 있고, 다음 턴에는 다시 살 수 있다', () => {
+    const first = buyEquipment(make({ age: 20, money: 500 }), 'keyboard')
+    if (!first.ok) throw new Error(first.error)
+    expect(buyEquipment(first.state, 'mouse').ok).toBe(false)
+    const next = run(first.state, [{ id: 'rest' }, { id: 'rest' }]).state
+    expect(buyEquipment(next, 'mouse').ok).toBe(true)
   })
 
   it('돈이 부족하거나 최고 단계면 구매할 수 없다', () => {
-    expect(applyTurn(make({ age: 20, money: 5 }), [{ id: 'buy_equipment', item: 'pc' }, { id: 'rest' }]).ok).toBe(false)
+    expect(buyEquipment(make({ age: 20, money: 5 }), 'pc').ok).toBe(false)
     const maxed = make({ age: 20, money: 999, equipment: { keyboard: 3, mouse: 0, monitor: 0, pc: 0 } })
-    expect(applyTurn(maxed, [{ id: 'buy_equipment', item: 'keyboard' }, { id: 'rest' }]).ok).toBe(false)
+    expect(buyEquipment(maxed, 'keyboard').ok).toBe(false)
   })
 
   it('실패한 선택은 상태를 바꾸지 않는다 (원본 불변)', () => {

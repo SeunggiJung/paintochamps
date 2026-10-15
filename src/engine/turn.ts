@@ -42,8 +42,8 @@ interface ActionDef {
 export const ACTIONS = actionData as Record<ActionId, ActionDef>
 const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; costs: number[] }>
 
-/** 한 칸의 선택: 일반 행동, 또는 장비 구매(행동 1개를 쓴다) */
-export type Slot = { id: ActionId } | { id: 'buy_equipment'; item: EquipmentId }
+/** 한 칸의 선택: 일반 행동 (장비 구매는 행동을 쓰지 않는다 — buyEquipment) */
+export type Slot = { id: ActionId }
 /** 한 턴에 행동 2개를 고른다. 같은 행동을 두 번 골라도 된다. */
 export type TurnChoice = readonly [Slot, Slot]
 
@@ -81,14 +81,6 @@ function costOf(action: ActionDef, scale: number): number {
 
 /** 선택 가능한지 확인한다. 가능하면 null, 아니면 이유를 돌려준다. */
 export function checkSlot(state: GameState, slot: Slot): string | null {
-  if (slot.id === 'buy_equipment') {
-    const item = EQUIPMENT[slot.item]
-    if (!item) return '알 수 없는 장비다'
-    const level = state.equipment[slot.item]
-    if (level >= rules.equipment.maxLevel) return `${item.name}은(는) 이미 최고 단계다`
-    if (state.money < item.costs[level]) return `돈이 부족하다 (${item.costs[level]}만 원 필요)`
-    return null
-  }
   const action = ACTIONS[slot.id]
   if (!action) return '알 수 없는 행동이다'
   if (action.modes && !action.modes.includes(state.mode)) {
@@ -108,17 +100,36 @@ export function checkSlot(state: GameState, slot: Slot): string | null {
   return null
 }
 
+/** 장비를 살 수 있는지 확인한다. 턴을 쓰지 않지만 한 턴에 하나까지다. 가능하면 null. */
+export function checkEquipment(state: GameState, item: EquipmentId): string | null {
+  const def = EQUIPMENT[item]
+  if (!def) return '알 수 없는 장비다'
+  if (state.finished) return '이미 끝난 커리어다'
+  const level = state.equipment[item]
+  if (level >= rules.equipment.maxLevel) return `${def.name}은(는) 이미 최고 단계다`
+  if (state.equipBoughtTurn === state.turnCount) return '장비는 한 턴에 하나만 살 수 있다'
+  if (state.money < def.costs[level]) return `돈이 부족하다 (${def.costs[level]}만 원 필요)`
+  return null
+}
+
+/** 장비를 산다. 행동 칸을 쓰지 않고, 한 턴에 하나까지. */
+export function buyEquipment(state: GameState, item: EquipmentId): { ok: true; state: GameState } | { ok: false; error: string } {
+  const error = checkEquipment(state, item)
+  if (error) return { ok: false, error }
+  const level = state.equipment[item]
+  return {
+    ok: true,
+    state: {
+      ...state,
+      money: state.money - EQUIPMENT[item].costs[level],
+      equipment: { ...state.equipment, [item]: level + 1 },
+      equipBoughtTurn: state.turnCount,
+    },
+  }
+}
+
 /** 선택 하나를 적용한 새 상태. 컨디션 계수는 이 행동을 하기 직전의 컨디션으로 계산한다. */
 function applySlot(state: GameState, slot: Slot, scale: number, rng: Rng, notes: string[]): GameState {
-  if (slot.id === 'buy_equipment') {
-    const level = state.equipment[slot.item]
-    return {
-      ...state,
-      money: state.money - EQUIPMENT[slot.item].costs[level],
-      equipment: { ...state.equipment, [slot.item]: level + 1 },
-    }
-  }
-
   const action = ACTIONS[slot.id]
   const slumpFactor = state.slumpMonths > 0 ? rules.slumpGrowthFactor : 1
   const gains: Partial<Record<StatKey, number>> = { ...action.stats }
@@ -202,7 +213,7 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
   }
 
   // 방탕 게이지: 이번 턴에 술·유흥·도박을 안 했으면 내려가고, 높으면 중독 패널티가 붙는다
-  const usedVice = choice.some((s) => s.id !== 'buy_equipment' && (ACTIONS[s.id].vice ?? 0) > 0)
+  const usedVice = choice.some((s) => (ACTIONS[s.id].vice ?? 0) > 0)
   if (!usedVice) next = { ...next, vice: Math.max(0, next.vice - rules.vice.decayPerBase * scale) }
   if (next.vice >= rules.vice.addictionAt) {
     next = applyEffects(next, { condition: rules.vice.addictionCondition, stats: { mental: rules.vice.addictionMental } }, scale)

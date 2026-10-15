@@ -5,7 +5,7 @@ import { genrePower } from '../engine/power.ts'
 import { createRng, mixSeed, type Rng } from '../engine/rng.ts'
 import { acceptOffer, settleSeason } from '../engine/season.ts'
 import { createInitialState, type ActionId, type EquipmentId, type GameState, type ModeId } from '../engine/state.ts'
-import { ACTIONS, applyTurn, startNextSeason, type Slot, type TurnChoice } from '../engine/turn.ts'
+import { ACTIONS, applyTurn, buyEquipment, startNextSeason, type Slot, type TurnChoice } from '../engine/turn.ts'
 import type { GenreId } from '../engine/types.ts'
 
 /**
@@ -23,10 +23,10 @@ export interface BotOptions {
 
 const ACTION_IDS = Object.keys(ACTIONS) as ActionId[]
 const ACTION_SLOTS: Slot[] = ACTION_IDS.map((id) => ({ id }))
-const BUY_SLOTS: Slot[] = (['keyboard', 'mouse', 'monitor', 'pc'] as EquipmentId[]).map((item) => ({ id: 'buy_equipment', item }))
-const ALL_SLOTS: Slot[] = [...ACTION_SLOTS, ...BUY_SLOTS]
+const ALL_SLOTS: Slot[] = ACTION_SLOTS
+const EQUIPMENT_IDS: EquipmentId[] = ['keyboard', 'mouse', 'monitor', 'pc']
 
-const isRisky = (slot: Slot) => slot.id !== 'buy_equipment' && !!ACTIONS[slot.id].outcomes
+const isRisky = (slot: Slot) => !!ACTIONS[slot.id].outcomes
 
 /** 숙련 봇이 상태를 얼마나 좋게 보는지: 실력치 + 컨디션(성장 효율) + 명성·돈 + 장비 − 방탕·부상·슬럼프 */
 function value(s: GameState): number {
@@ -58,6 +58,20 @@ function expectedValue(s: GameState, choice: TurnChoice, rng: Rng): number | nul
     total += value(r.state)
   }
   return total / n
+}
+
+/** 장비는 행동 칸을 쓰지 않고 한 턴에 하나까지 산다. 숙련은 가치가 오르는 것만, 무작위는 절반 확률로 아무거나, 단순은 사지 않는다. */
+function shop(s: GameState, policy: BotPolicy, rng: Rng): GameState {
+  if (policy === 'casual') return s
+  const options = EQUIPMENT_IDS.map((item) => buyEquipment(s, item)).filter((r) => r.ok).map((r) => (r.ok ? r.state : s))
+  if (options.length === 0) return s
+  if (policy === 'random') {
+    // 예전에 장비가 행동 후보 중 하나로 뽑히던 빈도(두 칸 중 한 번 이상)와 맞춘다
+    const pSlot = EQUIPMENT_IDS.length / (ACTION_IDS.length + EQUIPMENT_IDS.length)
+    return rng() < 1 - (1 - pSlot) ** 2 ? options[Math.floor(rng() * options.length)] : s
+  }
+  const best = options.reduce((a, b) => (value(b) > value(a) ? b : a))
+  return value(best) > value(s) ? best : s
 }
 
 function skilledChoice(s: GameState, rng: Rng): TurnChoice {
@@ -118,6 +132,7 @@ export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: Bot
   let s = createInitialState({ name: '봇', genre, mode, seed, gacha: rollGacha(rng, genre) })
   let turn = 0
   while (!s.finished) {
+    s = shop(s, opts.policy, botRng)
     const choice = opts.policy === 'skilled' ? skilledChoice(s, botRng) : opts.policy === 'random' ? randomChoice(s, botRng) : casualChoice(s, genre, turn)
     let r = applyTurn(s, choice)
     if (!r.ok) r = applyTurn(s, [{ id: 'rest' }, { id: 'rest' }])

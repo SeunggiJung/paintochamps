@@ -92,6 +92,8 @@ export interface GameState {
   fame: number
   /** 장비 단계 (0~3) */
   equipment: Record<EquipmentId, number>
+  /** 마지막으로 장비를 산 턴(turnCount). 한 턴에 하나만 살 수 있다. */
+  equipBoughtTurn: number
 
   stage: StageId
   /** 소속 팀. 아마추어 팀 단계부터 생긴다. */
@@ -146,6 +148,7 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     money: rules.start.money,
     fame: rules.start.fame,
     equipment: { keyboard: 0, mouse: 0, monitor: 0, pc: 0 },
+    equipBoughtTurn: -1,
     stage: 'basement',
     team: null,
     debutTeamId: null,
