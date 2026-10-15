@@ -2,7 +2,7 @@ import { h } from './dom.ts'
 import { OUTLINE, placeSprite, shade } from './sprite.ts'
 
 /**
- * 타이틀 화면 중앙의 도트 애니메이션 (메이플스토리풍): 방구석 게임 → 대회 출전 → 훈련 → 우승이 16초 주기로 이어진다.
+ * 타이틀 화면 중앙의 도트 애니메이션 (메이플스토리풍): 방구석 게임 → 여럿이 대회 → 코치·팀원과 연습 → 우승이 16초 주기로 이어진다.
  * 밝고 알록달록한 배경, 진한 갈색 윤곽선이 있는 소품, 큰 머리의 캐릭터로 게임이 어떤 이야기인지 한눈에 보여 준다.
  * 모두 SVG 도트(crispEdges)와 CSS 애니메이션이라 에셋 파일이 없다.
  */
@@ -50,31 +50,32 @@ function sceneHome(): string {
   ${box(4, 62, 46, 14, '#9b6a3c')}${box(8, 56, 38, 10, '#4f8dff')}${box(8, 52, 14, 6, '#ffffff')}
   <rect x="26" y="58" width="16" height="2" fill="#8fb8ff"/>
   ${box(60, 44, 18, 28, '#e0503c')}
-  ${person(70, 78, '#3a86ff', 'stand', 'bob', '#7a4426', '#ff5a3c')}
+  ${person(70, 78, '#3a86ff', 'stand', '', '#7a4426', '#ff5a3c')}
   ${box(56, 66, 90, 5, '#b9793c')}${box(60, 71, 5, 20, '#8a5a30')}${box(137, 71, 5, 20, '#8a5a30')}
   ${monitor(96, 42, 40, 24, '<rect class="blk1" x="102" y="52" width="6" height="6" fill="#ffd34d"/><rect class="blk2" x="118" y="48" width="6" height="6" fill="#ff6b7a"/><rect class="beam" x="100" y="46" width="32" height="2" fill="#c8f2ff"/>')}
   ${box(80, 62, 14, 3, '#ffffff')}${box(98, 62, 6, 3, '#e8e8f0')}
   ${box(148, 56, 9, 10, '#d9503a')}<rect x="150" y="48" width="5" height="8" fill="#58c05a"/><rect x="147" y="51" width="4" height="4" fill="#58c05a"/><rect x="154" y="50" width="4" height="4" fill="#58c05a"/>
-  <rect class="blink" x="140" y="62" width="4" height="3" fill="#7fe3ff"/>
+  <rect class="key1" x="82" y="59" width="4" height="3" fill="#ffd9b3"/><rect class="key2" x="88" y="59" width="4" height="3" fill="#ffd9b3"/><rect class="blink" x="140" y="62" width="4" height="3" fill="#7fe3ff"/>
 </g>`
 }
 
+/** 책상 앞에 앉은 사람: 책상이 하반신을 가리고, 모니터가 몸통 앞을 가려 얼굴만 위로 보인다 */
+function seated(x: number, footY: number, size: number, shirt: string, hair: string, withMonitor = true): string {
+  const deskY = footY - Math.round(size * 0.24)
+  return (
+    placeSprite({ shirt, hair, headset: '#ff5a3c' }, 'stand', x, footY, size) +
+    box(x - 13, deskY, 26, 4, '#b9793c') +
+    (withMonitor ? box(x - 7, deskY - 8, 14, 8, '#3a4268') + `<rect class="screen" x="${x - 5}" y="${deskY - 6}" width="10" height="4" fill="#5fd1ff"/>` : '')
+  )
+}
+
 function sceneMatch(): string {
-  const heads = ['#7a4426', '#2a2a2a', '#d8a04a', '#c0583a']
-  const shirts = ['#ff6b7a', '#4cc38a', '#ffb740', '#b980ff', '#4fa3ff']
-  const crowd = Array.from({ length: 12 }, (_, i) => {
-    const x = 6 + i * 13
-    return (
-      `<g class="crowd" style="animation-delay:${((i * 0.13) % 0.6).toFixed(2)}s">` +
-      `<rect x="${x - 1}" y="${86 + (i % 2)}" width="10" height="14" fill="${OUTLINE}"/>` +
-      `<rect x="${x}" y="${88 + (i % 2)}" width="8" height="12" fill="${shirts[i % 5]}"/>` +
-      `<rect x="${x - 1}" y="${80 + (i % 2)}" width="10" height="9" fill="${OUTLINE}"/>` +
-      `<rect x="${x}" y="${81 + (i % 2)}" width="8" height="7" fill="#ffd9b3"/>` +
-      `<rect x="${x}" y="${81 + (i % 2)}" width="8" height="3" fill="${heads[i % 4]}"/>` +
-      `<rect x="${x + 1}" y="${85 + (i % 2)}" width="2" height="2" fill="#2a1f3d"/><rect x="${x + 5}" y="${85 + (i % 2)}" width="2" height="2" fill="#2a1f3d"/>` +
-      `<rect x="${x + 8}" y="${72 + (i % 3)}" width="2" height="12" fill="${shirts[(i + 2) % 5]}"/>` +
-      `</g>`
-    )
+  const shirts = ['#3a86ff', '#3a86ff', '#3a86ff', '#3a86ff', '#3a86ff']
+  const hairs = ['#7a4426', '#2a2a2a', '#d8a04a', '#c0583a', '#4a3a5a']
+  const players = shirts.map((c, i) => seated(18 + i * 31, 88, 36, c, hairs[i])).join('')
+  const crowd = Array.from({ length: 14 }, (_, i) => {
+    const x = 4 + i * 11.5
+    return `<rect x="${x - 1}" y="${52 + (i % 2) * 2}" width="9" height="9" fill="${OUTLINE}"/><rect x="${x}" y="${53 + (i % 2) * 2}" width="7" height="7" fill="#ffd9b3"/><rect x="${x}" y="${53 + (i % 2) * 2}" width="7" height="3" fill="${['#7a4426', '#2a2a2a', '#d8a04a', '#c0583a'][i % 4]}"/>`
   }).join('')
   return `<g class="scene s2">
   <rect width="${W}" height="${H}" fill="#7b8cf0"/><rect width="${W}" height="30" fill="#5d6fe0"/>
@@ -83,38 +84,34 @@ function sceneMatch(): string {
   ${box(40, 8, 80, 16, '#ff5a3c')}
   <g fill="#ffffff"><rect x="54" y="13" width="6" height="6"/><rect x="72" y="13" width="6" height="6"/><rect x="90" y="13" width="6" height="6"/><rect x="108" y="13" width="6" height="6"/></g>
   <g fill="#ffe27a"><rect x="56" y="11" width="2" height="10"/><rect x="52" y="15" width="10" height="2"/><rect x="92" y="11" width="2" height="10"/><rect x="88" y="15" width="10" height="2"/></g>
-  ${box(8, 14, 12, 22, '#ffd34d')}<rect x="13" y="36" width="2" height="30" fill="${OUTLINE}"/>
-  ${box(140, 14, 12, 22, '#4cc38a')}<rect x="145" y="36" width="2" height="30" fill="${OUTLINE}"/>
-  ${box(0, 64, W, 14, '#8a63d2')}<rect y="78" width="${W}" height="4" fill="#5b3fa0"/>
-  ${box(104, 52, 36, 5, '#caa26a')}
-  ${monitor(108, 36, 14, 14)}${monitor(126, 36, 14, 14)}
-  ${person(122, 64, '#e0503c', 'stand', 'bob', '#2a2a2a')}
-  <g class="walk">${person(34, 80, '#3a86ff', 'stand', 'step')}</g>
+  ${box(8, 14, 12, 22, '#ffd34d')}<rect x="13" y="36" width="2" height="16" fill="${OUTLINE}"/>
+  ${box(140, 14, 12, 22, '#4cc38a')}<rect x="145" y="36" width="2" height="16" fill="${OUTLINE}"/>
   ${crowd}
+  ${box(0, 62, W, 6, '#8a63d2')}<rect y="68" width="${W}" height="32" fill="#5b3fa0"/>
+  ${players}
 </g>`
 }
 
 function sceneTrain(): string {
-  const bar = (y: number, color: string, delay: string) =>
-    `${box(104, y, 8, 8, color)}<rect x="116" y="${y + 1}" width="34" height="6" fill="#1a2140"/><rect class="hbar" x="116" y="${y + 1}" width="34" height="6" fill="${color}" style="animation-delay:${delay}"/>`
-  const arrows = [0, 1, 2]
-    .map((i) => `<g class="rise" style="animation-delay:${i * 0.7}s"><rect x="${44 + i * 14}" y="30" width="3" height="6" fill="#ffe27a"/><rect x="${42 + i * 14}" y="30" width="7" height="2" fill="#ffe27a"/><rect x="${43 + i * 14}" y="28" width="5" height="2" fill="#ffe27a"/></g>`)
-    .join('')
+  const mates = [
+    seated(20, 88, 36, '#3a86ff', '#7a4426'),
+    seated(52, 88, 36, '#4cc38a', '#2a2a2a'),
+    seated(84, 88, 36, '#ffb740', '#d8a04a'),
+  ].join('')
   return `<g class="scene s3">
   <rect width="${W}" height="${H}" fill="#cfeff3"/><rect y="0" width="${W}" height="6" fill="#a9dbe6"/>
-  <rect y="66" width="${W}" height="34" fill="#9fc3d0"/><rect y="66" width="${W}" height="2" fill="#c3e1ea"/>
-  ${monitor(10, 14, 22, 14)}${monitor(38, 14, 22, 14)}
-  ${box(70, 10, 18, 18, '#ffffff')}<rect x="78" y="14" width="2" height="8" fill="${OUTLINE}"/><rect x="78" y="20" width="6" height="2" fill="${OUTLINE}"/>
-  ${box(98, 8, 56, 52, '#2a3359')}
-  ${bar(16, '#4cc38a', '0s')}${bar(32, '#4fa3ff', '0.1s')}${bar(48, '#ffb740', '0.2s')}
-  ${arrows}
-  ${person(34, 78, '#3a86ff', 'stand', 'bob', '#7a4426', '#ff5a3c')}
-  ${box(10, 66, 66, 5, '#b9793c')}${box(14, 71, 5, 18, '#8a5a30')}${box(66, 71, 5, 18, '#8a5a30')}
-  ${monitor(52, 44, 22, 20)}
-  <rect class="sweat" x="52" y="34" width="3" height="5" fill="#7fe3ff"/><rect class="sweat late" x="18" y="40" width="3" height="5" fill="#7fe3ff"/>
-  ${box(84, 72, 10, 14, '#e0503c')}
+  <rect y="62" width="${W}" height="38" fill="#9fc3d0"/><rect y="62" width="${W}" height="2" fill="#c3e1ea"/>
+  ${box(104, 8, 50, 34, '#ffffff')}
+  <g fill="#4fa3ff"><rect x="112" y="16" width="5" height="5"/><rect x="132" y="16" width="5" height="5"/><rect x="122" y="30" width="5" height="5"/></g>
+  <g fill="#e0503c"><rect x="142" y="28" width="5" height="5"/><rect x="112" y="30" width="5" height="5"/></g>
+  <rect class="plan" x="118" y="20" width="22" height="2" fill="#2a3359"/><rect class="plan" x="124" y="23" width="2" height="8" fill="#2a3359"/>
+  ${box(12, 10, 22, 14, '#3a4268')}<rect class="screen" x="15" y="13" width="16" height="8" fill="#5fd1ff"/>
+  ${mates}
+  ${placeSprite({ shirt: '#3b3b4f', hair: '#9a9aa8' }, 'stand', 130, 88, 44)}
+  <g class="talk">${box(98, 40, 14, 8, '#ffffff')}<rect x="101" y="43" width="2" height="2" fill="${OUTLINE}"/><rect x="105" y="43" width="2" height="2" fill="${OUTLINE}"/><rect x="109" y="43" width="2" height="2" fill="${OUTLINE}"/></g>
 </g>`
 }
+
 
 function sceneWin(): string {
   const colors = ['#ffd34d', '#ff6b7a', '#4fa3ff', '#4cc38a', '#b980ff']
@@ -155,31 +152,24 @@ const CSS = `
 @keyframes heroFlicker { 0% { fill: #5fd1ff; } 50% { fill: #86e0ff; } }
 .hero .beam { animation: heroBeam 1.4s linear infinite; }
 @keyframes heroBeam { from { transform: translateY(0); } to { transform: translateY(12px); } }
-.hero .blk1 { animation: heroBlk 2s steps(2) infinite; }
-.hero .blk2 { animation: heroBlk 2s steps(2) infinite reverse; }
+.hero .blk1 { animation: heroBlk 0.8s steps(2) infinite; }
+.hero .blk2 { animation: heroBlk 0.8s steps(2) infinite reverse; }
+.hero .key1 { animation: heroKey 0.35s steps(2) infinite; }
+.hero .key2 { animation: heroKey 0.35s steps(2) infinite reverse; }
+@keyframes heroKey { 50% { transform: translateY(1px); } }
+.hero .talk { animation: heroTalk 3.2s steps(1) infinite; }
+@keyframes heroTalk { 0%, 55% { opacity: 1; } 60%, 100% { opacity: 0; } }
+.hero .plan { animation: heroPlan 4s steps(1) infinite; }
+@keyframes heroPlan { 0%, 70% { opacity: 1; } 75%, 100% { opacity: 0.2; } }
 @keyframes heroBlk { 50% { transform: translateY(-3px); } }
-.hero .bob { animation: heroBob 2.4s ease-in-out infinite; }
-.hero .step { animation: heroBob 1s ease-in-out infinite; }
-@keyframes heroBob { 50% { transform: translateY(-0.8px); } }
 .hero .blink { animation: heroBlink 1s steps(2) infinite; }
 @keyframes heroBlink { 50% { opacity: 0; } }
 .hero .sun { animation: heroSun 3s steps(2) infinite; }
 @keyframes heroSun { 50% { fill: #fff3a8; } }
 .hero .cloud { animation: heroCloud 8s linear infinite alternate; }
 @keyframes heroCloud { from { transform: translateX(0); } to { transform: translateX(-24px); } }
-.hero .walk { animation: heroWalk 16s infinite; }
-@keyframes heroWalk { 0%, 25% { transform: translateX(-34px); } 38%, 100% { transform: translateX(30px); } }
 .hero .spot { animation: heroSpot 2.4s ease-in-out infinite alternate; }
 @keyframes heroSpot { from { opacity: 0.12; } to { opacity: 0.3; } }
-.hero .crowd { animation: heroCrowd 1.8s ease-in-out infinite; }
-@keyframes heroCrowd { 50% { transform: translateY(-1.5px); } }
-.hero .hbar { transform-box: fill-box; transform-origin: left center; animation: heroBar 16s infinite; }
-@keyframes heroBar { 0%, 50% { transform: scaleX(0.12); } 70%, 100% { transform: scaleX(1); } }
-.hero .rise { animation: heroRise 2.1s linear infinite; }
-@keyframes heroRise { from { transform: translateY(8px); opacity: 0; } 30% { opacity: 1; } to { transform: translateY(-14px); opacity: 0; } }
-.hero .sweat { animation: heroSweat 1.2s linear infinite; }
-.hero .sweat.late { animation-delay: 0.6s; }
-@keyframes heroSweat { from { transform: translateY(0); opacity: 1; } to { transform: translateY(12px); opacity: 0; } }
 .hero .trophy { animation: heroTrophy 16s infinite; }
 @keyframes heroTrophy { 0%, 75% { transform: translateY(28px); } 82%, 100% { transform: translateY(0); } }
 .hero .cheer { animation: heroCheer 1.4s ease-in-out infinite; }
@@ -218,6 +208,6 @@ export function titleHero(): HTMLElement {
     'div',
     { class: 'hero' },
     frame,
-    h('div', { class: 'hero-captions', 'aria-hidden': 'true' }, h('span', { class: 'c1' }, '방구석에서 게임하던 겜돌이가'), h('span', { class: 'c2' }, '대회에 도전하고'), h('span', { class: 'c3' }, '훈련으로 실력을 키워서'), h('span', { class: 'c4' }, '월드 챔피언을 향해!')),
+    h('div', { class: 'hero-captions', 'aria-hidden': 'true' }, h('span', { class: 'c1' }, '방구석에서 열심히 게임하던 겜돌이가'), h('span', { class: 'c2' }, '대회에서 다 같이 겨루고'), h('span', { class: 'c3' }, '코치·팀원과 연습해서 실력을 키워'), h('span', { class: 'c4' }, '월드 챔피언을 향해!')),
   )
 }
