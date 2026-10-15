@@ -1,9 +1,9 @@
 {
   "order": ["basement", "local_cup", "amateur_team", "pro2", "pro1"],
   "stages": {
-    "basement":     { "name": "방구석 랭커",         "next": { "minPower": 300 } },
-    "local_cup":    { "name": "지역 아마추어 대회",   "next": { "minPower": 450, "minFame": 20, "scout": "amateur" } },
-    "amateur_team": { "name": "아마추어 팀 입단",     "next": { "minPower": 550, "minFame": 40, "scout": "pro" } },
+    "basement":     { "name": "방구석 랭커" },
+    "local_cup":    { "name": "지역 아마추어 대회" },
+    "amateur_team": { "name": "아마추어 팀 입단" },
     "pro2":         { "name": "프로 2부 리그",       "next": { "minPower": 650 } },
     "pro1":         { "name": "프로 1부 리그" }
   },

@@ -42,6 +42,8 @@ export type ActionId =
   | 'rehab'
   | 'counseling'
 export type EquipmentId = 'keyboard' | 'mouse' | 'monitor' | 'pc'
+/** 초반 루트: rookie 아직 갈림길 전, academy 정석(아카데미 출신), open 우회(공개 테스트·스카우트) */
+export type PathId = 'rookie' | 'academy' | 'open'
 export type StageId = 'basement' | 'local_cup' | 'amateur_team' | 'pro2' | 'pro1'
 export type EndingId =
   | 'hidden_loyal'
@@ -114,6 +116,16 @@ export interface GameState {
   equipBoughtTurn: number
   /** 이번 턴에 나온 무작위 훈련 후보. 턴이 끝날 때마다 새로 뽑는다. (옛 세이브에는 없을 수 있다 — trainingMenuOf) */
   trainingMenu: ActionId[]
+  /** 초반 루트. 옛 세이브에는 없을 수 있다 (routes.ts가 기본값을 채운다) */
+  path: PathId
+  /** PC방 대회에 나간 횟수 */
+  cafeAttempts: number
+  /** PC방 대회 상위 성적으로 아카데미 입단 테스트 초대를 받았는지 */
+  academyInvite: boolean
+  /** 아카데미 입단 테스트에서 떨어져 재도전한 횟수 */
+  academyRetries: number
+  /** 이번 시즌 결산에서 볼 시험의 준비 선택 (prep id) */
+  testPrep: string | null
   /** 시즌 중간 제안을 마지막으로 받은 시즌. 시즌당 한 번만 온다. */
   midOfferSeason: number
 
@@ -173,6 +185,11 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     equipBoughtTurn: -1,
     trainingMenu: drawTrainingMenu(seed, 0, false),
     midOfferSeason: 0,
+    path: 'rookie',
+    cafeAttempts: 0,
+    academyInvite: false,
+    academyRetries: 0,
+    testPrep: null,
     stage: 'basement',
     team: null,
     debutTeamId: null,

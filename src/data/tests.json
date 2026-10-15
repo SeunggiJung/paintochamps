@@ -1,0 +1,42 @@
+{
+  "tests": {
+    "academy_test": {
+      "name": "아카데미 입단 테스트", "noise": 0.08,
+      "items": [
+        { "label": "실기", "stat": "power", "target": 210, "weight": 0.6 },
+        { "label": "면접", "stat": "mental", "target": 170, "weight": 0.2 },
+        { "label": "팀플", "stat": "teamwork", "target": 170, "weight": 0.2 }
+      ]
+    },
+    "amateur_open_test": {
+      "name": "아마추어 팀 공개 입단 테스트", "noise": 0.08,
+      "items": [
+        { "label": "실기", "stat": "power", "target": 400, "weight": 0.6 },
+        { "label": "면접", "stat": "mental", "target": 280, "weight": 0.2 },
+        { "label": "팀플", "stat": "teamwork", "target": 280, "weight": 0.2 }
+      ]
+    },
+    "pro_tryout": {
+      "name": "프로 트라이아웃", "noise": 0.08,
+      "items": [
+        { "label": "실기", "stat": "power", "target": 500, "weight": 0.6 },
+        { "label": "면접", "stat": "mental", "target": 340, "weight": 0.2 },
+        { "label": "팀플", "stat": "teamwork", "target": 380, "weight": 0.2 }
+      ]
+    },
+    "pro2_open_test": {
+      "name": "프로 2부 공개 입단 테스트", "noise": 0.08,
+      "items": [
+        { "label": "실기", "stat": "power", "target": 560, "weight": 0.5 },
+        { "label": "인지도", "stat": "fame", "target": 40, "weight": 0.2 },
+        { "label": "면접", "stat": "mental", "target": 350, "weight": 0.15 },
+        { "label": "팀플", "stat": "teamwork", "target": 350, "weight": 0.15 }
+      ]
+    }
+  },
+  "prep": [
+    { "id": "focus", "label": "집중 준비", "desc": "시험에 올인한다. 컨디션이 많이 떨어진다.", "bonus": 0.1, "chance": 1, "condition": -15 },
+    { "id": "rest", "label": "컨디션 관리", "desc": "푹 쉬고 시험장에 간다. 효과는 작지만 몸이 가볍다.", "bonus": 0.04, "chance": 1, "condition": 15 },
+    { "id": "advice", "label": "선배에게 조언", "desc": "밥을 사고 요령을 묻는다. 먹힐 때도, 안 먹힐 때도 있다.", "bonus": 0.16, "chance": 0.6, "money": -10 }
+  ]
+}

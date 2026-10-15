@@ -3,6 +3,7 @@ import equipmentData from '../data/equipment.json'
 import gacha from '../data/gacha.json'
 import genres from '../data/genres.json'
 import modes from '../data/modes.json'
+import routes from '../data/routes.json'
 import rules from '../data/rules.json'
 import { applyEffects, type Effects } from './effects.ts'
 import { equipmentEfficiency, growthDelta } from './growth.ts'
@@ -73,6 +74,12 @@ export function turnsPerSeason(mode: GameState['mode']): number {
 /** 한 턴에 이벤트가 하나 이상 일어날 확률: 1 − 0.65^(턴 길이 ÷ 3개월) */
 export function eventChance(mode: GameState['mode']): number {
   return 1 - rules.eventBase ** turnScale(mode)
+}
+
+/** 모드별 성장 보너스(튜토리얼) × 정석 루트(아카데미 코칭) 보너스 */
+function modeGrowth(state: GameState): number {
+  const mode = (modes[state.mode] as { growthBonus?: number }).growthBonus ?? 1
+  return mode * (state.path === 'academy' ? routes.academy.growthBonus : 1)
 }
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
@@ -150,7 +157,7 @@ function applySlot(state: GameState, slot: Slot, scale: number, rng: Rng, notes:
     if (base === undefined) continue
     const delta = growthDelta({
       base,
-      scale: scale * slumpFactor * ((modes[state.mode] as { growthBonus?: number }).growthBonus ?? 1),
+      scale: scale * slumpFactor * modeGrowth(state),
       efficiency,
       condition: state.condition,
       traitMultiplier: state.trait.stat === key ? gacha.traitMultiplier : 1,

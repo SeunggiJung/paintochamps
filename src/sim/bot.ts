@@ -3,6 +3,7 @@ import { rollGacha } from '../engine/gacha.ts'
 import { conditionCoef } from '../engine/growth.ts'
 import { genrePower } from '../engine/power.ts'
 import { createRng, mixSeed, type Rng } from '../engine/rng.ts'
+import { choosePrep, PREP, upcomingTest } from '../engine/routes.ts'
 import { acceptOffer, rollMidSeasonOffer, settleSeason } from '../engine/season.ts'
 import { createInitialState, type ActionId, type EquipmentId, type GameState, type ModeId } from '../engine/state.ts'
 import { trainingMenuOf } from '../engine/training.ts'
@@ -133,6 +134,14 @@ function pickEventChoice(s: GameState, event: GameEvent, policy: BotPolicy, rng:
   return best
 }
 
+/** 시험 준비: 숙련은 가장 효과가 큰 집중 준비, 단순은 컨디션 관리, 무작위는 돈이 되는 것 중 아무거나 */
+function pickPrep(s: GameState, policy: BotPolicy, rng: Rng): string {
+  if (policy === 'skilled') return 'focus'
+  if (policy === 'casual') return 'rest'
+  const options = PREP.filter((p) => !p.money || s.money + p.money >= 0)
+  return options[Math.floor(rng() * options.length)].id
+}
+
 /** 한 판을 끝까지 자동으로 플레이한다. 같은 인자면 항상 같은 결과가 나온다. */
 export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: BotOptions = { policy: 'skilled' }): GameState {
   const rng = createRng(seed)
@@ -155,6 +164,7 @@ export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: Bot
     opts.onTurn?.(s)
 
     if (r.seasonEnded) {
+      if (upcomingTest(s)) s = choosePrep(s, pickPrep(s, opts.policy, botRng))
       s = settleSeason(s).state
       if (s.finished) break
       if (s.pendingOffers) {

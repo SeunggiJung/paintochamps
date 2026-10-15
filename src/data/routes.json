@@ -1,0 +1,6 @@
+{
+  "cafe": { "maxAttempts": 3, "inviteTop": 4, "toLocalAfter": 2, "toLocalMinPower": 280 },
+  "academy": { "retryMax": 1, "growthBonus": 1.05 },
+  "local": { "maxAge": 22, "scoutTop": 4, "scoutMinPower": 430, "openTestTop": 8 },
+  "offerCount": { "scout": 3, "openTest": 2 }
+}

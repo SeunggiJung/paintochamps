@@ -5,6 +5,7 @@ import modes from '../data/modes.json'
 import rules from '../data/rules.json'
 import { rollEvent, turnRng } from '../engine/events.ts'
 import { genrePower } from '../engine/power.ts'
+import { choosePrep, expectedScore, PREP, testItems, testName, upcomingTest } from '../engine/routes.ts'
 import { acceptOffer, eventsFor, rollMidSeasonOffer, stageName } from '../engine/season.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
 import { trainingMenuOf } from '../engine/training.ts'
@@ -238,6 +239,53 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     saveGame(ctx.storage, state)
   }
 
+  /** 이번 결산에서 볼 시험의 현재 달성도와 준비 선택 */
+  function prepCard(): HTMLElement | null {
+    const upcoming = upcomingTest(state)
+    if (!upcoming) return null
+    const items = testItems(state, upcoming.id)
+    const score = Math.round(expectedScore(state, upcoming.id) * 100)
+    const chosen = PREP.find((p) => p.id === state.testPrep)
+    return h(
+      'section',
+      { class: 'card' },
+      h('div', { class: 'row' }, h('h3', {}, testName(upcoming.id)), h('span', { class: 'power' }, '예상 ', h('b', {}, `${score}`), ' / 합격 100')),
+      !upcoming.certain && h('p', { class: 'muted small' }, '지역 대회 성적이 좋으면 응시할 수 있다.'),
+      ...items.map((it) =>
+        h(
+          'div',
+          { class: 'stat-row compact' },
+          h('span', { class: 'stat-name' }, it.label),
+          h('div', { class: 'bar' }, h('div', { class: `bar-fill${it.ratio < 0.8 ? ' low' : ''}`, style: `width:${Math.min(100, (it.ratio / 1.5) * 100)}%` })),
+          h('span', { class: 'stat-value' }, `${Math.round(it.ratio * 100)}%`),
+          h('span', {}),
+        ),
+      ),
+      chosen
+        ? h('p', { class: 'muted' }, `준비: ${chosen.label}`)
+        : h(
+            'div',
+            { class: 'choices vertical' },
+            ...PREP.map((p) =>
+              h(
+                'button',
+                {
+                  class: 'choice',
+                  disabled: !!p.money && state.money + p.money < 0,
+                  onclick: () => {
+                    state = choosePrep(state, p.id)
+                    saveGame(ctx.storage, state)
+                    render()
+                  },
+                },
+                h('b', {}, p.label),
+                h('span', { class: 'muted small' }, p.desc),
+              ),
+            ),
+          ),
+    )
+  }
+
   // 시즌의 마지막 턴까지 마친 상태. 결산 화면으로 넘어간다. (결산은 시드로 정해져서 중간에 나가도 같은 결과가 나온다.)
   function seasonEnd(): HTMLElement {
     return h(
@@ -246,6 +294,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       h('p', { class: 'eyebrow' }, `${state.season}시즌 종료`),
       h('h2', {}, `${state.name} · ${state.age}세`),
       h('p', { class: 'muted' }, '이번 시즌의 모든 턴을 마쳤습니다. 대회 결과를 확인하세요. (진행 상황은 저장되어 있습니다.)'),
+      prepCard(),
       h('button', { class: 'btn primary', onclick: async () => (await askTeamName(), ctx.toSeason(state)) }, '시즌 결산 보기'),
       h('button', { class: 'btn ghost small', onclick: () => ctx.toTitle() }, '타이틀로'),
     )

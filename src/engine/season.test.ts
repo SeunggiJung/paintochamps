@@ -27,9 +27,9 @@ function atSeasonEnd(overrides: Partial<GameState> & { power?: number } = {}, ge
 }
 
 describe('이벤트 목록', () => {
-  it('방구석 단계의 PC방 대회는 2회차(표준·정밀)부터 열리고, 1부는 장르별 일정이 다르다', () => {
-    expect(eventsFor({ stage: 'basement', genre: 'fps', mode: 'tutorial' })).toHaveLength(0)
-    for (const mode of ['standard', 'precise'] as const) expect(eventsFor({ stage: 'basement', genre: 'fps', mode }).map((e) => e.id)).toEqual(['cafe_cup'])
+  it('방구석 단계의 PC방 대회는 모든 모드에 열리지만 아카데미 초대를 받은 해에는 나가지 않고, 1부는 장르별 일정이 다르다', () => {
+    for (const mode of ['tutorial', 'standard', 'precise'] as const) expect(eventsFor({ stage: 'basement', genre: 'fps', mode }).map((e) => e.id)).toEqual(['cafe_cup'])
+    expect(eventsFor({ stage: 'basement', genre: 'fps', mode: 'standard', academyInvite: true })).toHaveLength(0)
     expect(eventsFor({ stage: 'pro1', genre: 'aos', mode: 'standard' }).map((e) => e.id)).toEqual(['split1', 'mid_qualifier', 'midseason', 'split2', 'playoffs', 'world'])
     expect(eventsFor({ stage: 'pro1', genre: 'fps', mode: 'standard' }).map((e) => e.id)).toEqual([
       'kickoff', 'masters1', 'stage1', 'stage1_playoffs', 'masters2', 'stage2', 'stage2_playoffs', 'world',
@@ -69,15 +69,7 @@ describe('시즌 결산', () => {
 })
 
 describe('승급과 강등', () => {
-  it('방구석에서는 R 300 이상이면 지역 대회로 올라가고, 미만이면 머문다', () => {
-    expect(settleSeason(atSeasonEnd({ power: 300 })).state.stage).toBe('local_cup')
-    expect(settleSeason(atSeasonEnd({ power: 299 })).state.stage).toBe('basement')
-  })
-
-  it('지역 대회 → 아마추어 팀은 R 450과 명성 20이 필요하고, 스카우트 제안이 생긴다', () => {
-    const lowFame = settleSeason(atSeasonEnd({ stage: 'local_cup', power: 460, fame: 0 })).state
-    // 대회 보상으로 명성이 오를 수 있으니, 명성이 부족하면 머물고 충분하면 올라가는 쪽만 확인한다
-    if (lowFame.stage === 'local_cup') expect(lowFame.fame).toBeLessThan(20)
+  it('지역 대회에서 상위권에 들고 실력이 받쳐 주면 스카우트 제안이 생긴다', () => {
     const r = settleSeason(atSeasonEnd({ stage: 'local_cup', power: 460, fame: 100 }))
     expect(r.state.stage).toBe('amateur_team')
     expect(r.state.pendingOffers?.kind).toBe('scout')
