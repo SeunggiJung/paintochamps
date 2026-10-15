@@ -190,24 +190,24 @@ input[type='text'] {
 /* 계약 연출 (도트 장면: 서명 → 도장 → 악수) */
 .contract { text-align: center; }
 .contract-svg { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); image-rendering: pixelated; cursor: pointer; }
-.c-paper { opacity: 0; animation: paperLife 2.6s linear both; }
+.c-desk { opacity: 0; animation: paperLife 2.6s linear both; }
 .c-sign { stroke-dasharray: 100; animation: signDraw 1.2s ease-in-out 0.3s both; }
 .c-pen { animation: penMove 1.2s ease-in-out 0.3s both; }
 .c-stamp { transform-box: fill-box; transform-origin: center; animation: stampIn 0.35s ease-out 1.7s backwards; }
-.c-arm-l { animation: armL 0.6s ease-out 2.6s backwards; }
-.c-arm-r { animation: armR 0.6s ease-out 2.6s backwards; }
-.c-grip { animation: fadeIn 0.15s linear 3.1s backwards; }
-.c-clasp { animation: shake 0.14s ease-in-out 3.25s 6 alternate; }
+.c-char-l { animation: charL 3s ease-in-out both; }
+.c-char-r { animation: charR 3s ease-in-out both; }
+.c-arms { animation: fadeIn 0.1s linear 3s backwards; }
+.c-hands { animation: shake 0.14s ease-in-out 3.2s 6 alternate; }
 .c-spark { transform-box: fill-box; transform-origin: center; animation: sparkPop 0.6s ease-out 3.3s backwards; }
 .c-result { animation: fadeUp 0.5s ease-out 3.4s backwards; }
 .c-ok { animation: fadeUp 0.4s ease-out 3.6s backwards; }
 .contract.skip *, .contract.skip { animation: none !important; }
 @keyframes paperLife { 0% { opacity: 0; transform: translateY(6px); } 8% { opacity: 1; transform: none; } 85% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes signDraw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
-@keyframes penMove { from { transform: translate(0, 0); } to { transform: translate(24px, -1px); } }
+@keyframes penMove { from { transform: translate(0, 0); } to { transform: translate(18px, -1px); } }
 @keyframes stampIn { from { opacity: 0; transform: scale(2.6); } to { opacity: 1; transform: none; } }
-@keyframes armL { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: none; } }
-@keyframes armR { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: none; } }
+@keyframes charL { 0%, 78% { transform: translateX(-30px); } 100% { transform: none; } }
+@keyframes charR { 0%, 78% { transform: translateX(30px); } 100% { transform: none; } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes shake { to { transform: translateY(-1.5px); } }
 @keyframes sparkPop { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }

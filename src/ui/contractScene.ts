@@ -3,43 +3,55 @@ import { offerTerms } from '../engine/teams.ts'
 import { h } from './dom.ts'
 import { formatMoney } from './format.ts'
 import { perkLabel } from './offerView.ts'
+import { OUTLINE, placeSprite, shade } from './sprite.ts'
 import { teamHue, teamIconMarkup } from './teamIcon.ts'
 import { openSheet } from './sheet.ts'
 
-/** 도트 풍 계약 장면: 서명 → 팀 도장 → 악수. 클릭하면 연출을 건너뛴다. */
+/** hsl(0~359, %, %) → #rrggbb (스프라이트 셔츠 색은 16진수만 받는다) */
+function hslHex(hue: number, sat: number, light: number): string {
+  const s = sat / 100
+  const l = light / 100
+  const k = (n: number) => (n + hue / 30) % 12
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))
+  const to = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0')
+  return `#${to(f(0))}${to(f(8))}${to(f(4))}`
+}
+
+/** 윤곽선이 있는 상자 */
+function box(x: number, y: number, w: number, hh: number, c: string): string {
+  return `<rect x="${x - 1}" y="${y - 1}" width="${w + 2}" height="${hh + 2}" fill="${OUTLINE}"/><rect x="${x}" y="${y}" width="${w}" height="${hh}" fill="${c}"/><rect x="${x}" y="${y}" width="${w}" height="1" fill="${shade(c, 1.28)}"/><rect x="${x}" y="${y + hh - 1}" width="${w}" height="1" fill="${shade(c, 0.78)}"/>`
+}
+
+/**
+ * 도트 계약 장면(타이틀과 같은 스프라이트 스타일): 책상 양쪽에서 서명하고 팀 도장을 찍은 뒤,
+ * 두 사람이 가운데로 다가와 악수한다. 클릭하면 연출을 건너뛴다.
+ */
 export function sceneSvg(teamId: string): string {
   const hue = teamHue(teamId)
-  const team = `hsl(${hue} 65% 52%)`
-  const teamDark = `hsl(${hue} 60% 36%)`
-  const skin = '#f0c9a0'
-  const skinShade = '#d9ab7c'
+  const teamColor = hslHex(hue, 65, 52)
+  const skin = '#ffd9b3'
   return `
-<svg class="contract-svg" viewBox="0 0 96 64" shape-rendering="crispEdges" role="img" aria-label="계약서에 서명하고 악수하는 장면">
-  <rect width="96" height="64" fill="#1a2036"/>
-  <rect y="0" width="96" height="3" fill="#232a47"/>
-  <rect y="44" width="96" height="20" fill="#6b4a2f"/>
-  <rect y="44" width="96" height="2" fill="#8a6440"/>
-  <g class="c-paper">
-    <rect x="27" y="9" width="42" height="37" fill="#c9c2a8"/>
-    <rect x="26" y="8" width="42" height="37" fill="#f4f1e6"/>
-    <rect x="31" y="13" width="26" height="2" fill="#9aa1bd"/>
-    <rect x="31" y="18" width="32" height="2" fill="#c3c7d6"/>
-    <rect x="31" y="22" width="30" height="2" fill="#c3c7d6"/>
-    <rect x="31" y="26" width="32" height="2" fill="#c3c7d6"/>
-    <rect x="31" y="38" width="20" height="1" fill="#6b7290"/>
-    <path class="c-sign" d="M32 36 l2 -4 l2 5 l2 -6 l2 5 l3 -3 l2 2 l5 -2" fill="none" stroke="#1d3fa0" stroke-width="1.4" pathLength="100"/>
-    <g class="c-pen"><rect x="30" y="26" width="2" height="9" fill="#e4572e"/><rect x="30" y="35" width="2" height="2" fill="#222"/></g>
-    <g class="c-stamp">${teamIconMarkup(teamId, 1.6, 52, 26)}<rect x="51" y="25" width="14.8" height="14.8" fill="none" stroke="${team}" stroke-width="0.6"/></g>
+<svg class="contract-svg" viewBox="0 0 160 100" shape-rendering="crispEdges" role="img" aria-label="계약서에 서명하고 악수하는 장면">
+  <rect width="160" height="100" fill="#cfe6ff"/><rect y="56" width="160" height="14" fill="#a9c9ee"/><rect y="56" width="160" height="2" fill="#d6e8ff"/>
+  <rect y="70" width="160" height="30" fill="#c98f55"/><rect y="82" width="160" height="1" fill="#b27a45"/><rect y="92" width="160" height="1" fill="#b27a45"/>
+  ${box(60, 8, 40, 34, teamColor)}${teamIconMarkup(teamId, 3, 68, 13)}
+  ${box(146, 56, 9, 10, '#d9503a')}<rect x="148" y="48" width="5" height="8" fill="#58c05a"/><rect x="145" y="51" width="4" height="4" fill="#58c05a"/><rect x="152" y="50" width="4" height="4" fill="#58c05a"/>
+  <g class="c-desk">
+    ${box(46, 66, 68, 5, '#b9793c')}${box(50, 71, 5, 16, '#8a5a30')}${box(105, 71, 5, 16, '#8a5a30')}
+    ${box(64, 61, 32, 5, '#ffffff')}
+    <rect x="68" y="63" width="16" height="1" fill="#b5bcd3"/>
+    <path class="c-sign" d="M68 65 l2 -3 l2 4 l2 -5 l2 4 l3 -2 l2 2 l5 -2" fill="none" stroke="#1d3fa0" stroke-width="1.2" pathLength="100"/>
+    <g class="c-pen"><rect x="68" y="55" width="2" height="8" fill="#e4572e"/><rect x="68" y="63" width="2" height="2" fill="#222"/></g>
+    <g class="c-stamp">${teamIconMarkup(teamId, 1.2, 84, 55)}<rect x="83" y="54" width="10.6" height="10.6" fill="none" stroke="${teamColor}" stroke-width="0.6"/></g>
   </g>
-  <g class="c-clasp">
-    <g class="c-arm-l"><rect x="4" y="30" width="28" height="12" fill="#4a7fd4"/><rect x="4" y="30" width="28" height="2" fill="#6a9ae6"/><rect x="32" y="31" width="10" height="9" fill="${skin}"/><rect x="32" y="38" width="10" height="2" fill="${skinShade}"/></g>
-    <g class="c-arm-r"><rect x="64" y="30" width="28" height="12" fill="${team}"/><rect x="64" y="30" width="28" height="2" fill="${teamDark}"/><rect x="54" y="31" width="10" height="9" fill="${skin}"/><rect x="54" y="38" width="10" height="2" fill="${skinShade}"/></g>
-    <g class="c-grip"><rect x="41" y="29" width="14" height="12" fill="${skin}"/>
-    <rect x="41" y="29" width="14" height="2" fill="#fbe0bf"/>
-    <rect x="43" y="33" width="2" height="5" fill="${skinShade}"/><rect x="47" y="33" width="2" height="5" fill="${skinShade}"/><rect x="51" y="33" width="2" height="5" fill="${skinShade}"/>
-    <rect x="41" y="40" width="14" height="1" fill="${skinShade}"/></g>
-  </g>
-  <g class="c-spark" fill="#ffd34d"><rect x="46" y="20" width="2" height="6"/><rect x="44" y="22" width="6" height="2"/><rect x="30" y="24" width="1" height="3"/><rect x="29" y="25" width="3" height="1"/><rect x="66" y="22" width="1" height="3"/><rect x="65" y="23" width="3" height="1"/></g>
+  <g class="c-char-l">${placeSprite({ shirt: '#3a86ff', headset: '#ff5a3c' }, 'stand', 58, 88, 44)}</g>
+  <g class="c-char-r">${placeSprite({ shirt: teamColor, hair: '#2a2a2a' }, 'stand', 102, 88, 44)}</g>
+  <g class="c-arms"><g class="c-hands">
+    ${box(68, 68, 9, 5, '#3a86ff')}${box(85, 68, 9, 5, teamColor)}
+    ${box(77, 68, 8, 5, skin)}
+  </g></g>
+  <g class="c-spark" fill="#ffd34d"><rect x="79" y="62" width="2" height="6"/><rect x="77" y="64" width="6" height="2"/><rect x="66" y="66" width="1" height="3"/><rect x="65" y="67" width="3" height="1"/><rect x="94" y="64" width="1" height="3"/><rect x="93" y="65" width="3" height="1"/></g>
 </svg>`
 }
 
