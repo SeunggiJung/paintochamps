@@ -1,5 +1,6 @@
 import type { Grade, StatKey } from '../engine/types.ts'
 import type { ModeId } from '../engine/state.ts'
+import { TRAINING_POOL } from '../engine/training.ts'
 
 export const STAT_LABEL: Record<StatKey, string> = {
   reaction: '반응속도',
@@ -27,8 +28,10 @@ export const MODE_INFO: Record<ModeId, { name: string; desc: string }> = {
 }
 
 /** 행동 목록 묶음. 여기 없는 행동은 목록에 나오지 않으니 행동을 추가하면 여기도 넣는다. */
+
 export const ACTION_GROUPS: { title: string; ids: string[] }[] = [
-  { title: '훈련', ids: ['basics', 'aim_lab', 'reflex_drill', 'video_review', 'strategy_study', 'vs_pros', 'concentration', 'mental_training', 'marathon_match', 'sparring', 'team_scrim', 'comms_practice', 'rank_practice', 'private_lesson', 'overtrain', 'all_night_gaming'] },
+  { title: '훈련', ids: TRAINING_POOL },
+  { title: '특별 훈련', ids: ['private_lesson', 'overtrain', 'all_night_gaming'] },
   { title: '회복', ids: ['rest', 'meditation', 'rehab', 'counseling', 'hangout'] },
   { title: '돈·명성', ids: ['part_time', 'broadcast', 'donate'] },
   { title: '유혹', ids: ['drink', 'nightlife', 'gamble', 'impulse_shopping', 'community_flame'] },

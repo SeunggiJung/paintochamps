@@ -9,7 +9,7 @@
   "baseMonths": 3,
   "growthRate": 0.3,
   "growthExponent": 0.15,
-  "trainingMenuSize": 4,
+  "trainingMenuSize": 3,
   "eventBase": 0.65,
   "conditionCoef": {
     "full": 80,
