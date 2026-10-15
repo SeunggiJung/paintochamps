@@ -2,6 +2,7 @@ import rules from '../data/rules.json'
 import stageData from '../data/stages.json'
 import { evaluateEnding } from './endings.ts'
 import { advanceCalendar } from './calendar.ts'
+import { moneyScale } from './economy.ts'
 import { eventsFor, playerPower, type EventDef } from './competitions.ts'
 import { pickTeams } from './field.ts'
 import { playSeries } from './match.ts'
@@ -200,7 +201,7 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
   return {
     ...state,
     team: offer.team,
-    money: state.money + (offer.perk === 'salary' ? OFFERS.salaryMoney : 0),
+    money: state.money + (offer.perk === 'salary' ? OFFERS.salaryMoney * moneyScale(state.stage) : 0),
     fame: state.fame + (offer.perk === 'playtime' ? OFFERS.playtimeFame : 0),
     pendingOffers: null,
   }

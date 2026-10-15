@@ -1,6 +1,7 @@
 import type { GameState, Offer } from '../engine/state.ts'
 import { offerTerms } from '../engine/teams.ts'
 import { h } from './dom.ts'
+import { formatMoney } from './format.ts'
 import { perkLabel } from './offerView.ts'
 import { teamHue, teamIconMarkup } from './teamIcon.ts'
 import { openSheet } from './sheet.ts'
@@ -56,7 +57,7 @@ export async function showContract(state: GameState, offer: Offer, kind: 'join' 
         { class: 'c-result' },
         h('p', { class: 'eyebrow' }, kind === 'transfer' ? '이적 계약 체결' : '입단 계약 체결'),
         h('h2', {}, `${offer.team.name}`),
-        terms && h('p', { class: 'muted' }, `월급 ${terms.profile.salary}만 / 3개월 · ${perkLabel(offer)}`),
+        terms && h('p', { class: 'muted' }, `월급 ${formatMoney(terms.profile.salary)} / 3개월 · ${perkLabel(offer, state.stage)}`),
       ),
       h('button', { class: 'btn primary c-ok', onclick: () => close() }, '확인'),
     )

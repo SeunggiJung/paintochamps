@@ -1,5 +1,6 @@
 import { applyEventChoice, availableChoices, choiceOutcomes, rollEvent, turnRng, type GameEvent } from '../engine/events.ts'
 import { rollGacha } from '../engine/gacha.ts'
+import { moneyScale } from '../engine/economy.ts'
 import { conditionCoef } from '../engine/growth.ts'
 import { genrePower } from '../engine/power.ts'
 import { createRng, mixSeed, type Rng } from '../engine/rng.ts'
@@ -42,7 +43,7 @@ function value(s: GameState): number {
     80 * conditionCoef(s.condition) +
     0.2 * s.condition +
     0.5 * s.fame +
-    0.15 * s.money +
+    0.15 * (s.money / moneyScale(s.stage)) + // 돈은 소속 단계의 규모로 나눠 같은 무게로 본다
     8 * levels * horizon -
     10 * s.vice -
     4 * s.injuredMonths -

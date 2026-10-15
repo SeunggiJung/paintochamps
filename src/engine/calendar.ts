@@ -1,5 +1,6 @@
 import routes from '../data/routes.json'
 import { eventsFor, midPhase, playerPower, type EventDef } from './competitions.ts'
+import { moneyScale } from './economy.ts'
 import { academyName, makeOpponents } from './field.ts'
 import { createRng, mixSeed } from './rng.ts'
 import type { GameState, RunRecord, SeasonRun, StandingRow } from './state.ts'
@@ -109,7 +110,7 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
 
   const reward = ev.rewards.find((r) => placement <= r.upTo) ?? ev.rewards[ev.rewards.length - 1]
   return {
-    record: { id: ev.id, name: ev.name, placement, fieldSize: order.length, fame: reward.fame, money: reward.money, order, mid, table, advanced, revealed: 'none' },
+    record: { id: ev.id, name: ev.name, placement, fieldSize: order.length, fame: reward.fame, money: reward.money * moneyScale(state.stage), order, mid, table, advanced, revealed: 'none' },
     qualified,
     points,
   }

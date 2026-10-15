@@ -10,6 +10,7 @@ import { applyEffects, type Effects } from './effects.ts'
 import { equipmentEfficiency, growthDelta } from './growth.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { ActionId, EquipmentId, GameState } from './state.ts'
+import { equipmentCost, moneyScale } from './economy.ts'
 import { salaryOf } from './teams.ts'
 import { drawTrainingMenu, trainingMenuOf } from './training.ts'
 import { STAT_KEYS, type StatKey, type Stats } from './types.ts'
@@ -48,7 +49,7 @@ interface ActionDef {
 }
 
 export const ACTIONS = actionData as Record<ActionId, ActionDef>
-const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; costs: number[] }>
+const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; base: number }>
 
 /** 한 칸의 선택: 일반 행동 (장비 구매는 행동을 쓰지 않는다 — buyEquipment) */
 export type Slot = { id: ActionId }
@@ -88,9 +89,9 @@ function modeGrowth(state: GameState): number {
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
-/** 행동에 쓰는 돈 (양수). 돈을 버는 행동이면 0. */
-function costOf(action: ActionDef, scale: number): number {
-  return Math.max(0, -(action.money ?? 0)) * scale
+/** 행동에 쓰는 돈 (양수). 돈을 버는 행동이면 0. 소속 단계의 돈 규모를 곱한다. */
+export function moneyCostOf(state: Pick<GameState, 'stage' | 'mode'>, id: ActionId): number {
+  return Math.max(0, -(ACTIONS[id].money ?? 0)) * turnScale(state.mode) * moneyScale(state.stage)
 }
 
 /** 같은 행동을 한 턴에 두 번 고를 수 있는지. 훈련은 한 번만, 휴식·아르바이트 같은 건 두 번도 된다. */
@@ -116,7 +117,7 @@ export function checkSlot(state: GameState, slot: Slot): string | null {
   if (minFame !== undefined && state.fame < minFame) return `${action.name}은(는) 명성 ${minFame} 이상이어야 한다`
   if (injured && state.injuredMonths <= 0) return `${action.name}은(는) 부상 중에만 할 수 있다`
   if (slump && state.slumpMonths <= 0) return `${action.name}은(는) 슬럼프 중에만 할 수 있다`
-  const cost = costOf(action, turnScale(state.mode))
+  const cost = moneyCostOf(state, slot.id)
   if (state.money < cost) return `돈이 부족하다 (${Math.ceil(cost)}만 원 필요)`
   return null
 }
@@ -129,7 +130,7 @@ export function checkEquipment(state: GameState, item: EquipmentId): string | nu
   const level = state.equipment[item]
   if (level >= rules.equipment.maxLevel) return `${def.name}은(는) 이미 최고 단계다`
   if (state.equipBoughtTurn === state.turnCount) return '장비는 한 턴에 하나만 살 수 있다'
-  if (state.money < def.costs[level]) return `돈이 부족하다 (${def.costs[level]}만 원 필요)`
+  if (state.money < equipmentCost(item, level)) return `돈이 부족하다 (${equipmentCost(item, level).toLocaleString('ko-KR')}만 원 필요)`
   return null
 }
 
@@ -142,7 +143,7 @@ export function buyEquipment(state: GameState, item: EquipmentId): { ok: true; s
     ok: true,
     state: {
       ...state,
-      money: state.money - EQUIPMENT[item].costs[level],
+      money: state.money - equipmentCost(item, level),
       equipment: { ...state.equipment, [item]: level + 1 },
       equipBoughtTurn: state.turnCount,
     },

@@ -1,6 +1,8 @@
 {
-  "salaryPerBase": { "amateur_team": 5, "pro2": 15, "pro1": 35 },
-  "traineeSalary": 3,
+  "salaryPerBase": { "amateur_team": 120, "pro2": 800, "pro1": 3000 },
+  "traineeSalary": 60,
+  "fameBonus": { "perFame": 0.004, "max": 1.5 },
+  "moneyScale": { "basement": 1, "local_cup": 1, "amateur_team": 2, "pro2": 8, "pro1": 30 },
   "leagueSize": { "amateur_team": 6, "pro2": 6, "pro1": 10 },
   "strengthSpread": { "min": 0.8, "max": 1.4 },
   "teamWeight": 0.3

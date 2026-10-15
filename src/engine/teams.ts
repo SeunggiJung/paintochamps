@@ -1,5 +1,6 @@
 import contracts from '../data/contracts.json'
 import { amateurTeams, proOrgs, teamPower, TIERS } from './field.ts'
+import { salaryFameMultiplier } from './economy.ts'
 import { genrePower } from './power.ts'
 import { pathOf } from './routes.ts'
 import type { GameState, Offer, StageId, TeamRef } from './state.ts'
@@ -39,7 +40,7 @@ function salaryFor(stage: Contracted, power: number): number {
 }
 
 /** 팀의 이번 시즌 정보: 전력, 지난 시즌 순위, 제시하는 월급. 시드로 정해져서 어느 화면에서 봐도 같다. */
-export function teamProfile(seed: number, season: number, team: TeamRef, stage: StageId): TeamProfile | null {
+export function teamProfile(seed: number, season: number, team: TeamRef, stage: StageId, fame = 0): TeamProfile | null {
   const tier = TIER_OF_STAGE[stage]
   if (!tier) return null
   const contracted = stage as Contracted
@@ -50,7 +51,7 @@ export function teamProfile(seed: number, season: number, team: TeamRef, stage: 
   const order = pool.map((t) => ({ id: t.id, p: teamPower(seed, last, t.id, tier) })).sort((a, b) => b.p - a.p)
   const index = Math.max(0, order.findIndex((t) => t.id === team.id))
   const leagueSize = LEAGUE_SIZE[contracted]
-  return { team, stage, power, lastRank: 1 + Math.floor((index * leagueSize) / order.length), leagueSize, salary: salaryFor(contracted, power) }
+  return { team, stage, power, lastRank: 1 + Math.floor((index * leagueSize) / order.length), leagueSize, salary: Math.round(salaryFor(contracted, power) * salaryFameMultiplier(fame)) }
 }
 
 /** 정석 루트의 연습생은 팀 전력과 상관없이 훈련비 정도만 받는다 */
@@ -62,7 +63,7 @@ function isTrainee(state: Pick<GameState, 'stage' | 'path'>): boolean {
 export function salaryOf(state: GameState): number {
   if (!state.team) return 0
   if (isTrainee(state)) return contracts.traineeSalary
-  const profile = teamProfile(state.seed, state.season, state.team, state.stage)
+  const profile = teamProfile(state.seed, state.season, state.team, state.stage, state.fame)
   return profile?.salary ?? 0
 }
 
@@ -102,7 +103,7 @@ export interface OfferTerms {
 
 /** 제안을 받은 팀의 조건 요약. 이적·입단 결정에 쓰는 정보다. */
 export function offerTerms(state: GameState, offer: Offer): OfferTerms | null {
-  const profile = teamProfile(state.seed, state.season, offer.team, state.stage)
+  const profile = teamProfile(state.seed, state.season, offer.team, state.stage, state.fame)
   if (!profile) return null
   const myPower = genrePower(state.stats, state.genre)
   const gap = profile.power - myPower

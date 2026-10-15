@@ -1,5 +1,6 @@
 import eventData from '../data/events.json'
 import { applyEffects, type Effects } from './effects.ts'
+import { moneyScale } from './economy.ts'
 import { pathOf } from './routes.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { GameState, PathId, StageId } from './state.ts'
@@ -71,7 +72,7 @@ export function isEligible(state: GameState, e: GameEvent): boolean {
   if (w.path && !w.path.includes(pathOf(state))) return false
   if (w.invited !== undefined && !!state.academyInvite !== w.invited) return false
   if (!inRange(state.cafeAttempts ?? 0, w.cafeAttempts) || !inRange(state.academyRetries ?? 0, w.academyRetries)) return false
-  if (!inRange(state.condition, w.condition) || !inRange(state.fame, w.fame) || !inRange(state.money, w.money) || !inRange(state.vice, w.vice)) return false
+  if (!inRange(state.condition, w.condition) || !inRange(state.fame, w.fame) || !inRange(state.money / moneyScale(state.stage), w.money) || !inRange(state.vice, w.vice)) return false
   for (const key of STAT_KEYS) if (!inRange(state.stats[key], w.stat?.[key])) return false
   return true
 }
@@ -101,7 +102,7 @@ export function availableChoices(state: GameState, event: GameEvent): number[] {
   return event.choices.flatMap((c, i) => {
     const r = c.requires
     if (r?.team !== undefined && (state.team !== null) !== r.team) return []
-    if (r?.minMoney !== undefined && state.money < r.minMoney) return []
+    if (r?.minMoney !== undefined && state.money < r.minMoney * moneyScale(state.stage)) return []
     return [i]
   })
 }

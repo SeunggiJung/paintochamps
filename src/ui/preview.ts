@@ -1,6 +1,7 @@
 import genres from '../data/genres.json'
 import modes from '../data/modes.json'
-import { ACTIONS, applyTurn, turnScale, type Slot, type TurnChoice } from '../engine/turn.ts'
+import { ACTIONS, applyTurn, moneyCostOf, type Slot, type TurnChoice } from '../engine/turn.ts'
+import { formatMoneyDelta } from './format.ts'
 import type { GameState } from '../engine/state.ts'
 import { STAT_KEYS } from '../engine/types.ts'
 import { STAT_LABEL } from './labels.ts'
@@ -31,7 +32,13 @@ export function describeChange(before: GameState, after: GameState, detail: Prev
   }
   for (const k of STAT_KEYS) put(STAT_LABEL[k], after.stats[k] - before.stats[k])
   put('컨디션', after.condition - before.condition)
-  put('돈', after.money - before.money, '만')
+  const moneyDelta = after.money - before.money
+  if (detail === 'exact') {
+    if (Math.round(moneyDelta) !== 0) out.push(`돈 ${formatMoneyDelta(moneyDelta)}`)
+  } else {
+    const a = arrow(moneyDelta)
+    if (a) out.push(`돈 ${a}`)
+  }
   put('명성', after.fame - before.fame)
   if (after.injuredMonths > before.injuredMonths) out.push('부상')
   if (after.slumpMonths > before.slumpMonths) out.push('슬럼프')
@@ -85,5 +92,5 @@ export function actionRisks(slot: Slot, state: GameState): string[] {
 
 /** 행동 하나의 돈 비용(만 원, 올림). 벌기만 하는 행동이면 0. */
 export function actionCost(slot: Slot, state: GameState): number {
-  return Math.ceil(Math.max(0, -(ACTIONS[slot.id].money ?? 0)) * turnScale(state.mode))
+  return Math.ceil(moneyCostOf(state, slot.id))
 }

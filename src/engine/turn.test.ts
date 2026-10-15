@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import modes from '../data/modes.json'
 import rules from '../data/rules.json'
+import { equipmentCost } from './economy.ts'
 import { conditionCoef, conditionTier, equipmentEfficiency, growthDelta } from './growth.ts'
 import { settleSeason } from './season.ts'
 import { createInitialState, type GameState, type ModeId } from './state.ts'
@@ -56,7 +57,17 @@ describe('성장 공식', () => {
 
   it('장비를 모두 최고 단계로 올리면 효율 1.2', () => {
     expect(equipmentEfficiency({ keyboard: 0, mouse: 0, monitor: 0, pc: 0 })).toBe(1)
-    expect(equipmentEfficiency({ keyboard: 3, mouse: 3, monitor: 3, pc: 3 })).toBeCloseTo(1.2)
+    const max = rules.equipment.maxLevel
+    expect(equipmentEfficiency({ keyboard: max, mouse: max, monitor: max, pc: max })).toBeCloseTo(1.2)
+  })
+
+  it('장비는 최고 10단계이고, 단계마다 가격이 2배로 오른다', () => {
+    expect(rules.equipment.maxLevel).toBe(10)
+    expect([0, 1, 2, 3].map((l) => equipmentCost('keyboard', l))).toEqual([5, 10, 20, 40])
+    expect(equipmentCost('keyboard', 9)).toBe(5 * 2 ** 9)
+    // 한 종류를 끝까지 올리는 비용은 첫 단계 가격의 약 2배^10
+    const total = Array.from({ length: 10 }, (_, l) => equipmentCost('pc', l)).reduce((a, b) => a + b, 0)
+    expect(total).toBe(15 * (2 ** 10 - 1))
   })
 })
 
@@ -175,7 +186,7 @@ describe('조건과 비용', () => {
     const r = buyEquipment(s, 'keyboard')
     if (!r.ok) throw new Error(r.error)
     expect(r.state.equipment.keyboard).toBe(1)
-    expect(r.state.money).toBe(40)
+    expect(r.state.money).toBe(45)
     expect(r.state.turnCount).toBe(s.turnCount)
     expect(r.state.turnInSeason).toBe(s.turnInSeason)
   })
@@ -190,7 +201,7 @@ describe('조건과 비용', () => {
 
   it('돈이 부족하거나 최고 단계면 구매할 수 없다', () => {
     expect(buyEquipment(make({ age: 20, money: 5 }), 'pc').ok).toBe(false)
-    const maxed = make({ age: 20, money: 999, equipment: { keyboard: 3, mouse: 0, monitor: 0, pc: 0 } })
+    const maxed = make({ age: 20, money: 9999999, equipment: { keyboard: 10, mouse: 0, monitor: 0, pc: 0 } })
     expect(buyEquipment(maxed, 'keyboard').ok).toBe(false)
   })
 

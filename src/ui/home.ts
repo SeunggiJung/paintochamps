@@ -26,9 +26,11 @@ import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
 import { statName } from './statHelp.ts'
 import { teamIcon } from './teamIcon.ts'
+import { equipmentCost } from '../engine/economy.ts'
 import { salaryOf } from '../engine/teams.ts'
+import { formatMoney } from './format.ts'
 
-const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; costs: number[] }>
+const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; base: number }>
 const BAR_MAX = gacha.statMax
 
 /** 이 행동을 목록에 보여 줄지. 모드·팀·부상 같은 구조적 이유로 못 하는 행동은 아예 숨기고, 돈·명성 부족은 이유와 함께 비활성으로 보여 준다. */
@@ -84,7 +86,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     return h(
       'button',
       { class: `action${taken ? ' taken' : ''}`, disabled: !!reason || busy, onclick: () => pick(slot) },
-      h('span', { class: 'action-title' }, title, cost > 0 && h('em', {}, ` ${cost}만`), taken && h('span', { class: 'tag taken-tag' }, '선택됨')),
+      h('span', { class: 'action-title' }, title, cost > 0 && h('em', {}, ` ${formatMoney(cost)}`), taken && h('span', { class: 'tag taken-tag' }, '선택됨')),
       h('span', { class: 'muted small' }, reason ?? (taken ? '다시 누르면 취소' : tags.join(' · '))),
       risks.length > 0 && !reason && h('span', { class: 'risk small' }, `⚠ ${risks.join(' / ')}`),
     )
@@ -187,7 +189,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       return h(
         'button',
         { class: 'action', disabled: !!reason || busy, onclick: () => buy(item) },
-        h('span', { class: 'action-title' }, title, !maxed && h('em', {}, ` ${EQUIPMENT[item].costs[level]}만`)),
+        h('span', { class: 'action-title' }, title, !maxed && h('em', {}, ` ${formatMoney(equipmentCost(item, level))}`)),
         h('span', { class: 'muted small' }, reason ?? '훈련 효율↑ · 바로 구매 (턴 소모 없음)'),
       )
     })
@@ -203,13 +205,13 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
           `${genres[state.genre].name} · ${MODE_INFO[state.mode].name} · ${stageName(state.stage)} · `,
           state.team && teamIcon(state.team.id, 18),
           `${state.team?.name ?? '무소속'}`,
-          state.team && salaryOf(state) > 0 ? ` · 월급 ${salaryOf(state)}만` : null,
+          state.team && salaryOf(state) > 0 ? ` · 월급 ${formatMoney(salaryOf(state))}/3개월` : null,
         ),
         h(
           'div',
           { class: 'meters' },
           h('div', {}, h('span', { class: 'muted small cond-label' }, '컨디션', conditionHelp(state)), h('div', { class: 'bar' }, h('div', { class: `bar-fill${tier.max <= 30 ? ' low' : tier.label === '완벽' ? ' perfect' : ''}`, style: `width:${state.condition}%` })), h('b', {}, conditionText(state))),
-          h('div', { class: 'kv' }, h('span', { class: 'muted small' }, '돈'), h('b', {}, `${Math.round(state.money)}만`)),
+          h('div', { class: 'kv' }, h('span', { class: 'muted small' }, '돈'), h('b', {}, formatMoney(state.money))),
           h('div', { class: 'kv' }, h('span', { class: 'muted small' }, '명성'), h('b', {}, String(Math.round(state.fame)))),
         ),
         statusChips().length > 0 && h('div', { class: 'chips' }, ...statusChips()),

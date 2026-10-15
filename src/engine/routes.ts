@@ -1,5 +1,6 @@
 import routes from '../data/routes.json'
 import testData from '../data/tests.json'
+import { moneyScale } from './economy.ts'
 import { academyName, pickTeams } from './field.ts'
 import { genrePower } from './power.ts'
 import { gaussian, type Rng } from './rng.ts'
@@ -93,12 +94,13 @@ export function choosePrep(state: GameState, prepId: string): GameState {
   if (!prep) throw new Error('없는 준비다')
   if (!upcomingTest(state)) throw new Error('볼 시험이 없다')
   if (state.testPrep) throw new Error('이미 준비를 골랐다')
-  if (prep.money && state.money + prep.money < 0) throw new Error('돈이 부족하다')
+  const prepMoney = (prep.money ?? 0) * moneyScale(state.stage)
+  if (prepMoney && state.money + prepMoney < 0) throw new Error('돈이 부족하다')
   return {
     ...state,
     testPrep: prepId,
     condition: Math.min(100, Math.max(0, state.condition + (prep.condition ?? 0))),
-    money: state.money + (prep.money ?? 0),
+    money: state.money + prepMoney,
   }
 }
 

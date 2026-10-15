@@ -9,6 +9,7 @@ import { recordFinish, saveGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
 import { statName } from './statHelp.ts'
+import { formatMoney } from './format.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
 
@@ -147,7 +148,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
             'div',
             { class: 'event-row' },
             h('div', { class: 'row' }, h('b', {}, e.name), h('span', { class: e.placement <= 3 ? 'place top' : 'place' }, `${e.placement}위 / ${e.fieldSize}팀`)),
-            h('span', { class: 'muted small' }, `명성 ${signed(e.fame)}${e.money > 0 ? ` · 상금 +${e.money}만` : ''}`),
+            h('span', { class: 'muted small' }, `명성 ${signed(e.fame)}${e.money > 0 ? ` · 상금 +${formatMoney(e.money)}` : ''}`),
           ),
         ),
         report.rival &&
@@ -163,7 +164,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         { class: 'card' },
         h('h3', {}, '이번 시즌 합계'),
         h('div', { class: 'delta-row' }, h('span', { class: 'stat-name' }, '명성'), h('span', { class: 'delta-vals muted' }, `${Math.round(before.fame)} → ${Math.round(settled.fame)}`), delta(fameGain)),
-        h('div', { class: 'delta-row' }, h('span', { class: 'stat-name' }, '돈'), h('span', { class: 'delta-vals muted' }, `${Math.round(before.money)}만 → ${Math.round(settled.money)}만`), delta(moneyGain)),
+        h('div', { class: 'delta-row' }, h('span', { class: 'stat-name' }, '돈'), h('span', { class: 'delta-vals muted' }, `${formatMoney(before.money)} → ${formatMoney(settled.money)}`), delta(moneyGain)),
       ),
       offersCard(),
       state.finished && h('section', { class: 'card' }, h('h3', {}, '기록'), h('p', { class: 'muted' }, state.rerolls > 0 ? `능력치 뽑기를 ${state.rerolls}번 다시 뽑았다.` : '능력치 뽑기를 한 번에 확정했다.')),

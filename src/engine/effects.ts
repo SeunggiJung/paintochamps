@@ -1,5 +1,6 @@
 import gacha from '../data/gacha.json'
 import rules from '../data/rules.json'
+import { moneyScale } from './economy.ts'
 import type { GameState } from './state.ts'
 import { STAT_KEYS, type Stats } from './types.ts'
 
@@ -50,7 +51,8 @@ export function applyEffects(state: GameState, fx: Effects, scale = 1): GameStat
     ...state,
     stats,
     condition: clamp(state.condition + (fx.condition ?? 0) * scale, 0, 100),
-    money: Math.max(0, state.money + (fx.money ?? 0) * scale),
+    // 돈은 소속 단계의 규모(moneyScale)를 곱한다: 프로가 될수록 쓰고 버는 금액이 커진다
+    money: Math.max(0, state.money + (fx.money ?? 0) * scale * moneyScale(state.stage)),
     fame: Math.max(0, state.fame + (fx.fame ?? 0) * scale),
     vice: Math.max(0, state.vice + (fx.vice ?? 0) * scale),
     slumpMonths: slump,

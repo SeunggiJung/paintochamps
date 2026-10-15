@@ -20,7 +20,8 @@
   "conditionRecoveryPerBase": 8,
   "equipment": {
     "maxEfficiencyBonus": 0.2,
-    "maxLevel": 3
+    "maxLevel": 10,
+    "costFactor": 2
   },
   "school": {
     "untilAge": 18,
