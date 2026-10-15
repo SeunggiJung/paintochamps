@@ -245,7 +245,7 @@ export function startNextSeason(state: GameState): GameState {
       stats[key] = Math.max(0, stats[key] - rules.ageDecline.amountPerSeason)
     }
   }
-  return { ...state, stats, age: state.age + 1, season: state.season + 1, turnInSeason: 0 }
+  return { ...state, stats, seasonStartStats: { ...stats }, age: state.age + 1, season: state.season + 1, turnInSeason: 0 }
 }
 
 /** 30세 시즌이 끝났으면 커리어가 끝난다. */

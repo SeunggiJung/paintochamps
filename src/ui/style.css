@@ -143,3 +143,19 @@ input[type='text'] {
 .event-text { margin: 0; font-size: 1.05rem; line-height: 1.6; }
 @keyframes rise { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
+
+/* 시즌 결산 */
+.up { color: var(--grade-R); }
+.down { color: var(--danger); }
+.flat { color: var(--muted); }
+.headline { text-align: center; align-items: center; padding: 20px 14px; }
+.headline p { margin: 0; }
+.headline-title { font-size: 1.4rem; font-weight: 900; }
+.headline.gold { border-color: var(--grade-UR); box-shadow: 0 0 26px #ffb740aa; }
+.headline.gold .headline-title { color: var(--grade-UR); }
+.headline.silver { border-color: var(--grade-SR); }
+.delta-row { display: grid; grid-template-columns: 5.5em 1fr auto; align-items: center; gap: 8px; }
+.delta-vals { text-align: right; font-variant-numeric: tabular-nums; }
+.event-row { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid var(--line); }
+.event-row:first-of-type { border-top: 0; }
+.place.top { color: var(--grade-UR); font-weight: 700; }

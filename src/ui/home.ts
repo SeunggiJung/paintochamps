@@ -181,15 +181,16 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     root.replaceChildren(...parts.filter((p): p is HTMLElement => !!p))
   }
 
-  // 시즌의 마지막 턴까지 마친 상태. 결산 화면(③)이 붙기 전까지는 안내만 한다.
+  // 시즌의 마지막 턴까지 마친 상태. 결산 화면으로 넘어간다. (결산은 시드로 정해져서 중간에 나가도 같은 결과가 나온다.)
   function seasonEnd(): HTMLElement {
     return h(
       'section',
       { class: 'stack-tight' },
       h('p', { class: 'eyebrow' }, `${state.season}시즌 종료`),
       h('h2', {}, `${state.name} · ${state.age}세`),
-      h('p', { class: 'muted' }, '이번 시즌의 모든 턴을 마쳤습니다. 대회 결과와 시즌 결산 화면은 다음 작업에서 만들어집니다. (진행 상황은 저장되어 있습니다.)'),
-      h('button', { class: 'btn', onclick: () => ctx.toTitle() }, '타이틀로'),
+      h('p', { class: 'muted' }, '이번 시즌의 모든 턴을 마쳤습니다. 대회 결과를 확인하세요. (진행 상황은 저장되어 있습니다.)'),
+      h('button', { class: 'btn primary', onclick: () => ctx.toSeason(state) }, '시즌 결산 보기'),
+      h('button', { class: 'btn ghost small', onclick: () => ctx.toTitle() }, '타이틀로'),
     )
   }
 

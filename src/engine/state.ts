@@ -83,6 +83,8 @@ export interface GameState {
   /** 전체 진행 턴 수 */
   turnCount: number
   stats: Stats
+  /** 이번 시즌을 시작할 때의 능력치. 시즌 결산 화면이 변동폭을 보여 주는 기준이다. (옛 저장에는 없을 수 있다) */
+  seasonStartStats: Stats
   trait: Trait
   condition: number
   /** 만 원 */
@@ -132,6 +134,7 @@ export function createInitialState({ name, genre, mode, gacha, seed }: NewGameOp
     turnInSeason: 0,
     turnCount: 0,
     stats: { ...gacha.stats },
+    seasonStartStats: { ...gacha.stats },
     trait: gacha.trait,
     condition: rules.start.condition,
     money: rules.start.money,
