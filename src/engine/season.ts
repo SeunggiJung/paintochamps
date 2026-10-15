@@ -104,7 +104,8 @@ interface Ctx {
 
 function playerTeam(state: GameState, ev: EventDef, power: number): Team {
   const base = state.team ?? { id: 'player', name: state.name }
-  return { id: base.id, name: ev.field?.names === 'academy' ? academyName(base) : base.name, power, isPlayer: true }
+  const name = ev.field?.names === 'academy' ? academyName(base) : ev.field?.names === 'cafe' ? (state.cafeTeamName ?? `${state.name}팀`) : base.name
+  return { id: base.id, name, power, isPlayer: true }
 }
 
 function runEvent(state: GameState, ev: EventDef, ctx: Ctx): Outcome | null {

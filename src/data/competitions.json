@@ -11,7 +11,7 @@
     "basement": [
       {
         "id": "cafe_cup", "name": "PC방 대회", "format": "elimination", "modes": ["standard", "precise"],
-        "field": { "names": "amateur", "tier": "cafe", "size": 8 }, "k": 1, "bestOf": 1,
+        "field": { "names": "cafe", "tier": "cafe", "size": 8 }, "k": 1, "bestOf": 1,
         "rewards": [{ "upTo": 1, "fame": 4, "money": 15 }, { "upTo": 2, "fame": 2, "money": 8 }, { "upTo": 4, "fame": 1, "money": 3 }, { "upTo": 99, "fame": 0, "money": 0 }]
       }
     ],

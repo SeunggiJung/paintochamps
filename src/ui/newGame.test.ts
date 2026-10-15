@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STAT_KEYS } from '../engine/types.ts'
-import { cleanName, NAME_MAX, playableGenres, REROLL_LIMIT, rollAt } from './newGame.ts'
+import { cleanName, NAME_MAX, playableGenres, rollAt } from './newGame.ts'
 
 describe('새 게임 로직', () => {
   it('같은 시드·같은 횟수면 뽑기 결과가 같고, 횟수가 다르면 달라진다', () => {
@@ -9,7 +9,7 @@ describe('새 게임 로직', () => {
   })
 
   it('뽑기 능력치 합계는 항상 600', () => {
-    for (let i = 0; i <= REROLL_LIMIT; i++) {
+    for (let i = 0; i <= 10; i++) {
       const sum = STAT_KEYS.reduce((a, k) => a + rollAt(7, 'aos', i).stats[k], 0)
       expect(sum).toBe(600)
     }

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { evaluateEnding } from './endings.ts'
+import { makeOpponents } from './field.ts'
+import { createRng } from './rng.ts'
 import { createInitialState, type GameState, type StageId } from './state.ts'
 import { acceptOffer, eventsFor, retire, settleSeason } from './season.ts'
 import { applyTurn, startNextSeason } from './turn.ts'
@@ -227,5 +229,27 @@ describe('엔딩', () => {
     expect(report.finished).toBe('hobbyist')
     expect(state.finished).toBe('hobbyist')
     expect((['pro1', 'basement'] as StageId[]).length).toBe(2)
+  })
+})
+
+describe('PC방 대회와 뽑기 기록', () => {
+  it('방구석 표준 모드 시즌에 PC방 대회를 치르고 명성·상금이 들어온다', () => {
+    const s = atSeasonEnd({ stage: 'basement', cafeTeamName: '접으셈즈' })
+    const { report, state } = settleSeason(s)
+    expect(report.events.map((e) => e.id)).toEqual(['cafe_cup'])
+    expect(report.events[0].fieldSize).toBe(8)
+    expect(state.fame).toBeGreaterThanOrEqual(s.fame)
+  })
+
+  it('PC방 대회 상대는 조잡한 이름 목록에서 뽑고 서로 겹치지 않는다', () => {
+    const teams = makeOpponents(createRng(3), 'cafe', 'cafe', 7, new Set(['player']))
+    expect(new Set(teams.map((t) => t.name)).size).toBe(7)
+    expect(teams.every((t) => t.id.startsWith('cafe_'))).toBe(true)
+  })
+
+  it('다시 뽑은 횟수가 기록된다', () => {
+    const base = createInitialState({ name: 'a', genre: 'fps', mode: 'tutorial', seed: 1, rerolls: 5, gacha: { stats: stats(100), trait: { id: 'grit', name: '끈기', stat: 'focus' }, grade: 'N', power: 100 } })
+    expect(base.rerolls).toBe(5)
+    expect(base.cafeTeamName).toBeNull()
   })
 })

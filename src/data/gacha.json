@@ -3,7 +3,6 @@
   "statMin": 50,
   "statMax": 1000,
   "traitMultiplier": 1.2,
-  "rerollLimit": 3,
   "grades": [
     { "grade": "UR",  "minPower": 122 },
     { "grade": "SSR", "minPower": 115 },

@@ -9,7 +9,7 @@ import type { NewGameDraft } from './create.ts'
 import { h } from './dom.ts'
 import { GRADE_COMMENT, GRADE_LABEL, MODE_INFO, STAT_LABEL } from './labels.ts'
 import { celebrate } from './confetti.ts'
-import { REROLL_LIMIT, rollAt } from './newGame.ts'
+import { rollAt } from './newGame.ts'
 
 const STEP_MS = 130
 /** 등급 공개 직전 뜸 들이는 시간 */
@@ -125,9 +125,8 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   }
 
   const setBusy = (busy: boolean) => {
-    const left = REROLL_LIMIT - rollIndex
-    rerollBtn.textContent = left > 0 ? `다시 뽑기 (${left}회 남음)` : '더 이상 다시 뽑을 수 없음'
-    rerollBtn.disabled = busy || left <= 0
+    rerollBtn.textContent = rollIndex > 0 ? `다시 뽑기 (${rollIndex}회 다시 뽑음)` : '다시 뽑기'
+    rerollBtn.disabled = busy
     startBtn.disabled = busy
     stage.title = busy ? '눌러서 건너뛰기' : ''
   }
@@ -135,7 +134,6 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   const roll = () => show(rollAt(draft.seed, draft.genre, rollIndex), true)
 
   rerollBtn.onclick = () => {
-    if (rollIndex >= REROLL_LIMIT) return
     rollIndex++
     roll()
   }
@@ -147,6 +145,7 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
       mode: draft.mode,
       gacha: rollAt(draft.seed, draft.genre, rollIndex),
       seed: draft.seed,
+      rerolls: rollIndex,
     })
     saveGame(ctx.storage, state)
     ctx.toHome(state)

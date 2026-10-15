@@ -5,11 +5,12 @@ import modes from '../data/modes.json'
 import rules from '../data/rules.json'
 import { rollEvent, turnRng } from '../engine/events.ts'
 import { genrePower } from '../engine/power.ts'
-import { stageName } from '../engine/season.ts'
+import { eventsFor, stageName } from '../engine/season.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
 import { ACTIONS, applyTurn, checkSlot, turnsPerSeason, type Slot } from '../engine/turn.ts'
 import { STAT_KEYS } from '../engine/types.ts'
 import { saveGame } from '../save/storage.ts'
+import { cleanTeamName, TEAM_NAME_MAX } from './newGame.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
 import { runEvent } from './eventFlow.ts'
@@ -181,6 +182,30 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     root.replaceChildren(...parts.filter((p): p is HTMLElement => !!p))
   }
 
+  /** PC방 대회에 처음 나가기 전에 팀 이름을 직접 짓게 한다. */
+  const askTeamName = async () => {
+    if (state.cafeTeamName || !eventsFor(state).some((e) => e.field?.names === 'cafe')) return
+    const input = h('input', { type: 'text', maxLength: TEAM_NAME_MAX, value: `${state.name}팀`, autocomplete: 'off', 'aria-label': '팀 이름' })
+    const name = await openSheet<string>((close) =>
+      h(
+        'form',
+        {
+          class: 'stack-tight',
+          onsubmit: (e: Event) => {
+            e.preventDefault()
+            close(cleanTeamName(input.value) ?? `${state.name}팀`)
+          },
+        },
+        h('p', { class: 'eyebrow' }, 'PC방 대회 출전'),
+        h('p', { class: 'event-text' }, '친구들과 PC방 대회에 나가기로 했다. 팀 이름은 뭐로 할까?'),
+        input,
+        h('button', { class: 'btn primary', type: 'submit' }, '이 이름으로 출전'),
+      ),
+    )
+    state = { ...state, cafeTeamName: name }
+    saveGame(ctx.storage, state)
+  }
+
   // 시즌의 마지막 턴까지 마친 상태. 결산 화면으로 넘어간다. (결산은 시드로 정해져서 중간에 나가도 같은 결과가 나온다.)
   function seasonEnd(): HTMLElement {
     return h(
@@ -189,7 +214,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       h('p', { class: 'eyebrow' }, `${state.season}시즌 종료`),
       h('h2', {}, `${state.name} · ${state.age}세`),
       h('p', { class: 'muted' }, '이번 시즌의 모든 턴을 마쳤습니다. 대회 결과를 확인하세요. (진행 상황은 저장되어 있습니다.)'),
-      h('button', { class: 'btn primary', onclick: () => ctx.toSeason(state) }, '시즌 결산 보기'),
+      h('button', { class: 'btn primary', onclick: async () => (await askTeamName(), ctx.toSeason(state)) }, '시즌 결산 보기'),
       h('button', { class: 'btn ghost small', onclick: () => ctx.toTitle() }, '타이틀로'),
     )
   }

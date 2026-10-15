@@ -143,6 +143,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         h('div', { class: 'delta-row' }, h('span', { class: 'stat-name' }, '돈'), h('span', { class: 'delta-vals muted' }, `${Math.round(before.money)}만 → ${Math.round(settled.money)}만`), delta(moneyGain)),
       ),
       offersCard(),
+      state.finished && h('section', { class: 'card' }, h('h3', {}, '기록'), h('p', { class: 'muted' }, state.rerolls > 0 ? `능력치 뽑기를 ${state.rerolls}번 다시 뽑았다.` : '능력치 뽑기를 한 번에 확정했다.')),
       h(
         'button',
         { class: 'btn primary', disabled: !!state.pendingOffers, onclick: proceed },

@@ -110,6 +110,10 @@ export interface GameState {
   /** 방탕 게이지. 술·유흥·도박으로 오르고 쉬면 내려간다. 높을수록 부작용이 잦고, 일정 수준을 넘으면 중독 패널티가 붙는다. */
   vice: number
   pendingOffers: PendingOffers | null
+  /** 플레이어가 직접 지은 PC방 대회 팀 이름 (처음 출전할 때 정한다) */
+  cafeTeamName: string | null
+  /** 능력치 뽑기를 다시 뽑은 횟수. 엔딩·게임 오버에서 보여 준다. */
+  rerolls: number
   finished: EndingId | null
   history: SeasonRecord[]
 }
@@ -120,9 +124,11 @@ export interface NewGameOptions {
   mode: ModeId
   gacha: GachaResult
   seed: number
+  /** 다시 뽑은 횟수 (기본 0) */
+  rerolls?: number
 }
 
-export function createInitialState({ name, genre, mode, gacha, seed }: NewGameOptions): GameState {
+export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0 }: NewGameOptions): GameState {
   return {
     saveVersion: 1,
     seed,
@@ -151,6 +157,8 @@ export function createInitialState({ name, genre, mode, gacha, seed }: NewGameOp
     injuredMonths: 0,
     vice: 0,
     pendingOffers: null,
+    cafeTeamName: null,
+    rerolls,
     finished: null,
     history: [],
   }

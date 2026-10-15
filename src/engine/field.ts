@@ -4,7 +4,7 @@ import { gaussian, shuffled, type Rng } from './rng.ts'
 import type { TeamRef } from './state.ts'
 import type { Team } from './tournament.ts'
 
-export type NamePool = 'amateur' | 'orgs' | 'academy' | 'intl'
+export type NamePool = 'amateur' | 'cafe' | 'orgs' | 'academy' | 'intl'
 
 interface Tier {
   mean: number
@@ -14,10 +14,12 @@ const TIERS = competitions.tiers as Record<string, Tier>
 
 const ORG_REFS: TeamRef[] = teamData.orgs.map((name, i) => ({ id: `org_${i}`, name }))
 const AMATEUR_REFS: TeamRef[] = teamData.amateur.map((name, i) => ({ id: `am_${i}`, name }))
+const CAFE_REFS: TeamRef[] = teamData.cafe.map((name, i) => ({ id: `cafe_${i}`, name }))
 const INTL_REFS: TeamRef[] = teamData.intl.map((name, i) => ({ id: `intl_${i}`, name }))
 
 function pool(kind: NamePool): TeamRef[] {
   if (kind === 'amateur') return AMATEUR_REFS
+  if (kind === 'cafe') return CAFE_REFS
   if (kind === 'intl') return INTL_REFS
   return ORG_REFS
 }
