@@ -21,13 +21,15 @@ npm install
 npm test                 # 전체 테스트 (난이도 회귀 테스트 포함, 약 30초)
 npx tsc --noEmit         # 타입 검사
 npm run build            # tsc + vite build
-npm run dev              # 개발 서버 (아직 화면 없음)
+npm run dev              # 개발 서버 (화면 확인)
 
 # 난이도 리포트를 파일로 받기 (규칙·수치를 바꾼 뒤)
 BALANCE_OUT=report.txt BALANCE_RUNS=150 npx vitest run src/sim
 ```
 
 Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
+
+**배포**: Cloudflare Pages(기본 `*.pages.dev` 주소)에 GitHub 저장소를 연결했다. 빌드 명령 `npm run build`, 출력 폴더 `dist`, `master`에 push하면 자동 배포된다. 별도 설정 파일은 없다(`vite.config`도 없어 `base`는 기본값). 도메인은 아직 없다.
 
 ## 3. 반드시 지킬 구조 규칙
 
