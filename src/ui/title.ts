@@ -3,6 +3,7 @@ import { clearGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
 import { MODE_INFO } from './labels.ts'
+import { titleHero } from './titleScene.ts'
 
 export function titleScreen(ctx: Ctx, saved: GameState | null): HTMLElement {
   const resume = saved
@@ -33,6 +34,7 @@ export function titleScreen(ctx: Ctx, saved: GameState | null): HTMLElement {
     h('p', { class: 'eyebrow' }, '16세, 방구석에서'),
     h('h1', {}, '방구석 겜돌이에서 프로게이머되기'),
     h('p', { class: 'muted' }, '월드 챔피언십 우승을 향한 15년.'),
+    titleHero(),
     h('div', { class: 'stack' }, resume, newGame),
     ctx.meta.finishedRuns > 0 && h('p', { class: 'muted small' }, `완주 ${ctx.meta.finishedRuns}회`),
   )
