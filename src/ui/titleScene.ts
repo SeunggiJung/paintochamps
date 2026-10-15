@@ -151,15 +151,16 @@ const CSS = `
 @keyframes heroS2 { 0%, 22% { opacity: 0; } 25%, 47% { opacity: 1; } 50%, 100% { opacity: 0; } }
 @keyframes heroS3 { 0%, 47% { opacity: 0; } 50%, 72% { opacity: 1; } 75%, 100% { opacity: 0; } }
 @keyframes heroS4 { 0%, 72% { opacity: 0; } 75%, 97% { opacity: 1; } 100% { opacity: 0; } }
-.hero .screen { animation: heroFlicker 0.9s steps(2) infinite; }
+.hero .screen { animation: heroFlicker 2.4s steps(2) infinite; }
 @keyframes heroFlicker { 0% { fill: #5fd1ff; } 50% { fill: #86e0ff; } }
 .hero .beam { animation: heroBeam 1.4s linear infinite; }
 @keyframes heroBeam { from { transform: translateY(0); } to { transform: translateY(12px); } }
-.hero .blk1 { animation: heroBlk 0.8s steps(2) infinite; }
-.hero .blk2 { animation: heroBlk 0.8s steps(2) infinite reverse; }
+.hero .blk1 { animation: heroBlk 2s steps(2) infinite; }
+.hero .blk2 { animation: heroBlk 2s steps(2) infinite reverse; }
 @keyframes heroBlk { 50% { transform: translateY(-3px); } }
-.hero .bob, .hero .step { animation: heroBob 0.5s steps(2) infinite; }
-@keyframes heroBob { 50% { transform: translateY(-1.5px); } }
+.hero .bob { animation: heroBob 2.4s ease-in-out infinite; }
+.hero .step { animation: heroBob 1s ease-in-out infinite; }
+@keyframes heroBob { 50% { transform: translateY(-0.8px); } }
 .hero .blink { animation: heroBlink 1s steps(2) infinite; }
 @keyframes heroBlink { 50% { opacity: 0; } }
 .hero .sun { animation: heroSun 3s steps(2) infinite; }
@@ -170,8 +171,8 @@ const CSS = `
 @keyframes heroWalk { 0%, 25% { transform: translateX(-34px); } 38%, 100% { transform: translateX(30px); } }
 .hero .spot { animation: heroSpot 2.4s ease-in-out infinite alternate; }
 @keyframes heroSpot { from { opacity: 0.12; } to { opacity: 0.3; } }
-.hero .crowd { animation: heroCrowd 0.6s steps(2) infinite; }
-@keyframes heroCrowd { 50% { transform: translateY(-3px); } }
+.hero .crowd { animation: heroCrowd 1.8s ease-in-out infinite; }
+@keyframes heroCrowd { 50% { transform: translateY(-1.5px); } }
 .hero .hbar { transform-box: fill-box; transform-origin: left center; animation: heroBar 16s infinite; }
 @keyframes heroBar { 0%, 50% { transform: scaleX(0.12); } 70%, 100% { transform: scaleX(1); } }
 .hero .rise { animation: heroRise 2.1s linear infinite; }
@@ -181,12 +182,12 @@ const CSS = `
 @keyframes heroSweat { from { transform: translateY(0); opacity: 1; } to { transform: translateY(12px); opacity: 0; } }
 .hero .trophy { animation: heroTrophy 16s infinite; }
 @keyframes heroTrophy { 0%, 75% { transform: translateY(28px); } 82%, 100% { transform: translateY(0); } }
-.hero .cheer { animation: heroCheer 0.45s steps(2) infinite; }
-.hero .cheer.late { animation-delay: 0.22s; }
-@keyframes heroCheer { 50% { transform: translateY(-3px); } }
+.hero .cheer { animation: heroCheer 1.4s ease-in-out infinite; }
+.hero .cheer.late { animation-delay: 0.5s; }
+@keyframes heroCheer { 50% { transform: translateY(-2px); } }
 .hero .conf { animation: heroConf 2.6s linear infinite; }
 @keyframes heroConf { from { transform: translateY(0); } to { transform: translateY(112px); } }
-.hero .stars { animation: heroBlink 0.8s steps(2) infinite; }
+.hero .stars { animation: heroBlink 1.6s steps(2) infinite; }
 .hero-captions { display: grid; margin-top: 10px; min-height: 1.5em; }
 .hero-captions span { grid-area: 1 / 1; opacity: 0; font-weight: 700; }
 .hero-captions .c1 { animation: heroS1 16s infinite; }
