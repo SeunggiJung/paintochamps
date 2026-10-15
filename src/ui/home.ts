@@ -240,7 +240,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
 
   /** PC방 대회에 처음 나가기 전에 팀 이름을 직접 짓게 한다. */
   const askTeamName = async () => {
-    if (state.cafeTeamName || !eventsFor(state).some((e) => e.field?.names === 'cafe')) return
+    if (state.cafeTeamName || state.academyInvite || !eventsFor(state).some((e) => e.field?.names === 'cafe')) return
     const input = h('input', { type: 'text', maxLength: TEAM_NAME_MAX, value: `${state.name}팀`, autocomplete: 'off', 'aria-label': '팀 이름' })
     const name = await openSheet<string>((close) =>
       h(

@@ -6,9 +6,18 @@ import type { Team } from './tournament.ts'
 
 export type NamePool = 'amateur' | 'cafe' | 'orgs' | 'academy' | 'intl'
 
-interface Tier {
+interface Grade {
+  /** 이 등급에 속하는 팀 수 (등급 팀 수의 합 = 풀의 팀 수) */
+  count: number
   mean: number
   sd: number
+}
+interface Tier {
+  /** 리그 전체의 평균·편차 (월급·팀 강도 평가 기준) */
+  mean: number
+  sd: number
+  /** 있으면 팀을 강호·중위권·약팀처럼 등급으로 나눠 등급별 평균으로 전력을 정한다 (시드마다 어느 팀이 어느 등급인지 다르다) */
+  grades?: Grade[]
 }
 const TIERS = competitions.tiers as Record<string, Tier>
 
@@ -55,10 +64,29 @@ export function hashId(id: string): number {
  * 같은 판에서는 같은 팀이 늘 비슷한 전력이라, 제안 화면에서 보여 준 전력이 실제 리그에서도 그대로 나온다.
  */
 export function teamPower(seed: number, season: number, teamId: string, tier: string): number {
-  const { mean, sd } = TIERS[tier]
-  const base = gaussian(createRng(mixSeed(seed, hashId(teamId), 0x7e4a)))
+  const { mean, sd, grades } = TIERS[tier]
   const drift = gaussian(createRng(mixSeed(seed, hashId(teamId), season, 0xd71f)))
+  if (grades) {
+    const g = gradeOf(seed, teamId, grades)
+    const base = gaussian(createRng(mixSeed(seed, hashId(teamId), 0x7e4b)))
+    return Math.min(1000, Math.max(50, g.mean + g.sd * (0.7 * base + 0.7 * drift)))
+  }
+  const base = gaussian(createRng(mixSeed(seed, hashId(teamId), 0x7e4a)))
   return Math.min(1000, Math.max(50, mean + sd * (0.85 * base + 0.5 * drift)))
+}
+
+const gradeById = new Map<string, Grade>()
+const gradedSeeds = new Set<string>()
+/** 시드마다 구단들을 섞어서 등급별 팀 수만큼 강호·중위권·약팀으로 나눈다 */
+function gradeOf(seed: number, teamId: string, grades: Grade[]): Grade {
+  const key = `${seed}:${grades.length}`
+  if (!gradedSeeds.has(key)) {
+    gradedSeeds.add(key)
+    const order = [...ORG_REFS].sort((a, b) => hashId(`${seed}:${a.id}`) - hashId(`${seed}:${b.id}`))
+    const slots = grades.flatMap((g) => Array<Grade>(g.count).fill(g))
+    order.forEach((t, i) => gradeById.set(`${key}:${t.id}`, slots[i] ?? grades[grades.length - 1]))
+  }
+  return gradeById.get(`${key}:${teamId}`) ?? grades[grades.length - 1]
 }
 
 /** 상대 팀 count개를 만든다. exclude에 든 팀 id는 뽑지 않는다. profile을 주면 팀마다 정해진 전력(teamPower)을 쓴다. */

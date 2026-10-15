@@ -3,34 +3,34 @@
     "academy_test": {
       "name": "아카데미 입단 테스트", "noise": 0.08,
       "items": [
-        { "label": "실기", "stat": "power", "target": 210, "weight": 0.6 },
-        { "label": "면접", "stat": "mental", "target": 170, "weight": 0.2 },
-        { "label": "팀플", "stat": "teamwork", "target": 170, "weight": 0.2 }
+        { "label": "실기", "stat": "power", "target": 185, "weight": 0.6 },
+        { "label": "면접", "stat": "mental", "target": 140, "weight": 0.2 },
+        { "label": "팀플", "stat": "teamwork", "target": 140, "weight": 0.2 }
       ]
     },
     "amateur_open_test": {
       "name": "아마추어 팀 공개 입단 테스트", "noise": 0.08,
       "items": [
-        { "label": "실기", "stat": "power", "target": 400, "weight": 0.6 },
-        { "label": "면접", "stat": "mental", "target": 280, "weight": 0.2 },
-        { "label": "팀플", "stat": "teamwork", "target": 280, "weight": 0.2 }
+        { "label": "실기", "stat": "power", "target": 240, "weight": 0.6 },
+        { "label": "면접", "stat": "mental", "target": 160, "weight": 0.2 },
+        { "label": "팀플", "stat": "teamwork", "target": 160, "weight": 0.2 }
       ]
     },
     "pro_tryout": {
       "name": "프로 트라이아웃", "noise": 0.08,
       "items": [
-        { "label": "실기", "stat": "power", "target": 500, "weight": 0.6 },
-        { "label": "면접", "stat": "mental", "target": 340, "weight": 0.2 },
-        { "label": "팀플", "stat": "teamwork", "target": 380, "weight": 0.2 }
+        { "label": "실기", "stat": "power", "target": 190, "weight": 0.6 },
+        { "label": "면접", "stat": "mental", "target": 150, "weight": 0.2 },
+        { "label": "팀플", "stat": "teamwork", "target": 150, "weight": 0.2 }
       ]
     },
     "pro2_open_test": {
       "name": "프로 2부 공개 입단 테스트", "noise": 0.08,
       "items": [
-        { "label": "실기", "stat": "power", "target": 560, "weight": 0.5 },
-        { "label": "인지도", "stat": "fame", "target": 40, "weight": 0.2 },
-        { "label": "면접", "stat": "mental", "target": 350, "weight": 0.15 },
-        { "label": "팀플", "stat": "teamwork", "target": 350, "weight": 0.15 }
+        { "label": "실기", "stat": "power", "target": 280, "weight": 0.5 },
+        { "label": "인지도", "stat": "fame", "target": 20, "weight": 0.2 },
+        { "label": "면접", "stat": "mental", "target": 180, "weight": 0.15 },
+        { "label": "팀플", "stat": "teamwork", "target": 180, "weight": 0.15 }
       ]
     }
   },

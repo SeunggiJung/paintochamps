@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { EVENTS, isEligible } from './events.ts'
+import { advanceCalendar } from './calendar.ts'
 import { choosePrep, expectedScore, upcomingTest } from './routes.ts'
 import { settleSeason } from './season.ts'
 import { createInitialState, type GameState } from './state.ts'
@@ -21,12 +22,24 @@ function at(power: number, o: Partial<GameState> = {}): GameState {
 }
 
 describe('초반 루트: PC방 대회', () => {
-  it('상위 성적이면 아카데미 입단 테스트 초대를 받고, 방구석에 머문다', () => {
+  it('PC방 대회 상위 성적이면 대회가 끝나는 시점에 초대를 받고, 같은 해 결산에서 입단 테스트를 본다', () => {
+    const cup = advanceCalendar(at(900, { turnInSeason: 3 }), 1)
+    const end = cup.beats.find((b) => b.kind === 'end')
+    if (!end || end.kind !== 'end') throw new Error('대회 결과가 없다')
+    expect(end.advanced.join(' ')).toContain('초대장')
+    expect(cup.state.academyInvite).toBe(true)
     const { state, report } = settleSeason(at(900))
-    expect(state.academyInvite).toBe(true)
-    expect(state.stage).toBe('basement')
+    expect(report.tests).toHaveLength(1)
+    expect(state.stage).toBe('amateur_team')
+    expect(state.path).toBe('academy')
     expect(state.cafeAttempts).toBe(1)
-    expect(report.routeNotes.join(' ')).toContain('초대장')
+  })
+
+  it('PC방 대회에서 눈에 띄지 못하면 초대 없이 방구석에 머문다', () => {
+    const { state, report } = settleSeason(at(40))
+    expect(state.academyInvite).toBe(false)
+    expect(report.tests).toHaveLength(0)
+    expect(state.stage).toBe('basement')
   })
 
   it('초대를 받은 해에는 PC방 대회에 나가지 않고, 강한 선수는 시험에 합격해 아카데미(정석)로 간다', () => {
@@ -72,11 +85,11 @@ describe('초반 루트: 지역 대회와 아마추어 팀', () => {
   it('정석 루트의 연습생은 아마추어 리그 성적이 나빠도 방출되지 않는다', () => {
     const team = { id: 'org_1', name: '실버폭스 아카데미' }
     for (let seed = 0; seed < 40; seed++) {
-      const s = settleSeason(at(100, { stage: 'amateur_team', path: 'academy', team, age: 19, seed })).state
+      const s = settleSeason(at(30, { stage: 'amateur_team', path: 'academy', team, age: 19, seed })).state
       expect(s.stage).toBe('amateur_team')
     }
     let released = 0
-    for (let seed = 0; seed < 40; seed++) if (settleSeason(at(100, { stage: 'amateur_team', path: 'open', team, age: 19, seed })).state.stage === 'local_cup') released++
+    for (let seed = 0; seed < 40; seed++) if (settleSeason(at(30, { stage: 'amateur_team', path: 'open', team, age: 19, seed })).state.stage === 'local_cup') released++
     expect(released).toBeGreaterThan(30)
   })
 
@@ -86,7 +99,7 @@ describe('초반 루트: 지역 대회와 아마추어 팀', () => {
     expect(r.state.stage).toBe('pro2')
     expect(r.state.everPro).toBe(true)
     expect(r.state.pendingOffers?.offers).toHaveLength(3)
-    const mid = at(540, { stage: 'amateur_team', fame: 40 })
+    const mid = at(230, { stage: 'amateur_team', fame: 20 })
     expect(expectedScore({ ...mid, path: 'academy' }, 'pro_tryout')).toBeGreaterThan(expectedScore({ ...mid, path: 'open' }, 'pro2_open_test'))
   })
 

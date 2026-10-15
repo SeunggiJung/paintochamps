@@ -1,3 +1,4 @@
+import routes from '../data/routes.json'
 import { eventsFor, midPhase, playerPower, type EventDef } from './competitions.ts'
 import { academyName, makeOpponents } from './field.ts'
 import { createRng, mixSeed } from './rng.ts'
@@ -114,11 +115,14 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
   }
 }
 
-/** 이번 시즌의 진행 기록. 시즌이 바뀌었으면 새로 만든다. */
+/**
+ * 이번 시즌의 진행 기록. 시즌이 바뀌었으면 새로 만든다.
+ * 시즌을 아카데미 입단 테스트 초대를 받은 채로 시작하면 PC방 대회에는 나가지 않는다.
+ */
 export function runOf(state: GameState): SeasonRun {
-  return state.seasonRun && state.seasonRun.season === state.season
-    ? state.seasonRun
-    : { season: state.season, phase: 0, runs: [], skipped: [], qualified: [], points: 0 }
+  if (state.seasonRun && state.seasonRun.season === state.season) return state.seasonRun
+  const skipCafe = state.academyInvite ? eventsFor(state).filter((e) => e.field?.names === 'cafe').map((e) => e.id) : []
+  return { season: state.season, phase: 0, runs: [], skipped: skipCafe, qualified: [], points: 0 }
 }
 
 /**
@@ -158,6 +162,12 @@ export function advanceCalendar(state: GameState, toPhase: number): CalendarUpda
     }
     if (rec.revealed !== 'end' && ev.span[1] <= toPhase) {
       next = { ...next, fame: next.fame + rec.fame, money: next.money + rec.money }
+      const advancedNotes = [...rec.advanced]
+      // PC방 대회에서 상위 성적을 내면 그 자리에서 아카데미 입단 테스트에 초대된다 (이번 시즌 결산에서 시험을 본다)
+      if (ev.field?.names === 'cafe' && rec.placement <= routes.cafe.inviteTop && !next.academyInvite) {
+        next = { ...next, academyInvite: true }
+        advancedNotes.push('아카데미에서 입단 테스트 초대장이 날아왔다!')
+      }
       beats.push({
         kind: 'end',
         phase: ev.span[1],
@@ -169,7 +179,7 @@ export function advanceCalendar(state: GameState, toPhase: number): CalendarUpda
         money: rec.money,
         table: rec.table,
         top: rec.order.slice(0, 3).map((t) => t.name),
-        advanced: rec.advanced,
+        advanced: advancedNotes,
         world: !!ev.world,
       })
       rec = { ...rec, revealed: 'end' }

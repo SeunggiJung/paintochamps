@@ -27,9 +27,8 @@ function atSeasonEnd(overrides: Partial<GameState> & { power?: number } = {}, ge
 }
 
 describe('이벤트 목록', () => {
-  it('방구석 단계의 PC방 대회는 모든 모드에 열리지만 아카데미 초대를 받은 해에는 나가지 않고, 1부는 장르별 일정이 다르다', () => {
+  it('방구석 단계의 PC방 대회는 모든 모드에 열리고, 1부는 장르별 일정이 다르다', () => {
     for (const mode of ['tutorial', 'standard', 'precise'] as const) expect(eventsFor({ stage: 'basement', genre: 'fps', mode }).map((e) => e.id)).toEqual(['cafe_cup'])
-    expect(eventsFor({ stage: 'basement', genre: 'fps', mode: 'standard', academyInvite: true })).toHaveLength(0)
     expect(eventsFor({ stage: 'pro1', genre: 'aos', mode: 'standard' }).map((e) => e.id)).toEqual(['split1', 'mid_qualifier', 'midseason', 'split2', 'playoffs', 'world'])
     expect(eventsFor({ stage: 'pro1', genre: 'fps', mode: 'standard' }).map((e) => e.id)).toEqual([
       'kickoff', 'masters1', 'stage1', 'stage1_playoffs', 'masters2', 'stage2', 'stage2_playoffs', 'world',
@@ -121,7 +120,7 @@ describe('승급과 강등', () => {
   it('아마추어 팀에서 강등되면 방출되어 지역 대회로 돌아간다', () => {
     let released = 0
     for (let seed = 0; seed < 60; seed++) {
-      const { state } = settleSeason(atSeasonEnd({ stage: 'amateur_team', team: { id: 'am_1', name: '붉은여우' }, power: 100, seed }))
+      const { state } = settleSeason(atSeasonEnd({ stage: 'amateur_team', team: { id: 'am_1', name: '붉은여우' }, power: 20, seed }))
       if (state.stage === 'local_cup') {
         released++
         expect(state.team).toBeNull()
@@ -136,18 +135,21 @@ describe('프로 1부와 월드 챔피언십', () => {
     atSeasonEnd({ stage: 'pro1', team: TEAM, power, everPro: true, debutTeamId: 'org_0', fame: 60, seed }, genre)
 
   for (const genre of ['aos', 'fps'] as GenreId[]) {
-    it(`${genre}: 압도적인 실력이면 월드에 나가 우승하고 커리어가 끝난다`, () => {
+    it(`${genre}: 최고 수준의 실력이면 월드에 나가 우승하고 커리어가 끝난다`, () => {
       let champions = 0
+      let reached = 0
       for (let seed = 0; seed < 30; seed++) {
         const { state, report } = settleSeason(pro1(genre, 1000, seed))
-        expect(report.events.some((e) => e.id === 'world')).toBe(true)
+        if (report.events.some((e) => e.id === 'world')) reached++
         if (report.worldChampion) {
           champions++
           expect(state.worldTitles).toBe(1)
           expect(state.finished).toBe('hidden_loyal')
         }
       }
-      expect(champions).toBeGreaterThan(20)
+      // 월드 상대(국제전 평균 990)도 실력치 상한(1000) 근처라, 능력치를 끝까지 올려도 우승이 보장되지는 않는다
+      expect(reached).toBeGreaterThan(20)
+      expect(champions).toBeGreaterThan(8)
     })
 
     it(`${genre}: 실력이 낮으면 월드에 진출하지 못하거나 우승하지 못한다`, () => {

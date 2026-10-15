@@ -43,10 +43,9 @@ export interface EventDef {
 const CALENDAR_OF: Record<GenreId, 'aos' | 'fps'> = { aos: 'aos', rts: 'aos', fps: 'fps', fighting: 'fps' }
 
 /** 이번 시즌에 치르는 대회 목록 (시간 순서) */
-export function eventsFor(state: Pick<GameState, 'stage' | 'genre' | 'mode'> & { academyInvite?: boolean }): EventDef[] {
+export function eventsFor(state: Pick<GameState, 'stage' | 'genre' | 'mode'>): EventDef[] {
   const all = (state.stage === 'pro1' ? competitions.stages.pro1[CALENDAR_OF[state.genre]] : competitions.stages[state.stage]) as EventDef[]
-  // 아카데미 입단 테스트 초대를 받은 해에는 PC방 대회에 다시 나가지 않는다
-  return all.filter((e) => (!e.modes || e.modes.includes(state.mode)) && !(state.academyInvite && e.field?.names === 'cafe'))
+  return all.filter((e) => !e.modes || e.modes.includes(state.mode))
 }
 
 /** 플레이어의 지금 장르 실력치. 큰 경기면 멘탈 보정을 더한다. */

@@ -150,7 +150,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
       if (cond.scout) pendingOffers = makeScoutOffers(rng, cond.scout, new Set(next.team ? [next.team.id] : []))
     }
   } else if (!worldChampion && (state.stage === 'basement' || state.stage === 'local_cup' || state.stage === 'amateur_team')) {
-    const step = routeStep(state, next, {
+    const step = routeStep(advanced, next, {
       placementOf: (id) => results.find((r) => r.id === id)?.placement,
       scout: (kind, count) => makeScoutOffers(rng, kind, new Set(next.team ? [next.team.id] : []), count),
       rng,

@@ -47,15 +47,15 @@
   "private_lesson": { "name": "개인 레슨", "topGenreStats": { "count": 3, "amount": 70 }, "money": -40, "condition": -5 },
   "overtrain": {
     "name": "강행군 훈련", "topGenreStats": { "count": 3, "amount": 100 }, "condition": -35, "modes": ["precise"],
-    "outcomes": [{ "chance": 0.25, "label": "무리한 훈련으로 부상을 입었다", "effects": { "injuredMonths": 3, "condition": -10 } }]
+    "outcomes": [{ "chance": 0.35, "label": "무리한 훈련으로 부상을 입었다", "effects": { "injuredMonths": 3, "condition": -10 } }]
   },
   "meditation":     { "name": "명상·요가", "condition": 8, "stats": { "mental": 25 }, "slumpMonths": -1, "modes": ["precise"] },
-  "impulse_shopping": { "name": "충동 쇼핑", "money": -30, "condition": 5, "stats": { "mental": 8 }, "modes": ["precise"] },
+  "impulse_shopping": { "name": "충동 쇼핑", "money": -50, "condition": 5, "stats": { "mental": 8 }, "modes": ["precise"] },
   "community_flame": {
-    "name": "커뮤니티 키배", "condition": -8, "stats": { "mental": -12 }, "modes": ["precise"],
+    "name": "커뮤니티 키배", "condition": -15, "stats": { "mental": -20 }, "modes": ["precise"],
     "outcomes": [{ "chance": 0.3, "label": "댓글 싸움이 번져 구설수에 올랐다", "effects": { "fame": -6 } }]
   },
-  "all_night_gaming": { "name": "밤샘 게임", "condition": -25, "stats": { "accuracy": 30 }, "modes": ["precise"] },
+  "all_night_gaming": { "name": "밤샘 게임", "condition": -35, "stats": { "accuracy": 30 }, "modes": ["precise"] },
 
   "rehab":      { "name": "재활 치료", "money": -5, "condition": 10, "injuredMonths": -3, "requires": { "injured": true }, "allowWhenInjured": true },
   "counseling": { "name": "멘탈 상담", "money": -10, "stats": { "mental": 30 }, "slumpMonths": -3, "requires": { "slump": true } }

@@ -144,6 +144,9 @@ export function routeStep(before: GameState, after: GameState, { placementOf, sc
 
   if (before.stage === 'basement') {
     const cafe = placementOf('cafe_cup')
+    const attempts = (before.cafeAttempts ?? 0) + (cafe !== undefined ? 1 : 0)
+    s = { ...s, cafeAttempts: attempts }
+    // PC방 대회 상위 성적(초대는 대회가 끝나는 시점에 이미 정해졌다)이거나 지난해 초대가 남아 있으면 입단 테스트를 본다
     if (before.academyInvite) {
       const t = takeTest(before, 'academy_test', rng)
       tests.push(t)
@@ -160,18 +163,11 @@ export function routeStep(before: GameState, after: GameState, { placementOf, sc
         s = { ...s, academyInvite: false }
         notes.push('아카데미 입단은 끝내 이루지 못했다. 이제 지역 대회에서 길을 찾는다.')
       }
+    } else if ((attempts >= R.cafe.toLocalAfter && power >= R.cafe.toLocalMinPower) || attempts >= R.cafe.maxAttempts) {
+      move('local_cup', 'open')
+      notes.push('PC방 대회에서는 눈에 띄지 못했다. 이제 지역 아마추어 대회에 나간다.')
     } else {
-      const attempts = (before.cafeAttempts ?? 0) + (cafe !== undefined ? 1 : 0)
-      s = { ...s, cafeAttempts: attempts }
-      if (cafe !== undefined && cafe <= R.cafe.inviteTop) {
-        s = { ...s, academyInvite: true }
-        notes.push(`PC방 대회 ${cafe}위! 한 아카데미에서 입단 테스트 초대장이 날아왔다.`)
-      } else if ((attempts >= R.cafe.toLocalAfter && power >= R.cafe.toLocalMinPower) || attempts >= R.cafe.maxAttempts) {
-        move('local_cup', 'open')
-        notes.push('PC방 대회에서는 눈에 띄지 못했다. 이제 지역 아마추어 대회에 나간다.')
-      } else {
-        notes.push('PC방 대회에서 눈에 띄지 못했다. 실력을 더 쌓고 다시 도전하자.')
-      }
+      notes.push('PC방 대회에서 눈에 띄지 못했다. 실력을 더 쌓고 다시 도전하자.')
     }
   } else if (before.stage === 'local_cup') {
     const p = placementOf('local_cup')

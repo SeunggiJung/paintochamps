@@ -78,8 +78,9 @@ describe('월급', () => {
   it('6개월 턴은 월급도 2배, 아카데미 연습생은 훈련비 정도만 받는다', () => {
     const std = make({ money: 100 })
     const tut = { ...std, mode: 'tutorial' as const }
-    const a = applyTurn(std, [{ id: 'rest' }, { id: 'rest' }])
-    const b = applyTurn(tut, [{ id: 'rest' }, { id: 'rest' }])
+    // 대회 상금이 섞이지 않게 대회 진행은 건너뛴다
+    const a = applyTurn(std, [{ id: 'rest' }, { id: 'rest' }], undefined, false)
+    const b = applyTurn(tut, [{ id: 'rest' }, { id: 'rest' }], undefined, false)
     if (!a.ok || !b.ok) throw new Error('turn failed')
     expect(b.delta.money).toBeCloseTo(a.delta.money * 2)
     const trainee = make({ stage: 'amateur_team', path: 'academy', team: { id: 'org_1', name: '실버폭스 아카데미' } })

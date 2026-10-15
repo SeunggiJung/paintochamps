@@ -1,11 +1,11 @@
 {
   "tiers": {
-    "cafe":    { "mean": 280, "sd": 40 },
-    "local":   { "mean": 330, "sd": 45 },
-    "amateur": { "mean": 480, "sd": 40 },
-    "pro2":    { "mean": 600, "sd": 40 },
-    "pro1":    { "mean": 830, "sd": 75 },
-    "intl":    { "mean": 850, "sd": 60 }
+    "cafe":    { "mean": 165, "sd": 35 },
+    "local":   { "mean": 210, "sd": 40 },
+    "amateur": { "mean": 230, "sd": 40 },
+    "pro2":    { "mean": 320, "sd": 45 },
+    "pro1":    { "mean": 673, "sd": 235, "grades": [ { "count": 5, "mean": 915, "sd": 40 }, { "count": 4, "mean": 620, "sd": 55 }, { "count": 3, "mean": 340, "sd": 50 } ] },
+    "intl":    { "mean": 990, "sd": 35 }
   },
   "stages": {
     "basement": [
@@ -34,7 +34,12 @@
     ],
     "pro2": [
       {
-        "id": "pro2_league", "span": [0, 1], "name": "프로 2부 리그", "format": "league",
+        "id": "pro2_spring", "span": [0, 0.5], "name": "프로 2부 봄 리그", "format": "league",
+        "field": { "names": "academy", "tier": "pro2", "size": 6 }, "rounds": 2, "bestOf": 3,
+        "rewards": [{ "upTo": 1, "fame": 5, "money": 40 }, { "upTo": 3, "fame": 3, "money": 20 }, { "upTo": 99, "fame": 1, "money": 10 }]
+      },
+      {
+        "id": "pro2_autumn", "span": [0.5, 1], "name": "프로 2부 가을 리그", "format": "league",
         "field": { "names": "academy", "tier": "pro2", "size": 6 }, "rounds": 2, "bestOf": 3, "rank": true,
         "rewards": [{ "upTo": 1, "fame": 10, "money": 80 }, { "upTo": 3, "fame": 5, "money": 40 }, { "upTo": 99, "fame": 2, "money": 20 }]
       }
@@ -67,7 +72,7 @@
         {
           "id": "playoffs", "span": [0.78, 0.86], "name": "플레이오프", "format": "elimination",
           "from": { "event": "split2", "top": 6 }, "k": 2, "bestOf": 5, "big": true,
-          "qualifies": [{ "to": "world", "top": 3 }],
+          "qualifies": [{ "to": "world", "top": 2 }],
           "points": [6, 4, 3, 2, 1, 1],
           "rewards": [{ "upTo": 1, "fame": 15, "money": 150 }, { "upTo": 3, "fame": 8, "money": 80 }, { "upTo": 99, "fame": 3, "money": 30 }]
         },

@@ -50,20 +50,24 @@ describe('대회 일정 데이터', () => {
 describe('시간에 따른 대회 진행', () => {
   it('리그는 절반 시점에 중간 순위를, 끝에 최종 순위와 보상을 공개한다', () => {
     const s = make({ stage: 'pro2', mode: 'standard' })
-    const half = advanceCalendar(s, 0.5)
-    expect(half.beats.map((b) => b.kind)).toEqual(['mid'])
-    const mid = half.beats[0]
+    // 프로 2부는 봄(0~50%)·가을(50~100%) 두 리그다. 봄 리그 절반(25%)에 중간 순위, 50%에 최종 순위
+    const quarter = advanceCalendar(s, 0.25)
+    expect(quarter.beats.map((b) => b.kind)).toEqual(['mid'])
+    const mid = quarter.beats[0]
     if (mid.kind !== 'mid') throw new Error()
+    expect(mid.eventId).toBe('pro2_spring')
     expect(mid.size).toBe(6)
     expect(mid.rank).toBeGreaterThanOrEqual(1)
-    expect(half.state.fame).toBe(s.fame) // 아직 보상 없음
-    const end = advanceCalendar(half.state, 1)
-    expect(end.beats.map((b) => b.kind)).toEqual(['end'])
-    const result = end.beats[0]
+    expect(quarter.state.fame).toBe(s.fame) // 아직 보상 없음
+    const half = advanceCalendar(quarter.state, 0.5)
+    expect(half.beats.map((b) => b.kind)).toEqual(['end'])
+    const result = half.beats[0]
     if (result.kind !== 'end') throw new Error()
     expect(result.table).toHaveLength(6)
-    expect(end.state.fame).toBeCloseTo(s.fame + result.fame)
-    expect(end.state.money).toBeCloseTo(s.money + result.money)
+    expect(half.state.fame).toBeCloseTo(s.fame + result.fame)
+    expect(half.state.money).toBeCloseTo(s.money + result.money)
+    const autumn = advanceCalendar(half.state, 1)
+    expect(autumn.beats.map((b) => `${b.eventId}:${b.kind}`)).toEqual(['pro2_autumn:mid', 'pro2_autumn:end'])
   })
 
   it('같은 시점을 다시 진행해도 같은 결과를 두 번 공개하거나 보상을 두 번 주지 않는다', () => {
@@ -117,12 +121,12 @@ describe('시간에 따른 대회 진행', () => {
       }
       s = r.state
     }
-    expect(seen).toEqual(['mid', 'end'])
+    expect(seen).toEqual(['mid', 'end', 'mid', 'end'])
     const { report, state } = settleSeason(s)
-    expect(report.events).toHaveLength(1)
-    expect(report.events[0].fame).toBe(rewardFame)
+    expect(report.events).toHaveLength(2)
+    expect(report.events.reduce((sum, e) => sum + e.fame, 0)).toBe(rewardFame)
     // 결산이 대회를 다시 치르거나 보상을 한 번 더 주지 않는다
-    expect(state.fame - s.fame).toBeLessThan(report.events[0].fame + 10)
+    expect(state.fame - s.fame).toBeLessThan(rewardFame + 10)
   })
 
   it('미리보기용(calendar=false)은 대회를 진행하지 않는다', () => {
