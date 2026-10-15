@@ -6,7 +6,7 @@ import { academyName, makeOpponents, pickTeams, type NamePool } from './field.ts
 import { mentalAdjusted, playSeries } from './match.ts'
 import { genrePower } from './power.ts'
 import { createRng, gaussian, mixSeed, type Rng } from './rng.ts'
-import type { EndingId, EventRecord, GameState, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
+import type { EndingId, EventRecord, GameState, ModeId, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
 import { runElimination, runLeague, type Team } from './tournament.ts'
 import { isCareerOver, isSettled, turnsPerSeason } from './turn.ts'
 import type { GenreId } from './types.ts'
@@ -20,6 +20,8 @@ interface Reward {
 export interface EventDef {
   id: string
   name: string
+  /** 이 모드에서만 열린다 (없으면 모든 모드). 튜토리얼에서 빼려면 표준·정밀만 적는다. */
+  modes?: ModeId[]
   format: 'league' | 'elimination'
   field?: { names: NamePool; tier: string; size: number }
   /** 앞선 이벤트 순위표의 상위 top팀으로 치른다 (플레이어가 거기 못 들면 열리지 않는다) */
@@ -58,9 +60,9 @@ export function stageName(stage: StageId): string {
 }
 
 /** 이번 시즌에 치르는 대회 목록 */
-export function eventsFor(state: Pick<GameState, 'stage' | 'genre'>): EventDef[] {
-  if (state.stage === 'pro1') return competitions.stages.pro1[CALENDAR_OF[state.genre]] as EventDef[]
-  return competitions.stages[state.stage] as EventDef[]
+export function eventsFor(state: Pick<GameState, 'stage' | 'genre' | 'mode'>): EventDef[] {
+  const all = (state.stage === 'pro1' ? competitions.stages.pro1[CALENDAR_OF[state.genre]] : competitions.stages[state.stage]) as EventDef[]
+  return all.filter((e) => !e.modes || e.modes.includes(state.mode))
 }
 
 /** 플레이어의 지금 장르 실력치. 큰 경기면 멘탈 보정을 더한다. */

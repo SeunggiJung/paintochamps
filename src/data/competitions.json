@@ -1,5 +1,6 @@
 {
   "tiers": {
+    "cafe":    { "mean": 200, "sd": 40 },
     "local":   { "mean": 330, "sd": 45 },
     "amateur": { "mean": 480, "sd": 40 },
     "pro2":    { "mean": 600, "sd": 40 },
@@ -7,7 +8,13 @@
     "intl":    { "mean": 850, "sd": 60 }
   },
   "stages": {
-    "basement": [],
+    "basement": [
+      {
+        "id": "cafe_cup", "name": "PC방 대회", "format": "elimination", "modes": ["standard", "precise"],
+        "field": { "names": "amateur", "tier": "cafe", "size": 8 }, "k": 1, "bestOf": 1,
+        "rewards": [{ "upTo": 1, "fame": 4, "money": 15 }, { "upTo": 2, "fame": 2, "money": 8 }, { "upTo": 4, "fame": 1, "money": 3 }, { "upTo": 99, "fame": 0, "money": 0 }]
+      }
+    ],
     "local_cup": [
       {
         "id": "local_cup", "name": "지역 아마추어 대회", "format": "elimination",

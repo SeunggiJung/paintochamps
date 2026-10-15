@@ -25,10 +25,11 @@ function atSeasonEnd(overrides: Partial<GameState> & { power?: number } = {}, ge
 }
 
 describe('이벤트 목록', () => {
-  it('방구석 단계에는 대회가 없고, 1부는 장르별 일정이 다르다', () => {
-    expect(eventsFor({ stage: 'basement', genre: 'fps' })).toHaveLength(0)
-    expect(eventsFor({ stage: 'pro1', genre: 'aos' }).map((e) => e.id)).toEqual(['split1', 'mid_qualifier', 'midseason', 'split2', 'playoffs', 'world'])
-    expect(eventsFor({ stage: 'pro1', genre: 'fps' }).map((e) => e.id)).toEqual([
+  it('방구석 단계의 PC방 대회는 2회차(표준·정밀)부터 열리고, 1부는 장르별 일정이 다르다', () => {
+    expect(eventsFor({ stage: 'basement', genre: 'fps', mode: 'tutorial' })).toHaveLength(0)
+    for (const mode of ['standard', 'precise'] as const) expect(eventsFor({ stage: 'basement', genre: 'fps', mode }).map((e) => e.id)).toEqual(['cafe_cup'])
+    expect(eventsFor({ stage: 'pro1', genre: 'aos', mode: 'standard' }).map((e) => e.id)).toEqual(['split1', 'mid_qualifier', 'midseason', 'split2', 'playoffs', 'world'])
+    expect(eventsFor({ stage: 'pro1', genre: 'fps', mode: 'standard' }).map((e) => e.id)).toEqual([
       'kickoff', 'masters1', 'stage1', 'stage1_playoffs', 'masters2', 'stage2', 'stage2_playoffs', 'world',
     ])
   })
