@@ -250,3 +250,16 @@ input[type='text'] {
 .bar-fill.perfect { background: var(--grade-UR); }
 .cond-hint.tier-부진 { color: var(--danger); }
 .cond-hint.tier-완벽 { color: var(--grade-UR); }
+
+/* 능력치 이름·도움말, 중앙 시트, 선택된 훈련 */
+.stat-name { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.stat-row { grid-template-columns: 7em 1fr 2.5em auto; }
+.stat-row.compact { grid-template-columns: 7em 1fr 2.6em 2.6em; }
+.overlay.center { align-items: center; padding: 16px; }
+.overlay.center .sheet { border-radius: 20px; max-height: 80dvh; animation: pop 0.22s ease-out; }
+@keyframes pop { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .overlay.center .sheet { animation: none; } }
+.action.taken { border-color: var(--accent); background: #232a47; }
+.taken-tag { margin-left: 6px; }
+.delta-row .stat-name { min-width: 7em; }
+.help-pop { white-space: normal; }

@@ -1,5 +1,5 @@
 {
   "tutorial": { "name": "튜토리얼", "turnMonths": 6, "turnsPerSeason": 2, "growthBonus": 1.05, "preview": "exact" },
   "standard": { "name": "표준", "turnMonths": 3, "turnsPerSeason": 4, "preview": "exact" },
-  "precise":  { "name": "정밀", "turnMonths": 1, "turnsPerSeason": 12, "growthBonus": 0.97, "preview": "hint" }
+  "precise":  { "name": "정밀", "turnMonths": 1, "turnsPerSeason": 12, "growthBonus": 0.95, "preview": "hint" }
 }

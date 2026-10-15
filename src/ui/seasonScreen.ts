@@ -8,7 +8,7 @@ import { STAT_KEYS } from '../engine/types.ts'
 import { recordFinish, saveGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
-import { STAT_LABEL } from './labels.ts'
+import { statName } from './statHelp.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
 
@@ -134,7 +134,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         ...STAT_KEYS.map((k) => {
           const from = Math.round(startStats[k])
           const to = Math.round(before.stats[k])
-          return h('div', { class: 'delta-row' }, h('span', { class: 'stat-name' }, STAT_LABEL[k]), h('span', { class: 'delta-vals muted' }, `${from} → ${to}`), delta(to - from))
+          return h('div', { class: 'delta-row' }, statName(k, before.genre), h('span', { class: 'delta-vals muted' }, `${from} → ${to}`), delta(to - from))
         }),
       ),
       h(

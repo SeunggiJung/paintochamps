@@ -7,6 +7,7 @@ import { saveGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import type { NewGameDraft } from './create.ts'
 import { h } from './dom.ts'
+import { statName } from './statHelp.ts'
 import { GRADE_COMMENT, GRADE_LABEL, MODE_INFO, STAT_LABEL } from './labels.ts'
 import { celebrate } from './confetti.ts'
 import { rollAt } from './newGame.ts'
@@ -64,7 +65,7 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
       const row = h(
         'div',
         { class: `stat-row${animate ? ' hidden' : ''}` },
-        h('span', { class: 'stat-name' }, STAT_LABEL[k], genre.weights[k] >= KEY_WEIGHT && h('b', { title: '이 장르의 핵심 능력치' }, ' ★')),
+        statName(k, draft.genre, genre.weights[k] >= KEY_WEIGHT),
         h('div', { class: 'bar' }, fill),
         value,
         isTrait && h('span', { class: 'tag' }, '특성'),

@@ -108,14 +108,15 @@ function randomChoice(s: GameState, rng: Rng): TurnChoice {
   return valid.length ? valid[Math.floor(rng() * valid.length)] : [{ id: 'rest' }, { id: 'rest' }]
 }
 
-function casualChoice(s: GameState, turn: number): TurnChoice {
+function casualChoice(s: GameState): TurnChoice {
   // 나온 훈련 후보 중 앞의 것을 고르고(어떤 게 좋은지 따지지 않는다), 나머지는 랭크전 연습
   const menu = trainingMenuOf(s).map((id): Slot => ({ id })).filter((slot) => checkSlot(s, slot) === null)
-  const train: Slot[] = [menu[0] ?? { id: 'rank_practice' }, { id: 'rank_practice' }]
-  const work: Slot = turn % 2 ? train[0] : s.team ? (menu[1] ?? train[1]) : train[1]
-  if (s.injuredMonths > 0 || s.condition < 45) return [{ id: 'rest' }, { id: 'rest' }]
-  if (s.condition < 65) return [work, { id: 'rest' }]
-  return [work, train[(turn + 1) % 2]]
+  const rest: Slot = { id: 'rest' }
+  const first: Slot = menu[0] ?? rest
+  const second: Slot = rest
+  if (s.injuredMonths > 0 || s.condition < 45) return [rest, rest]
+  if (s.condition < 65) return [first, rest]
+  return [first, second]
 }
 
 function pickEventChoice(s: GameState, event: GameEvent, policy: BotPolicy, rng: Rng): number {
@@ -150,7 +151,7 @@ export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: Bot
   let turn = 0
   while (!s.finished) {
     s = shop(s, opts.policy, botRng)
-    const choice = opts.policy === 'skilled' ? skilledChoice(s, botRng) : opts.policy === 'random' ? randomChoice(s, botRng) : casualChoice(s, turn)
+    const choice = opts.policy === 'skilled' ? skilledChoice(s, botRng) : opts.policy === 'random' ? randomChoice(s, botRng) : casualChoice(s)
     let r = applyTurn(s, choice)
     if (!r.ok) r = applyTurn(s, [{ id: 'rest' }, { id: 'rest' }])
     if (!r.ok) throw new Error(`${genre}/${mode}/${seed} turn ${turn}: ${r.error}`)

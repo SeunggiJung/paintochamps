@@ -9,14 +9,14 @@ import { choosePrep, expectedScore, PREP, testItems, testName, upcomingTest } fr
 import { acceptOffer, eventsFor, rollMidSeasonOffer, stageName } from '../engine/season.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
 import { trainingMenuOf } from '../engine/training.ts'
-import { ACTIONS, applyTurn, buyEquipment, checkEquipment, checkSlot, turnsPerSeason, type Slot } from '../engine/turn.ts'
+import { ACTIONS, applyTurn, buyEquipment, checkEquipment, checkSlot, isRepeatable, turnsPerSeason, type Slot } from '../engine/turn.ts'
 import { STAT_KEYS } from '../engine/types.ts'
 import { saveGame } from '../save/storage.ts'
 import { cleanTeamName, TEAM_NAME_MAX } from './newGame.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
 import { runEvent } from './eventFlow.ts'
-import { ACTION_GROUPS, MODE_INFO, STAT_LABEL } from './labels.ts'
+import { ACTION_GROUPS, MODE_INFO } from './labels.ts'
 import { actionCost, actionRisks, actionTags, describeChange, previewTurn } from './preview.ts'
 import { openSheet } from './sheet.ts'
 import { playTimeline, scheduleBar } from './calendarUi.ts'
@@ -24,6 +24,7 @@ import { conditionHelp, conditionText } from './conditionHelp.ts'
 import { conditionTier } from '../engine/growth.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
+import { statName } from './statHelp.ts'
 import { teamIcon } from './teamIcon.ts'
 import { salaryOf } from '../engine/teams.ts'
 
@@ -63,6 +64,12 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
   }
 
   const pick = (slot: Slot) => {
+    // 같은 훈련을 다시 누르면 선택이 취소된다 (훈련은 한 턴에 한 번만)
+    if (!isRepeatable(slot.id) && picked.some((p) => p.id === slot.id)) {
+      picked = picked.filter((p) => p.id !== slot.id)
+      render()
+      return
+    }
     // 빈 칸부터 채우고, 둘 다 찼으면 두 번째 칸을 바꾼다
     picked = picked.length < 2 ? [...picked, slot] : [picked[0], slot]
     render()
@@ -73,11 +80,12 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     const tags = actionTags(slot, state)
     const cost = actionCost(slot, state)
     const risks = actionRisks(slot, state)
+    const taken = !isRepeatable(slot.id) && picked.some((p) => p.id === slot.id)
     return h(
       'button',
-      { class: 'action', disabled: !!reason || busy, onclick: () => pick(slot) },
-      h('span', { class: 'action-title' }, title, cost > 0 && h('em', {}, ` ${cost}만`)),
-      h('span', { class: 'muted small' }, reason ?? tags.join(' · ')),
+      { class: `action${taken ? ' taken' : ''}`, disabled: !!reason || busy, onclick: () => pick(slot) },
+      h('span', { class: 'action-title' }, title, cost > 0 && h('em', {}, ` ${cost}만`), taken && h('span', { class: 'tag taken-tag' }, '선택됨')),
+      h('span', { class: 'muted small' }, reason ?? (taken ? '다시 누르면 취소' : tags.join(' · '))),
       risks.length > 0 && !reason && h('span', { class: 'risk small' }, `⚠ ${risks.join(' / ')}`),
     )
   }
@@ -215,7 +223,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
           h(
             'div',
             { class: 'stat-row compact' },
-            h('span', { class: 'stat-name' }, STAT_LABEL[k], genres[state.genre].weights[k] >= 20 && h('b', {}, ' ★')),
+            statName(k, state.genre, genres[state.genre].weights[k] >= 20),
             h('div', { class: 'bar' }, h('div', { class: 'bar-fill', style: `width:${(state.stats[k] / BAR_MAX) * 100}%` })),
             h('span', { class: 'stat-value' }, String(Math.round(state.stats[k]))),
             state.trait.stat === k ? h('span', { class: 'tag' }, '특성') : h('span', {}),

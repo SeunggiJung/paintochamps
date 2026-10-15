@@ -61,5 +61,5 @@ export async function showContract(state: GameState, offer: Offer, kind: 'join' 
       h('button', { class: 'btn primary c-ok', onclick: () => close() }, '확인'),
     )
     return root
-  })
+  }, { center: true })
 }

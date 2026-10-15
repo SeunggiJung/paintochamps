@@ -2,12 +2,14 @@ import { h } from './dom.ts'
 
 /**
  * 화면 위에 뜨는 팝업. build가 만든 내용을 보여 주고, close(값)을 부르면 닫히면서 그 값으로 resolve된다.
+
  * 바깥을 눌러도 닫히지 않는다. (이벤트 선택처럼 반드시 답해야 하는 팝업이 많다.)
+ * center를 주면 아래에서 올라오는 시트 대신 화면 중앙에 뜬다 (진행 연출·대회 결과 같은 장면용).
  */
-export function openSheet<T>(build: (close: (value: T) => void) => HTMLElement): Promise<T> {
+export function openSheet<T>(build: (close: (value: T) => void) => HTMLElement, options: { center?: boolean } = {}): Promise<T> {
   return new Promise((resolve) => {
     const previous = document.activeElement as HTMLElement | null
-    const overlay = h('div', { class: 'overlay' })
+    const overlay = h('div', { class: `overlay${options.center ? ' center' : ''}` })
     const close = (value: T) => {
       overlay.remove()
       previous?.focus?.()

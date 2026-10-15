@@ -41,6 +41,8 @@ interface ActionDef {
   allowWhenInjured?: boolean
   /** true면 매 턴 무작위로 뽑힌 후보(trainingMenu)에 있을 때만 고를 수 있는 훈련 */
   pool?: boolean
+  /** true면 한 턴에 같은 행동을 두 번 고를 수 없다 (훈련류. pool 훈련은 늘 해당) */
+  noRepeat?: boolean
   /** 이 모드에서만 할 수 있다. 없으면 모든 모드. (정밀 모드는 선택지가 더 많다) */
   modes?: GameState['mode'][]
 }
@@ -89,6 +91,12 @@ const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(mi
 /** 행동에 쓰는 돈 (양수). 돈을 버는 행동이면 0. */
 function costOf(action: ActionDef, scale: number): number {
   return Math.max(0, -(action.money ?? 0)) * scale
+}
+
+/** 같은 행동을 한 턴에 두 번 고를 수 있는지. 훈련은 한 번만, 휴식·아르바이트 같은 건 두 번도 된다. */
+export function isRepeatable(id: ActionId): boolean {
+  const a = ACTIONS[id]
+  return !(a?.pool || a?.noRepeat)
 }
 
 /** 선택 가능한지 확인한다. 가능하면 null, 아니면 이유를 돌려준다. */
@@ -215,6 +223,8 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
   if (state.finished) return { ok: false, error: '이미 끝난 커리어다' }
   if (state.pendingOffers) return { ok: false, error: '받은 제안을 먼저 정해야 한다' }
   if (state.turnInSeason >= turnsPerSeason(state.mode)) return { ok: false, error: '시즌 결산이 필요하다' }
+
+  if (choice[0].id === choice[1].id && !isRepeatable(choice[0].id)) return { ok: false, error: `${ACTIONS[choice[0].id].name}은(는) 한 턴에 한 번만 할 수 있다` }
 
   const scale = turnScale(state.mode)
   const notes: string[] = []

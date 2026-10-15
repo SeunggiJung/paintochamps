@@ -4,7 +4,7 @@ import rules from '../data/rules.json'
 import { conditionCoef, conditionTier, equipmentEfficiency, growthDelta } from './growth.ts'
 import { settleSeason } from './season.ts'
 import { createInitialState, type GameState, type ModeId } from './state.ts'
-import { applyTurn, buyEquipment, eventChance, isCareerOver, startNextSeason, turnScale, type TurnChoice } from './turn.ts'
+import { applyTurn, buyEquipment, eventChance, isCareerOver, isRepeatable, startNextSeason, turnScale, type TurnChoice } from './turn.ts'
 import { TRAINING_POOL } from './training.ts'
 import type { GenreId, Stats } from './types.ts'
 
@@ -127,15 +127,27 @@ describe('행동', () => {
     const tired = run(make({ age: 20, condition: 20 }), [{ id: 'video_review' }, { id: 'rest' }])
     expect(tired.delta.stats.judgment).toBeLessThan(fresh.delta.stats.judgment)
     expect(fresh.state.condition).toBeLessThanOrEqual(100)
-    const crash = run(make({ age: 20, condition: 5 }), [{ id: 'rank_practice' }, { id: 'rank_practice' }])
+    const crash = run(make({ age: 20, condition: 5 }), [{ id: 'rank_practice' }, { id: 'part_time' }])
     expect(crash.state.condition).toBeCloseTo(rules.conditionRecoveryPerBase) // 바닥까지 떨어진 뒤 턴 회복분만 남는다
   })
 
   it('두 번째 행동은 첫 번째 행동으로 줄어든 컨디션 기준으로 계산한다', () => {
-    const r = run(make({ age: 20, condition: 80 }), [{ id: 'rank_practice' }, { id: 'rank_practice' }])
-    const single = run(make({ age: 20, condition: 80 }), [{ id: 'rank_practice' }, { id: 'rest' }])
-    // 첫 행동 뒤 컨디션 65 → 계수 약 0.81 이라 두 번째 랭크전 효과가 더 작다
-    expect(r.delta.stats.accuracy).toBeLessThan(single.delta.stats.accuracy * 2)
+    // 컨디션 85(완벽 ×1.15)에서 랭크전을 하면 70(좋음 ×1.0)이 되어, 뒤에 하는 에임 연습은 처음부터 하는 것보다 덜 오른다
+    const both = run(make({ age: 20, condition: 85 }), [{ id: 'rank_practice' }, { id: 'aim_lab' }])
+    const rankOnly = run(make({ age: 20, condition: 85 }), [{ id: 'rank_practice' }, { id: 'rest' }])
+    const aimFresh = run(make({ age: 20, condition: 85 }), [{ id: 'aim_lab' }, { id: 'rest' }])
+    expect(both.delta.stats.accuracy - rankOnly.delta.stats.accuracy).toBeLessThan(aimFresh.delta.stats.accuracy)
+  })
+
+  it('같은 훈련은 한 턴에 두 번 고를 수 없고, 휴식 같은 행동은 두 번도 된다', () => {
+    const s = make({ age: 20 })
+    const twice = applyTurn(s, [{ id: 'rank_practice' }, { id: 'rank_practice' }])
+    expect(twice.ok).toBe(false)
+    expect(twice.ok === false && twice.error).toContain('한 번만')
+    expect(isRepeatable('rank_practice')).toBe(false)
+    expect(isRepeatable('private_lesson')).toBe(false)
+    expect(isRepeatable('rest')).toBe(true)
+    expect(applyTurn(s, [{ id: 'rest' }, { id: 'rest' }]).ok).toBe(true)
   })
 })
 

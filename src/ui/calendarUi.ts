@@ -61,7 +61,7 @@ export function showBeat(beat: CalendarBeat): Promise<void> {
       beat.advanced.length > 0 && h('div', { class: 'chips' }, ...beat.advanced.map((a) => h('span', { class: 'chip' }, a))),
       h('button', { class: 'btn primary', onclick: () => close() }, '확인'),
     )
-  })
+  }, { center: true })
 }
 
 export interface TimelineInput {
@@ -142,7 +142,7 @@ export function playTimeline({ before, calendar, actions, brief }: TimelineInput
       close()
     })()
     return root
-  })
+  }, { center: true })
 }
 
 /** 홈 화면의 시즌 일정: 대회별로 예정·진행 중·중간 순위·최종 순위를 한눈에 보여 준다 */
