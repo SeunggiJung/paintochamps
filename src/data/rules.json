@@ -7,7 +7,7 @@
     "fame": 0
   },
   "baseMonths": 3,
-  "growthRate": 0.3,
+  "growthRate": 0.32,
   "growthExponent": 0.15,
   "trainingMenuSize": 3,
   "eventBase": 0.65,

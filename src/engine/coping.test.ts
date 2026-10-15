@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
+import rules from '../data/rules.json'
 import { applyEffects, slumpDurationFactor } from './effects.ts'
 import { applyEventChoice, availableChoices, checkChance, choiceOutcomes, EVENTS, isEligible } from './events.ts'
 import { createRng } from './rng.ts'
 import { createInitialState, type GameState } from './state.ts'
 import type { Stats } from './types.ts'
+
+// 이벤트가 직접 바꾸는 능력치는 훈련과 같은 성장 속도를 곱해서 반영된다
+const RATE = rules.growthRate
 
 const TEAM = { id: 'org_0', name: '나이트호크' }
 
@@ -77,8 +81,8 @@ describe('능력치 판정: 실력이 대처 성공을 좌우한다', () => {
   it('실패하면 멘탈이 깎이고, 성공하면 멘탈이 오른다', () => {
     const win = applyEventChoice(make(500), byId('slump'), 1, () => 0)
     const lose = applyEventChoice(make(500), byId('slump'), 1, () => 0.99)
-    expect(win.stats.mental).toBe(530)
-    expect(lose.stats.mental).toBe(480)
+    expect(win.stats.mental).toBeCloseTo(500 + 30 * RATE)
+    expect(lose.stats.mental).toBeCloseTo(500 - 20 * RATE)
     expect(win.slumpMonths).toBeLessThan(lose.slumpMonths)
   })
 
@@ -116,8 +120,8 @@ describe('부상: 대처에 따라 실력이 영구히 달라진다', () => {
     const s = make(500)
     const ignore = applyEventChoice(s, injury, 2)
     expect(ignore.injuredMonths).toBe(6)
-    expect(ignore.stats.reaction).toBe(s.stats.reaction - 30)
-    expect(ignore.stats.accuracy).toBe(s.stats.accuracy - 30)
+    expect(ignore.stats.reaction).toBeCloseTo(s.stats.reaction - 30 * RATE)
+    expect(ignore.stats.accuracy).toBeCloseTo(s.stats.accuracy - 30 * RATE)
   })
 
   it('병원 치료는 돈이 들지만 실력 손실이 없고 가장 빨리 낫는다', () => {
@@ -139,7 +143,7 @@ describe('부상: 대처에 따라 실력이 영구히 달라진다', () => {
     expect(win.injuredMonths).toBe(3)
     expect(win.stats.reaction).toBe(s.stats.reaction)
     expect(lose.injuredMonths).toBe(5)
-    expect(lose.stats.reaction).toBe(s.stats.reaction - 15)
+    expect(lose.stats.reaction).toBeCloseTo(s.stats.reaction - 15 * RATE)
   })
 
   it('대처를 잘하는 선수와 못하는 선수의 장기 실력 차이가 난다 (코호트 비교)', () => {
@@ -152,7 +156,7 @@ describe('부상: 대처에 따라 실력이 영구히 달라진다', () => {
       }
       return sum / 100
     }
-    expect(total(0)).toBeGreaterThan(total(2) + 40)
+    expect(total(0)).toBeGreaterThan(total(2) + 25)
   })
 })
 

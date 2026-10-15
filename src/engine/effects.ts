@@ -5,7 +5,7 @@ import { STAT_KEYS, type Stats } from './types.ts'
 
 /** 이벤트 선택지와 행동의 부작용이 함께 쓰는 효과 묶음 */
 export interface Effects {
-  /** 능력치 직접 증감 (성장 공식을 거치지 않는다) */
+  /** 능력치 직접 증감. 성장 공식(컨디션·장비)은 거치지 않지만 성장 속도(rules.growthRate)는 훈련과 똑같이 곱한다. */
   stats?: Partial<Stats>
   condition?: number
   money?: number
@@ -34,7 +34,7 @@ export function applyEffects(state: GameState, fx: Effects, scale = 1): GameStat
   const stats = { ...state.stats }
   for (const key of STAT_KEYS) {
     const d = fx.stats?.[key]
-    if (d !== undefined) stats[key] = clamp(stats[key] + d * scale, 0, gacha.statMax)
+    if (d !== undefined) stats[key] = clamp(stats[key] + d * scale * rules.growthRate, 0, gacha.statMax)
   }
 
   let slump = state.slumpMonths

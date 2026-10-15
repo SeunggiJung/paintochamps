@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import rules from '../data/rules.json'
 import { slumpDurationFactor } from './effects.ts'
 import { applyEventChoice, EVENTS, isEligible, rollEvent, turnRng } from './events.ts'
 import { createRng } from './rng.ts'
@@ -95,20 +96,20 @@ describe('rollEvent', () => {
 })
 
 describe('applyEventChoice', () => {
-  it('기획서 예시: 속마음을 털어놓으면 멘탈 +150, 컨디션 +10, 돈 +5', () => {
+  it('기획서 예시: 속마음을 털어놓으면 멘탈 +150(성장 속도 반영), 컨디션 +10, 돈 +5', () => {
     const s = make({ age: 17, condition: 50, money: 0, stats: { ...FLAT, mental: 200 } })
     const after = applyEventChoice(s, byId('parents_mental_care'), 0)
-    expect(after.stats.mental).toBe(350)
+    expect(after.stats.mental).toBeCloseTo(200 + 150 * rules.growthRate)
     expect(after.condition).toBe(60)
     expect(after.money).toBe(5)
   })
 
   it('범위를 넘지 않는다 (능력치 0~1000, 컨디션 0~100, 돈·명성 0 이상)', () => {
-    const s = make({ condition: 98, money: 3, stats: { ...FLAT, accuracy: 5, mental: 995 } })
+    const s = make({ condition: 98, money: 3, stats: { ...FLAT, accuracy: 0.5, mental: 995 } })
     expect(applyEventChoice(s, byId('power_outage'), 0).condition).toBe(100)
     expect(applyEventChoice(s, byId('equipment_broken'), 0).money).toBe(0)
     expect(applyEventChoice(s, byId('equipment_broken'), 1).stats.accuracy).toBe(0)
-    expect(applyEventChoice(s, byId('fan_letter'), 0).stats.mental).toBe(1000)
+    expect(applyEventChoice(s, byId('fan_letter'), 0).stats.mental).toBeCloseTo(1000, 0)
   })
 
   it('없는 선택지는 거부한다', () => {

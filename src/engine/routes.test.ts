@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { EVENTS, isEligible } from './events.ts'
 import { choosePrep, expectedScore, upcomingTest } from './routes.ts'
 import { settleSeason } from './season.ts'
 import { createInitialState, type GameState } from './state.ts'
@@ -122,5 +123,34 @@ describe('시험 준비', () => {
     const a = settleSeason(at(200, { academyInvite: true })).report.tests
     const b = settleSeason(at(200, { academyInvite: true })).report.tests
     expect(a).toEqual(b)
+  })
+})
+
+describe('루트별 이벤트', () => {
+  const eligible = (state: GameState) => EVENTS.filter((e) => isEligible(state, e)).map((e) => e.id)
+  const team = { id: 'org_1', name: '실버폭스 아카데미' }
+
+  it('아카데미 이벤트는 정석 루트의 연습생에게만 나온다', () => {
+    const academy = at(300, { stage: 'amateur_team', path: 'academy', team, age: 18, turnInSeason: 1, condition: 70 })
+    expect(eligible(academy)).toEqual(expect.arrayContaining(['academy_senior_spar', 'academy_monthly_eval', 'academy_dorm_life']))
+    expect(eligible({ ...academy, path: 'open' })).not.toContain('academy_senior_spar')
+  })
+
+  it('초대장 이벤트는 초대를 받은 방구석 선수에게만 나온다', () => {
+    const rookie = at(200, { turnInSeason: 1, condition: 70 })
+    expect(eligible(rookie)).not.toContain('invite_letter_day')
+    expect(eligible({ ...rookie, academyInvite: true })).toContain('invite_letter_day')
+  })
+
+  it('PC방 도전이 한 번 이상이고 초대를 못 받았을 때 격려 이벤트가 나온다', () => {
+    const rookie = at(200, { turnInSeason: 1, condition: 70, cafeAttempts: 1 })
+    expect(eligible(rookie)).toContain('cafe_retry_resolve')
+    expect(eligible({ ...rookie, academyInvite: true })).not.toContain('cafe_retry_resolve')
+  })
+
+  it('우회 루트 이벤트: 지역 대회 소문과 스트리머 제안', () => {
+    const local = at(300, { stage: 'local_cup', path: 'open', fame: 20, age: 20, turnInSeason: 1, condition: 70 })
+    expect(eligible(local)).toEqual(expect.arrayContaining(['local_cup_scout_rumor', 'open_route_streamer_collab', 'late_bloomer_family_worry']))
+    expect(eligible({ ...local, path: 'academy' })).not.toContain('open_route_streamer_collab')
   })
 })

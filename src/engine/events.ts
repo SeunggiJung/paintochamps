@@ -1,7 +1,8 @@
 import eventData from '../data/events.json'
 import { applyEffects, type Effects } from './effects.ts'
+import { pathOf } from './routes.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
-import type { GameState, StageId } from './state.ts'
+import type { GameState, PathId, StageId } from './state.ts'
 import { eventChance } from './turn.ts'
 import { STAT_KEYS, type StatKey } from './types.ts'
 
@@ -23,6 +24,14 @@ export interface EventWhen {
   modes?: GameState['mode'][]
   /** true면 팀 소속일 때만, false면 무소속일 때만 */
   team?: boolean
+  /** 초반 루트(rookie 갈림길 전, academy 정석, open 우회) */
+  path?: PathId[]
+  /** true면 아카데미 입단 테스트 초대를 받은 상태일 때만 */
+  invited?: boolean
+  /** PC방 대회에 나간 횟수 */
+  cafeAttempts?: Range
+  /** 아카데미 입단 테스트 재도전 횟수 */
+  academyRetries?: Range
 }
 
 export type EventEffects = Effects
@@ -59,6 +68,9 @@ export function isEligible(state: GameState, e: GameEvent): boolean {
   if (w.ageMin !== undefined && state.age < w.ageMin) return false
   if (w.ageMax !== undefined && state.age > w.ageMax) return false
   if (w.team !== undefined && (state.team !== null) !== w.team) return false
+  if (w.path && !w.path.includes(pathOf(state))) return false
+  if (w.invited !== undefined && !!state.academyInvite !== w.invited) return false
+  if (!inRange(state.cafeAttempts ?? 0, w.cafeAttempts) || !inRange(state.academyRetries ?? 0, w.academyRetries)) return false
   if (!inRange(state.condition, w.condition) || !inRange(state.fame, w.fame) || !inRange(state.money, w.money) || !inRange(state.vice, w.vice)) return false
   for (const key of STAT_KEYS) if (!inRange(state.stats[key], w.stat?.[key])) return false
   return true
