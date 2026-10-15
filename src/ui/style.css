@@ -213,3 +213,23 @@ input[type='text'] {
 @keyframes sparkPop { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .contract *, .contract { animation: none !important; } }
+
+/* 시간이 흘러가는 연출·대회 결과 카드·일정 */
+.timeline { text-align: center; padding: 8px 0; }
+.timeline h2 { font-size: 1.2rem; }
+.timeline-event { margin: 0; min-height: 1.4em; color: var(--grade-UR); font-weight: 700; }
+.timeline-fill { transition: width 0.25s linear; }
+.beat-title.gold { color: var(--grade-UR); }
+.beat-title.silver { color: var(--grade-SR); }
+.standings { margin: 4px 0; }
+.standing { display: grid; grid-template-columns: 1.8em 1fr auto; gap: 8px; padding: 4px 8px; border-radius: 8px; font-size: 0.9rem; }
+.standing.me { background: #232a47; font-weight: 700; }
+.standing .rank { color: var(--muted); font-variant-numeric: tabular-nums; }
+.schedule-list { display: flex; flex-direction: column; gap: 2px; }
+.schedule-row { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; border-top: 1px solid var(--line); font-size: 0.88rem; }
+.schedule-row:first-child { border-top: 0; }
+.schedule-row .sstate { color: var(--muted); }
+.schedule-row.running .sstate { color: var(--accent); font-weight: 700; }
+.schedule-row.done .sstate { color: var(--text); }
+.schedule-row.done.top .sstate { color: var(--grade-UR); font-weight: 700; }
+.schedule-row.skipped { opacity: 0.5; }

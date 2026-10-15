@@ -45,7 +45,7 @@ export type TurnPreview = { ok: true; lines: string[] } | { ok: false; error: st
  * 확정 효과만 계산하므로 실제 결과와 다를 수 있다.
  */
 export function previewTurn(state: GameState, choice: TurnChoice): TurnPreview {
-  const r = applyTurn(state, choice, () => 1)
+  const r = applyTurn(state, choice, () => 1, false)
   if (!r.ok) return r
   return { ok: true, lines: describeChange(state, r.state, previewDetail(state.mode)) }
 }

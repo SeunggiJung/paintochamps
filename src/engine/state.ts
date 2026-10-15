@@ -1,5 +1,6 @@
 import rules from '../data/rules.json'
 import { drawTrainingMenu } from './training.ts'
+import type { Team } from './tournament.ts'
 import type { GachaResult, GenreId, Stats, Trait } from './types.ts'
 
 export type ModeId = 'tutorial' | 'standard' | 'precise'
@@ -72,6 +73,46 @@ export interface PendingOffers {
   offers: Offer[]
 }
 
+/** 순위표 한 줄 (리그의 중간·최종 순위 표시용) */
+export interface StandingRow {
+  name: string
+  wins: number
+  losses: number
+  isPlayer: boolean
+}
+
+/** 이번 시즌에 시작해서 결과가 정해진 대회 한 건 */
+export interface RunRecord {
+  id: string
+  name: string
+  placement: number
+  fieldSize: number
+  /** 결과가 공개될 때 반영되는 보상 */
+  fame: number
+  money: number
+  /** 최종 순서(0번이 1위). 상위 팀을 이어받는 뒤 대회가 쓴다 */
+  order: Team[]
+  /** 리그: 절반 시점의 순위표와 최종 순위표 */
+  mid: StandingRow[] | null
+  table: StandingRow[] | null
+  /** 이 성적으로 얻은 진출권 문구 (예: '월드 챔피언십 진출') */
+  advanced: string[]
+  /** 어디까지 플레이어에게 알려 주었는지 */
+  revealed: 'none' | 'mid' | 'end'
+}
+
+/** 이번 시즌의 대회 진행 상황. 대회는 기간이 시작될 때 결과가 정해지고, 절반·끝 시점에 공개된다. */
+export interface SeasonRun {
+  season: number
+  /** 어느 시점(0~1)까지 진행했는지 */
+  phase: number
+  runs: RunRecord[]
+  /** 진출하지 못해 열리지 않은 대회 id */
+  skipped: string[]
+  qualified: string[]
+  points: number
+}
+
 export interface EventRecord {
   id: string
   name: string
@@ -126,6 +167,8 @@ export interface GameState {
   academyRetries: number
   /** 이번 시즌 결산에서 볼 시험의 준비 선택 (prep id) */
   testPrep: string | null
+  /** 이번 시즌 대회 진행 상황. 시즌이 바뀌면 새로 만든다 (옛 세이브에는 없을 수 있다). */
+  seasonRun: SeasonRun | null
   /** 시즌 중간 제안을 마지막으로 받은 시즌. 시즌당 한 번만 온다. */
   midOfferSeason: number
 
@@ -185,6 +228,7 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     equipBoughtTurn: -1,
     trainingMenu: drawTrainingMenu(seed, 0, false),
     midOfferSeason: 0,
+    seasonRun: null,
     path: 'rookie',
     cafeAttempts: 0,
     academyInvite: false,

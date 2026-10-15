@@ -1,49 +1,15 @@
-import competitions from '../data/competitions.json'
 import rules from '../data/rules.json'
 import stageData from '../data/stages.json'
 import { evaluateEnding } from './endings.ts'
-import { academyName, makeOpponents, pickTeams, type NamePool } from './field.ts'
-import { mentalAdjusted, playSeries } from './match.ts'
+import { advanceCalendar } from './calendar.ts'
+import { eventsFor, playerPower, type EventDef } from './competitions.ts'
+import { pickTeams } from './field.ts'
+import { playSeries } from './match.ts'
 import { genrePower } from './power.ts'
 import { createRng, gaussian, mixSeed, type Rng } from './rng.ts'
-import type { EndingId, EventRecord, GameState, ModeId, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
+import type { EndingId, EventRecord, GameState, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
 import { pathOf, routeStep, type TestResult } from './routes.ts'
-import { teamBoost } from './teams.ts'
-import { runElimination, runLeague, type Team } from './tournament.ts'
 import { isCareerOver, isSettled, turnScale, turnsPerSeason } from './turn.ts'
-import type { GenreId } from './types.ts'
-
-interface Reward {
-  upTo: number
-  fame: number
-  money: number
-}
-
-export interface EventDef {
-  id: string
-  name: string
-  /** 이 모드에서만 열린다 (없으면 모든 모드). 튜토리얼에서 빼려면 표준·정밀만 적는다. */
-  modes?: ModeId[]
-  format: 'league' | 'elimination'
-  field?: { names: NamePool; tier: string; size: number }
-  /** 앞선 이벤트 순위표의 상위 top팀으로 치른다 (플레이어가 거기 못 들면 열리지 않는다) */
-  from?: { event: string; top: number }
-  /** 이 진출권을 얻어야 열린다 */
-  needs?: string
-  rounds?: number
-  k?: number
-  bestOf: number
-  /** 큰 경기: 플레이어 실력치에 멘탈 보정을 더한다 */
-  big?: boolean
-  /** 시즌 순위로 쓴다: 하위권이면 강등 */
-  rank?: boolean
-  /** 월드 챔피언십 */
-  world?: boolean
-  rewards: Reward[]
-  qualifies?: { to: string; top: number }[]
-  points?: number[]
-  pointsQualify?: { to: string; minPoints: number }
-}
 
 interface StageDef {
   name: string
@@ -54,24 +20,10 @@ const STAGE_ORDER = stageData.order as StageId[]
 const STAGES = stageData.stages as Record<StageId, StageDef>
 const OFFERS = stageData.offers
 
-/** 1부 일정의 모양: AOS형(리그 → 선발전 → 국제전 → 플레이오프 → 월드), FPS형(킥오프 → 스테이지 1·2 → 마스터즈 → 챔피언스) */
-const CALENDAR_OF: Record<GenreId, 'aos' | 'fps'> = { aos: 'aos', rts: 'aos', fps: 'fps', fighting: 'fps' }
+export { eventsFor, playerPower, type EventDef }
 
 export function stageName(stage: StageId): string {
   return STAGES[stage].name
-}
-
-/** 이번 시즌에 치르는 대회 목록 */
-export function eventsFor(state: Pick<GameState, 'stage' | 'genre' | 'mode'> & { academyInvite?: boolean }): EventDef[] {
-  const all = (state.stage === 'pro1' ? competitions.stages.pro1[CALENDAR_OF[state.genre]] : competitions.stages[state.stage]) as EventDef[]
-  // 아카데미 입단 테스트 초대를 받은 해에는 PC방 대회에 다시 나가지 않는다
-  return all.filter((e) => (!e.modes || e.modes.includes(state.mode)) && !(state.academyInvite && e.field?.names === 'cafe'))
-}
-
-/** 플레이어의 지금 장르 실력치. 큰 경기면 멘탈 보정을 더한다. */
-export function playerPower(state: GameState, big: boolean): number {
-  const r = genrePower(state.stats, state.genre)
-  return big ? mentalAdjusted(r, state.stats.mental) : r
 }
 
 export interface EventResult extends EventRecord {
@@ -95,56 +47,6 @@ export interface SeasonReport {
   tests: TestResult[]
   /** 루트가 어떻게 갈렸는지 알려 주는 문구 */
   routeNotes: string[]
-}
-
-interface Outcome {
-  order: Team[]
-  placement: number
-}
-
-interface Ctx {
-  rng: Rng
-  outcomes: Map<string, Outcome>
-  qualified: Set<string>
-  points: number
-}
-
-function playerTeam(state: GameState, ev: EventDef, power: number): Team {
-  const base = state.team ?? { id: 'player', name: state.name }
-  const name = ev.field?.names === 'academy' ? academyName(base) : ev.field?.names === 'cafe' ? (state.cafeTeamName ?? `${state.name}팀`) : base.name
-  return { id: base.id, name, power, isPlayer: true }
-}
-
-function runEvent(state: GameState, ev: EventDef, ctx: Ctx): Outcome | null {
-  if (ev.needs && !ctx.qualified.has(ev.needs)) return null
-  // 소속 팀이 리그 평균보다 강하면 전력이 오르고 약하면 내려간다 (PC방 대회처럼 팀 없이 나가는 대회는 제외)
-  const power = playerPower(state, ev.big ?? false) + (ev.field?.names === 'cafe' ? 0 : teamBoost(state))
-
-  let teams: Team[]
-  if (ev.from) {
-    const prev = ctx.outcomes.get(ev.from.event)
-    if (!prev) return null
-    const top = prev.order.slice(0, ev.from.top)
-    if (!top.some((t) => t.isPlayer)) return null
-    teams = top.map((t) => (t.isPlayer ? { ...t, power } : t))
-  } else {
-    const f = ev.field!
-    const me = playerTeam(state, ev, power)
-    teams = [me, ...makeOpponents(ctx.rng, f.names, f.tier, f.size - 1, new Set([me.id]), f.names === 'cafe' || f.names === 'intl' ? undefined : { seed: state.seed, season: state.season })]
-  }
-
-  const order =
-    ev.format === 'league'
-      ? runLeague(ctx.rng, teams, ev.rounds ?? 1, ev.bestOf).map((s) => s.team)
-      : runElimination(ctx.rng, [...teams].sort((a, b) => b.power - a.power), ev.k ?? 1, ev.bestOf)
-  const placement = order.findIndex((t) => t.isPlayer) + 1
-  const outcome = { order, placement }
-  ctx.outcomes.set(ev.id, outcome)
-
-  for (const q of ev.qualifies ?? []) if (placement <= q.top) ctx.qualified.add(q.to)
-  if (ev.points) ctx.points += ev.points[placement - 1] ?? 0
-  if (ev.pointsQualify && ctx.points >= ev.pointsQualify.minPoints) ctx.qualified.add(ev.pointsQualify.to)
-  return outcome
 }
 
 function makeScoutOffers(rng: Rng, kind: 'amateur' | 'pro', exclude: Set<string>, count: number = OFFERS.count): PendingOffers {
@@ -187,25 +89,25 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
   if (state.turnInSeason < turnsPerSeason(state.mode)) throw new Error('시즌이 아직 끝나지 않았다')
   if (isSettled(state)) throw new Error('이미 결산한 시즌이다')
 
-  const rng = createRng(mixSeed(state.seed, state.season, 0x5ea5))
-  const ctx: Ctx = { rng, outcomes: new Map(), qualified: new Set(), points: 0 }
+  const rng = createRng(mixSeed(state.seed, state.season, 0x5ea5, 0xfe))
   const stageBefore = state.stage
 
-  let next: GameState = { ...state, seasonsInPro1: state.seasonsInPro1 + (state.stage === 'pro1' ? 1 : 0) }
+  // 시즌 중에 이미 치른 대회는 그대로 두고, 아직 열리지 않은 대회가 있으면(옛 세이브·바로 결산하는 경우) 지금 치른다
+  const advanced = advanceCalendar(state, 1).state
+  const run = advanced.seasonRun!
+  let next: GameState = { ...advanced, seasonsInPro1: advanced.seasonsInPro1 + (state.stage === 'pro1' ? 1 : 0) }
   const results: EventResult[] = []
   let rank: { placement: number; size: number } | null = null
   let worldChampion = false
 
   for (const ev of eventsFor(state)) {
-    const outcome = runEvent(state, ev, ctx)
-    if (!outcome) continue
-    const reward = ev.rewards.find((r) => outcome.placement <= r.upTo) ?? ev.rewards[ev.rewards.length - 1]
-    next = { ...next, fame: next.fame + reward.fame, money: next.money + reward.money }
-    results.push({ id: ev.id, name: ev.name, placement: outcome.placement, fieldSize: outcome.order.length, fame: reward.fame, money: reward.money })
-    if (ev.rank) rank = { placement: outcome.placement, size: outcome.order.length }
+    const rec = run.runs.find((r) => r.id === ev.id)
+    if (!rec) continue
+    results.push({ id: ev.id, name: ev.name, placement: rec.placement, fieldSize: rec.fieldSize, fame: rec.fame, money: rec.money })
+    if (ev.rank) rank = { placement: rec.placement, size: rec.fieldSize }
     if (ev.world) {
       next = { ...next, worldAppearances: next.worldAppearances + 1 }
-      if (outcome.placement === 1) {
+      if (rec.placement === 1) {
         next = { ...next, worldTitles: next.worldTitles + 1 }
         worldChampion = true
       }
@@ -281,7 +183,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
 
   return {
     state: next,
-    report: { stageBefore, stageAfter: next.stage, events: results, rival, relegated, promoted, qualified: [...ctx.qualified], worldChampion, finished, pendingOffers: next.pendingOffers, tests, routeNotes },
+    report: { stageBefore, stageAfter: next.stage, events: results, rival, relegated, promoted, qualified: run.qualified, worldChampion, finished, pendingOffers: next.pendingOffers, tests, routeNotes },
   }
 }
 

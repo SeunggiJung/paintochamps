@@ -15,21 +15,38 @@ export interface Standing {
   losses: number
 }
 
-/** 리그전: 모든 팀이 서로 rounds번씩 시리즈를 치르고, 승수 순으로 정렬한다 (동률은 무작위). */
-export function runLeague(rng: Rng, teams: readonly Team[], rounds: number, bestOf: number): Standing[] {
+/**
+ * 리그전: 모든 팀이 서로 rounds번씩 시리즈를 치르고, 승수 순으로 정렬한다 (동률은 무작위).
+ * 경기는 라운드 순서대로 치러지고, 전체 경기의 절반을 치른 시점의 순위(mid)도 함께 돌려준다.
+ */
+export function runLeagueDetailed(rng: Rng, teams: readonly Team[], rounds: number, bestOf: number): { final: Standing[]; mid: Standing[] } {
   const table = new Map<string, Standing>(teams.map((team) => [team.id, { team, wins: 0, losses: 0 }]))
-  for (let a = 0; a < teams.length; a++) {
-    for (let b = a + 1; b < teams.length; b++) {
-      for (let r = 0; r < rounds; r++) {
+  const tiebreak = new Map(teams.map((t) => [t.id, rng()]))
+  const sorted = () =>
+    [...table.values()].map((s) => ({ ...s })).sort((x, y) => y.wins - x.wins || tiebreak.get(y.team.id)! - tiebreak.get(x.team.id)!)
+
+  const total = rounds * ((teams.length * (teams.length - 1)) / 2)
+  const midAt = Math.floor(total / 2)
+  let played = 0
+  let mid: Standing[] = sorted()
+  for (let r = 0; r < rounds; r++) {
+    for (let a = 0; a < teams.length; a++) {
+      for (let b = a + 1; b < teams.length; b++) {
         const aWins = playSeries(rng, teams[a].power, teams[b].power, bestOf)
         const [winner, loser] = aWins ? [teams[a], teams[b]] : [teams[b], teams[a]]
         table.get(winner.id)!.wins++
         table.get(loser.id)!.losses++
+        played++
+        if (played === midAt) mid = sorted()
       }
     }
   }
-  const tiebreak = new Map(teams.map((t) => [t.id, rng()]))
-  return [...table.values()].sort((x, y) => y.wins - x.wins || tiebreak.get(y.team.id)! - tiebreak.get(x.team.id)!)
+  return { final: sorted(), mid }
+}
+
+/** 리그전 최종 순위 */
+export function runLeague(rng: Rng, teams: readonly Team[], rounds: number, bestOf: number): Standing[] {
+  return runLeagueDetailed(rng, teams, rounds, bestOf).final
 }
 
 /**

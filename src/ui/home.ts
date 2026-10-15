@@ -19,6 +19,7 @@ import { runEvent } from './eventFlow.ts'
 import { ACTION_GROUPS, MODE_INFO, STAT_LABEL } from './labels.ts'
 import { actionCost, actionRisks, actionTags, describeChange, previewTurn } from './preview.ts'
 import { openSheet } from './sheet.ts'
+import { playTimeline, scheduleBar } from './calendarUi.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
 import { teamIcon } from './teamIcon.ts'
@@ -111,6 +112,10 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
 
   const playTurn = async () => {
     if (picked.length !== 2 || busy) return
+    // PC방 대회는 시즌 중간에 열리므로, 출전 전에 팀 이름을 정한다
+    busy = true
+    await askTeamName()
+    busy = false
     const r = applyTurn(state, [picked[0], picked[1]])
     if (!r.ok) {
       render(r.error)
@@ -120,6 +125,8 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     render()
     const before = state
     let next = r.state
+    // 시간이 흘러가는 연출 (대회가 끝나는 시점마다 결과 카드)
+    await playTimeline({ before, calendar: r.calendar, actions: picked.map(slotName), brief: before.mode === 'precise' })
     const lines = describeChange(before, next, 'exact')
     await openSheet<void>((close) =>
       h(
@@ -196,6 +203,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         ),
         statusChips().length > 0 && h('div', { class: 'chips' }, ...statusChips()),
       ),
+      scheduleBar(state),
       h(
         'section',
         { class: 'card' },

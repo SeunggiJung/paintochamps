@@ -5,6 +5,7 @@ import genres from '../data/genres.json'
 import modes from '../data/modes.json'
 import routes from '../data/routes.json'
 import rules from '../data/rules.json'
+import { advanceCalendar, type CalendarUpdate } from './calendar.ts'
 import { applyEffects, type Effects } from './effects.ts'
 import { equipmentEfficiency, growthDelta } from './growth.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
@@ -60,7 +61,7 @@ export interface Delta {
 }
 
 export type TurnResult =
-  | { ok: true; state: GameState; delta: Delta; seasonEnded: boolean; notes: string[] }
+  | { ok: true; state: GameState; delta: Delta; seasonEnded: boolean; notes: string[]; calendar: CalendarUpdate }
   | { ok: false; error: string }
 
 /** 턴 길이 배율: 6개월 2, 3개월 1, 1개월 1/3 */
@@ -210,7 +211,7 @@ export function actionRng(state: GameState): Rng {
  * 시즌의 마지막 턴이면 seasonEnded가 true이고, 결산을 마친 뒤 startNextSeason을 부른다.
  * rng를 넘기지 않으면 상태에서 정해진 난수를 쓴다. (플레이어가 미리 결과를 알 수 없도록 AI가 점수를 매길 때는 다른 난수를 넘긴다.)
  */
-export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actionRng(state)): TurnResult {
+export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actionRng(state), calendar = true): TurnResult {
   if (state.finished) return { ok: false, error: '이미 끝난 커리어다' }
   if (state.pendingOffers) return { ok: false, error: '받은 제안을 먼저 정해야 한다' }
   if (state.turnInSeason >= turnsPerSeason(state.mode)) return { ok: false, error: '시즌 결산이 필요하다' }
@@ -252,7 +253,12 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
     turnCount: next.turnCount + 1,
   }
   next = { ...next, trainingMenu: drawTrainingMenu(next.seed, next.turnCount, next.team !== null) }
-  return { ok: true, state: next, delta: diff(state, next), seasonEnded: next.turnInSeason === turnsPerSeason(next.mode), notes }
+
+  // 시간이 흘러 기간이 시작·절반·끝에 닿은 대회를 진행하고 결과를 공개한다 (미리보기·AI 평가는 건너뛴다)
+  const phase = next.turnInSeason / turnsPerSeason(next.mode)
+  const update: CalendarUpdate = calendar ? advanceCalendar(next, phase) : { state: next, beats: [], running: [], phaseBefore: phase, phaseAfter: phase }
+  next = update.state
+  return { ok: true, state: next, delta: diff(state, next), seasonEnded: next.turnInSeason === turnsPerSeason(next.mode), notes, calendar: update }
 }
 
 /** 이번 시즌의 결산(settleSeason)을 이미 마쳤는지 */
@@ -272,7 +278,7 @@ export function startNextSeason(state: GameState): GameState {
       stats[key] = Math.max(0, stats[key] - rules.ageDecline.amountPerSeason)
     }
   }
-  return { ...state, stats, seasonStartStats: { ...stats }, age: state.age + 1, season: state.season + 1, turnInSeason: 0 }
+  return { ...state, stats, seasonStartStats: { ...stats }, age: state.age + 1, season: state.season + 1, turnInSeason: 0, seasonRun: null }
 }
 
 /** 30세 시즌이 끝났으면 커리어가 끝난다. */

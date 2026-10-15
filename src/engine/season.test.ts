@@ -70,14 +70,14 @@ describe('시즌 결산', () => {
 
 describe('승급과 강등', () => {
   it('지역 대회에서 상위권에 들고 실력이 받쳐 주면 스카우트 제안이 생긴다', () => {
-    const r = settleSeason(atSeasonEnd({ stage: 'local_cup', power: 460, fame: 100 }))
+    const r = settleSeason(atSeasonEnd({ stage: 'local_cup', power: 900, fame: 100 }))
     expect(r.state.stage).toBe('amateur_team')
     expect(r.state.pendingOffers?.kind).toBe('scout')
     expect(r.state.pendingOffers?.offers).toHaveLength(3)
   })
 
   it('제안을 고르면 팀이 정해지고 연봉 또는 명성 보너스를 받는다', () => {
-    const { state } = settleSeason(atSeasonEnd({ stage: 'local_cup', power: 460, fame: 100 }))
+    const { state } = settleSeason(atSeasonEnd({ stage: 'local_cup', power: 900, fame: 100 }))
     const offer = state.pendingOffers!.offers[0]
     const after = acceptOffer(state, 0)
     expect(after.team).toEqual(offer.team)
@@ -86,12 +86,12 @@ describe('승급과 강등', () => {
   })
 
   it('입단 제안은 거절할 수 없다', () => {
-    const { state } = settleSeason(atSeasonEnd({ stage: 'local_cup', power: 460, fame: 100 }))
+    const { state } = settleSeason(atSeasonEnd({ stage: 'local_cup', power: 900, fame: 100 }))
     expect(() => acceptOffer(state, null)).toThrow()
   })
 
   it('제안을 고르기 전에는 턴을 진행할 수 없다', () => {
-    const { state } = settleSeason(atSeasonEnd({ stage: 'local_cup', power: 460, fame: 100 }))
+    const { state } = settleSeason(atSeasonEnd({ stage: 'local_cup', power: 900, fame: 100 }))
     const next = { ...state, turnInSeason: 0 }
     expect(applyTurn(next, [{ id: 'rest' }, { id: 'rest' }]).ok).toBe(false)
     expect(() => startNextSeason(state)).toThrow()

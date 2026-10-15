@@ -58,7 +58,7 @@ function expectedValue(s: GameState, choice: TurnChoice, rng: Rng): number | nul
   const n = risky ? SAMPLES : 1
   let total = 0
   for (let k = 0; k < n; k++) {
-    const r = applyTurn(s, choice, risky ? rng : undefined)
+    const r = applyTurn(s, choice, risky ? rng : undefined, false)
     if (!r.ok) return null
     total += value(r.state)
   }
@@ -102,7 +102,7 @@ function randomChoice(s: GameState, rng: Rng): TurnChoice {
   for (let i = 0; i < slots.length; i++) {
     for (let j = i; j < slots.length; j++) {
       const choice: TurnChoice = [slots[i], slots[j]]
-      if (applyTurn(s, choice, rng).ok) valid.push(choice)
+      if (applyTurn(s, choice, rng, false).ok) valid.push(choice)
     }
   }
   return valid.length ? valid[Math.floor(rng() * valid.length)] : [{ id: 'rest' }, { id: 'rest' }]
