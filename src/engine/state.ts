@@ -159,6 +159,8 @@ export interface GameState {
   equipment: Record<EquipmentId, number>
   /** 시설 투자 단계(숙소·개인 코치·재활 트레이너·홍보 에이전시). 돈 소비처. (옛 세이브에는 없을 수 있다 — facilityLevel) */
   facilities: Partial<Record<FacilityId, number>>
+  /** 턴 끝 미니게임으로 얻은 다음 턴 훈련 효율 보너스 비율(0.05 = +5%). 턴이 지나면 0으로 돌아간다. (옛 세이브에는 없을 수 있다 — warmupBonus) */
+  warmup: number
   /** 이번 시즌에 고를 수 있는 무작위 훈련 후보. 시즌이 시작될 때 뽑는다. (옛 세이브에는 없을 수 있다 — trainingMenuOf) */
   trainingMenu: ActionId[]
   /** 이번 시즌에 정한 훈련. 시즌 동안 이 훈련만 할 수 있고, 시즌이 시작되면 null로 돌아가 후보 중에서 다시 고른다. 코치가 교체를 제안하면 바뀐다. (옛 세이브에는 없을 수 있다) */
@@ -236,6 +238,7 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     fame: rules.start.fame,
     equipment: { keyboard: 0, mouse: 0, monitor: 0, pc: 0 },
     facilities: {},
+    warmup: 0,
     trainingMenu: drawTrainingMenu(seed, 0, false),
     seasonTraining: null,
     trainingSwapSeason: 0,

@@ -1,0 +1,5 @@
+{
+  "bonus": { "good": 0.04, "great": 0.08 },
+  "shooting": { "name": "에임 워밍업", "desc": "20초 동안 나타나는 표적을 눌러 맞히세요.", "seconds": 20, "spawnMs": 650, "lifeMs": 1100, "good": 12, "great": 20 },
+  "puzzle": { "name": "짝 맞추기", "desc": "뒤집힌 카드 12장에서 같은 그림 6쌍을 찾으세요. 적게 뒤집을수록 좋습니다.", "pairs": 6, "goodMoves": 16, "greatMoves": 11 }
+}

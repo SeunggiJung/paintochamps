@@ -9,6 +9,7 @@ import { advanceCalendar, type CalendarUpdate } from './calendar.ts'
 import { applyEffects, type Effects } from './effects.ts'
 import { coachEfficiency, housingRecovery, medicSpeed, prFame } from './facilities.ts'
 import { equipmentEfficiency, growthDelta } from './growth.ts'
+import { warmupBonus } from './minigame.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { ActionId, EquipmentId, GameState } from './state.ts'
 import { equipmentCost, moneyScale } from './economy.ts'
@@ -162,7 +163,7 @@ function applySlot(state: GameState, slot: Slot, scale: number, rng: Rng, notes:
     for (const key of top) gains[key] = action.topGenreStats.amount
   }
 
-  const efficiency = equipmentEfficiency(state.equipment) * coachEfficiency(state)
+  const efficiency = equipmentEfficiency(state.equipment) * coachEfficiency(state) * (1 + warmupBonus(state))
   const stats = { ...state.stats }
   for (const key of STAT_KEYS) {
     const base = gains[key]
@@ -269,6 +270,7 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
     injuredMonths: Math.max(0, next.injuredMonths - months * medicSpeed(next)),
     turnInSeason: next.turnInSeason + 1,
     turnCount: next.turnCount + 1,
+    warmup: 0,
   }
   // 시간이 흘러 기간이 시작·절반·끝에 닿은 대회를 진행하고 결과를 공개한다 (미리보기·AI 평가는 건너뛴다)
   const phase = next.turnInSeason / turnsPerSeason(next.mode)
