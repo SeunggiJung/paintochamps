@@ -10,7 +10,7 @@
 |---|---|
 | 현재 단계 | 1단계(엔진·시뮬레이션) 완료, **2단계(웹 화면) 진행 중** — ①뽑기·캐릭터 생성, ②육성 메인·이벤트, ③시즌 결산, ④엔딩·도감 구현 완료(직접 플레이 확인 대기) |
 | 지금 화면 | 타이틀 → 캐릭터 생성 → 뽑기(등급별 폭죽) → 육성 메인(시즌 시작 '계획 시트'(방침·훈련·레슨·장비)를 정하면 '다음 턴 진행' 버튼으로 시즌 중 행동이 자동으로 흘러간다 · 이벤트 팝업 · 코치의 훈련 교체 제안, 첫 접속 말풍선 가이드). 시즌 마지막 턴 뒤 시즌 결산 화면(`seasonScreen.ts`: 총 성적·능력치 변동 → 대회·명성·제안)으로 이어지고 다음 시즌이 시작된다. 커리어가 끝나면 엔딩 화면(도트 일러스트·문구·커리어 요약·시즌별 기록·업적·다시 뽑기 횟수)과 엔딩·업적 도감으로 이어지고, 결산 화면의 '여기서 은퇴하기'로 자진 은퇴도 가능하다 |
-| 테스트 | 303개 통과 (`npm test`) |
+| 테스트 | 313개 통과 (`npm test`) |
 | 저장소 | `origin` = github.com/SeunggiJung/paintochamps.git, 브랜치 `master` |
 | 사용자 | 한국어 사용. 1인 개발, 기획·개발·밸런싱 담당 |
 
@@ -41,7 +41,7 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 
 ## 4. 코드 지도
 
-`src/data/` — 규칙 데이터: `genres`(장르별 가중치) `gacha`(뽑기·등급 경계·특성) `actions`(행동 효과·비용·부작용·모드 제한) `equipment` `modes`(턴 길이) `rules`(수치 상수) `stages`(승급 조건·제안) `competitions`(단계별 대회 구조·상대 실력치) `teams`(가상 팀 이름) `events`(이벤트 31종: 일상 21 + 초반 루트용 10) `endings`(엔딩 8종 조건·우선순위)
+`src/data/` — 규칙 데이터: `genres`(장르별 가중치) `gacha`(뽑기·등급 경계·특성) `actions`(행동 효과·비용·부작용·모드 제한) `equipment` `modes`(턴 길이) `rules`(수치 상수) `stages`(승급 조건·제안) `competitions`(단계별 대회 구조·상대 실력치) `teams`(가상 팀 이름) `events`(이벤트 63종: 일상·초반 루트·프로 생활) `facilities`(시설 투자 4종) `minigame`(턴 끝 미니게임 기준·보너스) `endings`(엔딩 8종 조건·우선순위)
 
 `src/engine/` — 게임 엔진
 - `state.ts` GameState와 타입, `createInitialState`
@@ -52,9 +52,9 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 - `match.ts` 승률·시리즈 확률·멘탈 보정 / `tournament.ts` 리그전, k패 탈락 토너먼트 / `field.ts` 상대 팀 생성
 - `competitions.ts` 대회 정의(`EventDef`, 기간 `span`)·`eventsFor` / `calendar.ts` **시즌 일정**(`advanceCalendar`: 기간이 시작되면 결과를 정하고 절반·끝에 공개) / `teams.ts` 팀 정보·월급 / `routes.ts` 초반 루트·시험
 - `season.ts` **시즌 결산**(`settleSeason`), 스카우트·이적(`acceptOffer`), `retire`
-- `events.ts` 이벤트 발생·선택지·능력치 판정 / `endings.ts` 엔딩 판정 / `training.ts` 시즌 훈련 후보·선택, 코치의 교체 제안(`coachSwapOffer`) / `achievements.ts` 업적(골든로드 등) 판정
+- `events.ts` 이벤트 발생·선택지·능력치 판정 / `endings.ts` 엔딩 판정 / `training.ts` 시즌 훈련 후보·선택, 코치의 교체 제안(`coachSwapOffer`) / `achievements.ts` 업적(골든로드 등) 판정 / `facilities.ts` **시설 투자**(숙소·개인 코치·재활 트레이너·홍보 에이전시, 돈 소비처) / `minigame.ts` 턴 끝 미니게임 등급·보너스(`applyWarmup`)
 
-`src/ui/` — 웹 화면(바닐라 TS, 프레임워크 없음). `app.ts` 화면 전환, `title/create/gachaScreen/home.ts` 화면, `planScreen.ts` 시즌 시작 계획 시트(방침·훈련·레슨·장비 구매), `eventFlow.ts` 이벤트 팝업, `sheet.ts` 팝업, `preview.ts` 행동 태그·비용·변화 문구(턴 미리보기는 없다), `guide.ts` 첫 접속 말풍선 가이드, `turnResult.ts` 기존·증가·감소 색 변화 그래프(턴 결과·이벤트 결과·시즌 결산), `ending.ts` 엔딩 화면, `codex.ts` 엔딩·업적 도감, `endingScenes.ts` 엔딩 일러스트 8장(SVG 도트 임시 그림), `confetti.ts` 폭죽, `newGame.ts` 시드·뽑기 로직
+`src/ui/` — 웹 화면(바닐라 TS, 프레임워크 없음). `app.ts` 화면 전환, `title/create/gachaScreen/home.ts` 화면, `planScreen.ts` 시즌 시작 계획 시트(방침·훈련·레슨·장비 구매), `eventFlow.ts` 이벤트 팝업, `sheet.ts` 팝업, `preview.ts` 행동 태그·비용·변화 문구(턴 미리보기는 없다), `guide.ts` 첫 접속 말풍선 가이드, `turnResult.ts` 기존·증가·감소 색 변화 그래프(턴 결과·이벤트 결과·시즌 결산), `ending.ts` 엔딩 화면, `codex.ts` 엔딩·업적 도감, `endingScenes.ts` 엔딩 일러스트 8장(SVG 도트 임시 그림), `miniGame.ts` 턴 끝 미니게임 2종(사격·짝 맞추기), `confetti.ts` 폭죽, `newGame.ts` 시드·뽑기 로직
 
 `src/save/storage.ts` — 저장·불러오기, 엔딩 도감(`MetaSave`: 엔딩별 횟수와 최근 판 요약 `FinishSummary`), 판 종료 기록(`recordFinish`)
 
@@ -114,6 +114,8 @@ saveGame(storage, s)                           // 매 턴 자동 저장
 - **돈의 규모는 소속 단계를 따른다** (`economy.ts`, `contracts.json`의 `moneyScale`: 방구석·지역 ×1, 아마추어 ×2, 프로 2부 ×8, 프로 1부 ×30). 행동·이벤트·상금·계약금의 돈은 3개월 기준 기본 금액에 이 배율을 곱한다(`applyEffects`, `moneyCostOf`, 이벤트 `minMoney`). 장비는 **10단계, 단계마다 가격 2배**(`equipmentCost` = 기본가 × 2^단계). 화면의 돈은 `ui/format.ts`로 "1억 2,500만"처럼 표시. 봇의 돈 평가는 단계 배율로 나눈다.
 - **개발자 밥사주기 버튼**: 타이틀 왼쪽 위(`support.ts`). 누르면 계좌번호 팝업(복사 버튼). 계좌 정보는 `data/support.json`(bank·account·holder)에 두고, `account`가 비어 있으면 버튼을 숨긴다. 배포하는 웹 페이지에 번호가 그대로 보이므로 공개해도 되는 계좌만 넣는다.
 - **장비 구매는 턴을 쓰지 않고 시즌 시작 계획 때 한다.** `buyEquipment`에는 횟수 제한이 없고 돈이 되는 만큼 산다(단계마다 가격이 2배라 저절로 제한된다). 이전의 "한 턴에 하나까지"(`equipBoughtTurn`)는 매 턴 선택이 사라지면서 없어졌다.
+- **시설 투자 = 후반 돈 소비처** (`facilities.ts`, `data/facilities.json`, 2026-10-16 테스트 피드백 "업글 다 하면 돈 쓸 데가 없다"): 숙소(턴당 컨디션 회복 +1/레벨)·개인 코치(훈련 효율 +1.5%/레벨)·재활 트레이너(부상·슬럼프 회복 +25%/레벨)·홍보 에이전시(턴당 명성 +0.3/레벨), 계획 시트에서 구매. **가격 = 기본가 × 소속 단계 돈 규모 × 2.5^단계**라 프로가 되어도 계속 비싸다. 봇은 시설을 사지 않는다(난이도 측정에는 영향 없음). 더 필요한 소비처(가족·집·구단 투자)는 계약 시스템과 묶어 설계.
+- **턴 끝 미니게임** (`miniGame.ts`, `engine/minigame.ts`, `data/minigame.json`, 사용자 요청): 시즌이 이어질 때 턴이 끝나면 쉬는 시간 미니게임이 뜬다(턴마다 사격 '에임 워밍업'·퍼즐 '짝 맞추기'가 번갈아). 잘하면 **다음 턴 훈련 효율 +4%(좋음)/+8%(최고)**, 건너뛰거나 못 해도 손해 없음(`GameState.warmup`, 턴이 지나면 0). 엔진은 점수 → 등급만 알고 게임 자체는 UI. 봇은 하지 않는다.
 - **돈이 남는 것은 저축으로 허용.** 소비처는 레슨·스트레스 해소·기부·재활·상담·장비. 큰 목돈 소비(예: 부모님 집)는 3단계에서 검토.
 - **정밀 모드**는 턴이 1개월(12턴)로 잘게 나뉜다. 시즌 계획 개편 전에는 "선택지가 많고 함정도 많다"(전용 행동 5종)였지만, 매 턴 선택이 사라져서 그 성격은 약해졌다. 전용 행동(`modes: precise`: 강행군·밤샘 게임 등)은 데이터에 남아 있으나 계획에서 쓰이지 않는다 — **정밀 모드의 정체성을 다시 정해야 한다(사용자 결정 대기)**.
 - 부상·슬럼프 **대처가 실력에 영향**: 멘탈이 슬럼프 기간을 바꾸고(0.6~1.4배), 능력치 판정(성공 확률 = 능력치÷1000), 선택지 조건(팀·돈), 부상을 참으면 능력치 영구 손실.
