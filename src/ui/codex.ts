@@ -6,7 +6,7 @@ import { h } from './dom.ts'
 import { endingArt } from './ending.ts'
 import { MODE_INFO } from './labels.ts'
 
-/** 엔딩 도감. 본 엔딩은 설명과 마지막 기록을, 못 본 엔딩은 해금 힌트만 보여 준다. */
+/** 엔딩 도감. 본 엔딩은 설명과 마지막 기록을, 못 본 엔딩은 조건을 숨기고 ???로만 보여 준다. */
 export function codexScreen(ctx: Ctx): HTMLElement {
   const { endings, finishedRuns, bestStage } = ctx.meta
   const found = ENDINGS.filter((e) => endings[e.id]).length
@@ -14,7 +14,7 @@ export function codexScreen(ctx: Ctx): HTMLElement {
   const card = (e: (typeof ENDINGS)[number]) => {
     const rec = endings[e.id]
     if (!rec) {
-      return h('section', { class: 'card codex-card locked' }, endingArt(e.id, true), h('div', { class: 'codex-body' }, h('b', {}, '???'), h('span', { class: 'muted small' }, e.hint)))
+      return h('section', { class: 'card codex-card locked' }, endingArt(e.id, true), h('div', { class: 'codex-body' }, h('b', {}, '???'), h('span', { class: 'muted small' }, '직접 플레이하며 찾아보세요.')))
     }
     const last = rec.last
     return h(

@@ -21,8 +21,6 @@ export interface EndingDef {
   when: When
   /** 도감에 해금된 뒤 보여 주는 설명 */
   desc: string
-  /** 아직 못 본 엔딩에 보여 주는 조건 힌트 */
-  hint: string
   /** 엔딩 화면 문구. {name}은 선수 이름으로 바뀐다 */
   epilogue: string
 }

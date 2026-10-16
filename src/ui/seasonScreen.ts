@@ -68,6 +68,9 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     scrollTo(0, 0)
   }
 
+  /** 튜토리얼은 월드 챔피언십 우승 전까지 중간 은퇴를 막는다 (나이가 다 차거나 월드 우승으로만 끝난다) */
+  const canRetire = () => !state.finished && (state.mode !== 'tutorial' || state.worldTitles >= 1)
+
   /** 자진 은퇴: 지금까지의 기록으로 커리어를 마무리한다 (되돌릴 수 없어서 한 번 더 묻는다) */
   const askRetire = async () => {
     const yes = await openSheet<boolean>((close) =>
@@ -187,7 +190,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         { class: 'btn primary', disabled: !!state.pendingOffers, onclick: proceed },
         state.finished ? '커리어 마무리' : state.pendingOffers ? '제안을 골라 주세요' : `${before.season + 1}시즌 시작`,
       ),
-      !state.finished && h('button', { class: 'btn ghost small', onclick: askRetire }, '여기서 은퇴하기'),
+      canRetire() && h('button', { class: 'btn ghost small', onclick: askRetire }, '여기서 은퇴하기'),
     ]
     root.replaceChildren(...parts.filter((p): p is HTMLElement => !!p))
   }
