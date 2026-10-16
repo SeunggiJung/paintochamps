@@ -5,6 +5,7 @@ import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
 import { MODE_INFO } from './labels.ts'
 import { supportButton } from './support.ts'
+import { maybeShowUpdateLog, openUpdateLog } from './updateLog.ts'
 import { titleHero } from './titleScene.ts'
 
 export function titleScreen(ctx: Ctx, saved: GameState | null): HTMLElement {
@@ -30,6 +31,9 @@ export function titleScreen(ctx: Ctx, saved: GameState | null): HTMLElement {
     '새로 시작',
   )
 
+  // 접속 직후 타이틀을 처음 볼 때 업데이트 로그를 띄운다 (오늘 하루 안 보기를 눌렀다면 건너뜀)
+  setTimeout(maybeShowUpdateLog, 0)
+
   return h(
     'main',
     { class: 'screen title' },
@@ -37,7 +41,7 @@ export function titleScreen(ctx: Ctx, saved: GameState | null): HTMLElement {
     h('h1', {}, '방구석 겜돌이에서 프로게이머되기'),
     h('p', { class: 'title-sub' }, '16세, 방구석에서 월드 챔피언십 우승을 향한 15년'),
     titleHero(),
-    h('div', { class: 'stack' }, resume, newGame, h('button', { class: 'btn ghost', onclick: () => ctx.toCodex() }, `엔딩 도감 (${ENDINGS.filter((e) => ctx.meta.endings[e.id]).length}/${ENDINGS.length})`)),
+    h('div', { class: 'stack' }, resume, newGame, h('button', { class: 'btn ghost', onclick: () => ctx.toCodex() }, `엔딩 도감 (${ENDINGS.filter((e) => ctx.meta.endings[e.id]).length}/${ENDINGS.length})`), h('button', { class: 'btn ghost', onclick: () => void openUpdateLog() }, '업데이트 로그')),
     ctx.meta.finishedRuns > 0 && h('p', { class: 'muted small' }, `완주 ${ctx.meta.finishedRuns}회`),
   )
 }

@@ -351,3 +351,8 @@ input[type='text'] {
 /* 시즌 활약 */
 .chip.award { background: #3a3220; border-color: #6b5a1e; color: #ffd34d; }
 .event-row.mine { background: #232a47; border-radius: 10px; padding: 4px 8px; }
+
+/* 업데이트 로그 */
+.update-entry { border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; background: var(--panel); }
+.update-entry summary { cursor: pointer; }
+.update-items { margin: 8px 0 4px; padding-left: 18px; display: grid; gap: 6px; font-size: 0.9rem; }
