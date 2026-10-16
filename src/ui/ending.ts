@@ -7,26 +7,19 @@ import { bestStageOf } from '../save/storage.ts'
 import type { Ctx, EndingInfo } from './app.ts'
 import { celebrate } from './confetti.ts'
 import { h } from './dom.ts'
+import { endingSceneSvg } from './endingScenes.ts'
 import { MODE_INFO } from './labels.ts'
 
 /**
- * 엔딩별 임시 그림. 엔딩 일러스트가 준비되면 data-art 값(ending_<id>)으로 이미지를 붙인다.
- * 필요한 장면 목록은 docs/ending-images.md.
+ * 엔딩 그림 자리. 지금은 코드로 그린 도트 장면(`endingScenes.ts`)이고, 일러스트가 준비되면 이미지로 바꾼다.
+ * data-art 값(ending_<id>)이 이미지 파일 이름이다. 필요한 장면 목록은 docs/ending-images.md.
+ * hero는 엔딩 화면의 큰 그림, thumb는 도감의 작은 그림. 못 본 엔딩(locked)은 ?로 가린다.
  */
-export const ENDING_ICON: Record<EndingId, string> = {
-  hidden_loyal: '🏟️',
-  legend: '🏆',
-  world_finalist: '🥈',
-  pro1_regular: '🎖️',
-  pro2_veteran: '🛠️',
-  coach: '📋',
-  streamer: '📺',
-  hobbyist: '🎮',
-}
-
-/** 엔딩 그림 자리. 일러스트가 들어오기 전까지 아이콘으로 대신한다. */
-export function endingArt(id: EndingId, locked = false): HTMLElement {
-  return h('div', { class: `ending-art${locked ? ' locked' : ''}`, 'data-art': `ending_${id}`, role: 'img', 'aria-label': locked ? '아직 보지 못한 엔딩' : endingDef(id).name }, locked ? '?' : ENDING_ICON[id])
+export function endingArt(id: EndingId, locked = false, size: 'hero' | 'thumb' = 'thumb'): HTMLElement {
+  const el = h('div', { class: `ending-art ${size}${locked ? ' locked' : ' scene'}`, 'data-art': `ending_${id}`, role: 'img', 'aria-label': locked ? '아직 보지 못한 엔딩' : endingDef(id).name })
+  if (locked) el.textContent = '?'
+  else el.innerHTML = endingSceneSvg(id)
+  return el
 }
 
 /** 시즌 하나의 대표 성적: 참가 팀 수 대비 순위가 가장 높은 대회 */
@@ -55,7 +48,7 @@ export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements }
     h(
       'section',
       { class: `card headline ${id === 'legend' || id === 'hidden_loyal' ? 'gold' : ''}` },
-      endingArt(id),
+      endingArt(id, false, 'hero'),
       isNew && h('span', { class: 'chip new-chip' }, '도감에 새로 기록!'),
       h('p', { class: 'headline-title' }, def.name),
       h('p', { class: 'event-text' }, def.epilogue.replaceAll('{name}', state.name)),

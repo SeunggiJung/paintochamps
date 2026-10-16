@@ -34,8 +34,8 @@ export function codexScreen(ctx: Ctx): HTMLElement {
 
   const achievementCard = (a: (typeof ACHIEVEMENTS)[number]) => {
     const rec = achievements[a.id]
-    if (!rec) return h('section', { class: 'card codex-card locked' }, h('div', { class: 'ending-art locked small-art' }, '?'), h('div', { class: 'codex-body' }, h('b', {}, '???'), h('span', { class: 'muted small' }, '직접 플레이하며 찾아보세요.')))
-    return h('section', { class: 'card codex-card' }, h('div', { class: 'ending-art small-art' }, '🏅'), h('div', { class: 'codex-body' }, h('div', { class: 'row' }, h('b', {}, a.name), h('span', { class: 'chip' }, `${rec.count}회`)), h('span', { class: 'muted small' }, a.desc)))
+    if (!rec) return h('section', { class: 'card codex-card locked' }, h('div', { class: 'ending-art thumb locked small-art' }, '?'), h('div', { class: 'codex-body' }, h('b', {}, '???'), h('span', { class: 'muted small' }, '직접 플레이하며 찾아보세요.')))
+    return h('section', { class: 'card codex-card' }, h('div', { class: 'ending-art thumb small-art' }, '🏅'), h('div', { class: 'codex-body' }, h('div', { class: 'row' }, h('b', {}, a.name), h('span', { class: 'chip' }, `${rec.count}회`)), h('span', { class: 'muted small' }, a.desc)))
   }
 
   return h(
