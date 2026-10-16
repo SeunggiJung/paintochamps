@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mentalAdjusted, seriesWinProbability, winProbability } from './match.ts'
 import { createRng } from './rng.ts'
-import { runElimination, runLeague, type Team } from './tournament.ts'
+import { runElimination, runLeague, runLeagueDetailed, type Team } from './tournament.ts'
 
 const team = (id: string, power: number): Team => ({ id, name: id, power })
 const field = (powers: number[]) => powers.map((p, i) => team(`t${i}`, p))
@@ -92,5 +92,16 @@ describe('runElimination', () => {
 
   it('1팀이면 그 팀이 우승이다', () => {
     expect(runElimination(createRng(1), field([500]), 2, 3).map((t) => t.id)).toEqual(['t0'])
+  })
+})
+
+describe('리그 중간 순위', () => {
+  it.each([12, 11, 8])('%i팀 리그: 중간 시점에 모든 팀이 비슷한 수의 경기를 치렀다 (플레이어 몰아치기 방지)', (n) => {
+    const teams = field(Array.from({ length: n }, () => 500))
+    const { mid, final } = runLeagueDetailed(createRng(7), teams, 1, 3)
+    const played = mid.map((s) => s.wins + s.losses)
+    expect(Math.max(...played) - Math.min(...played)).toBeLessThanOrEqual(2)
+    expect(played[0]).toBeLessThan(n - 1)
+    expect(final.every((s) => s.wins + s.losses === n - 1)).toBe(true)
   })
 })

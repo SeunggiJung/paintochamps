@@ -30,18 +30,36 @@ export function runLeagueDetailed(rng: Rng, teams: readonly Team[], rounds: numb
   let played = 0
   let mid: Standing[] = sorted()
   for (let r = 0; r < rounds; r++) {
-    for (let a = 0; a < teams.length; a++) {
-      for (let b = a + 1; b < teams.length; b++) {
-        const aWins = playSeries(rng, teams[a].power, teams[b].power, bestOf)
-        const [winner, loser] = aWins ? [teams[a], teams[b]] : [teams[b], teams[a]]
-        table.get(winner.id)!.wins++
-        table.get(loser.id)!.losses++
-        played++
-        if (played === midAt) mid = sorted()
-      }
+    for (const [a, b] of roundRobinSchedule(teams.length)) {
+      const aWins = playSeries(rng, teams[a].power, teams[b].power, bestOf)
+      const [winner, loser] = aWins ? [teams[a], teams[b]] : [teams[b], teams[a]]
+      table.get(winner.id)!.wins++
+      table.get(loser.id)!.losses++
+      played++
+      if (played === midAt) mid = sorted()
     }
   }
   return { final: sorted(), mid }
+}
+
+/**
+ * 라운드로빈 경기 순서 (circle method): 매 경기일마다 모든 팀이 한 경기씩 치른다.
+ * 팀 번호 순으로 몰아 치르면 0번 팀(플레이어)만 중간 순위에 최종 성적이 나온다.
+ */
+function roundRobinSchedule(n: number): [number, number][] {
+  const slots: (number | null)[] = Array.from({ length: n }, (_, i) => i)
+  if (n % 2 === 1) slots.push(null)
+  const m = slots.length
+  const games: [number, number][] = []
+  for (let day = 0; day < m - 1; day++) {
+    for (let i = 0; i < m / 2; i++) {
+      const a = slots[i]
+      const b = slots[m - 1 - i]
+      if (a !== null && b !== null) games.push([a, b])
+    }
+    slots.splice(1, 0, slots.pop()!)
+  }
+  return games
 }
 
 /** 리그전 최종 순위 */
