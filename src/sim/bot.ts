@@ -126,7 +126,7 @@ function pickEventChoice(s: GameState, event: GameEvent, policy: BotPolicy, rng:
 function pickPrep(s: GameState, policy: BotPolicy, rng: Rng): string {
   if (policy === 'skilled') return 'focus'
   if (policy === 'casual') return 'rest'
-  const options = PREP.filter((p) => !p.money || s.money + p.money >= 0)
+  const options = PREP.filter((p) => !p.money || s.money + p.money * moneyScale(s.stage) >= 0)
   return options[Math.floor(rng() * options.length)].id
 }
 
