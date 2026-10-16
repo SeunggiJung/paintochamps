@@ -1,0 +1,6 @@
+{
+  "housing": { "name": "숙소", "desc": "잠자리와 식사가 좋아져 턴마다 컨디션이 더 회복됩니다.", "base": 20, "factor": 2.5, "maxLevel": 5, "perLevel": 1.0, "unit": "컨디션 회복 +1/레벨" },
+  "coach": { "name": "개인 코치", "desc": "전담 코치가 훈련을 봐 줘서 훈련 효율이 오릅니다.", "base": 40, "factor": 2.5, "maxLevel": 5, "perLevel": 0.015, "unit": "훈련 효율 +1.5%/레벨" },
+  "medic": { "name": "재활 트레이너", "desc": "부상과 슬럼프에서 더 빨리 돌아옵니다.", "base": 30, "factor": 2.5, "maxLevel": 3, "perLevel": 0.25, "unit": "회복 속도 +25%/레벨" },
+  "pr": { "name": "홍보 에이전시", "desc": "활약이 널리 알려져 턴마다 명성이 조금씩 오릅니다.", "base": 50, "factor": 2.5, "maxLevel": 5, "perLevel": 0.3, "unit": "턴마다 명성 +0.3/레벨" }
+}

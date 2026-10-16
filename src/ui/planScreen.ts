@@ -1,6 +1,7 @@
 import equipmentData from '../data/equipment.json'
 import rules from '../data/rules.json'
 import { equipmentCost } from '../engine/economy.ts'
+import { buyFacility, checkFacility, FACILITIES, FACILITY_IDS, facilityCost, facilityLevel } from '../engine/facilities.ts'
 import { planOf, PRESETS, setSeasonPlan, type PresetId } from '../engine/plan.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
 import { chooseSeasonTraining, trainingMenuOf } from '../engine/training.ts'
@@ -93,6 +94,32 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
               },
               h('strong', {}, maxed ? `${EQUIPMENT[item].name} (최고)` : `${EQUIPMENT[item].name} Lv${level} → Lv${level + 1} · ${formatMoney(equipmentCost(item, level))}`),
               h('span', { class: 'muted small' }, reason ?? '구매'),
+            )
+          }),
+        ),
+
+        h('h3', {}, '시설 투자'),
+        h('p', { class: 'muted small' }, '장비를 다 올린 뒤에도 돈을 쓸 곳입니다. 가격은 지금 소속 단계의 돈 규모를 따라갑니다.'),
+        h(
+          'div',
+          { class: 'choices vertical' },
+          ...FACILITY_IDS.map((id) => {
+            const def = FACILITIES[id]
+            const level = facilityLevel(state, id)
+            const reason = checkFacility(state, id)
+            return h(
+              'button',
+              {
+                class: 'choice',
+                disabled: !!reason,
+                onclick: () => {
+                  const r = buyFacility(state, id)
+                  if (r.ok) state = r.state
+                  draw()
+                },
+              },
+              h('strong', {}, level >= def.maxLevel ? `${def.name} (최고)` : `${def.name} Lv${level} → Lv${level + 1} · ${formatMoney(facilityCost(state, id))}`),
+              h('span', { class: 'muted small' }, `${def.desc} (${def.unit})${reason && level < def.maxLevel ? ` — ${reason}` : ''}`),
             )
           }),
         ),

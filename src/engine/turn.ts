@@ -7,6 +7,7 @@ import routes from '../data/routes.json'
 import rules from '../data/rules.json'
 import { advanceCalendar, type CalendarUpdate } from './calendar.ts'
 import { applyEffects, type Effects } from './effects.ts'
+import { coachEfficiency, housingRecovery, medicSpeed, prFame } from './facilities.ts'
 import { equipmentEfficiency, growthDelta } from './growth.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { ActionId, EquipmentId, GameState } from './state.ts'
@@ -161,7 +162,7 @@ function applySlot(state: GameState, slot: Slot, scale: number, rng: Rng, notes:
     for (const key of top) gains[key] = action.topGenreStats.amount
   }
 
-  const efficiency = equipmentEfficiency(state.equipment)
+  const efficiency = equipmentEfficiency(state.equipment) * coachEfficiency(state)
   const stats = { ...state.stats }
   for (const key of STAT_KEYS) {
     const base = gains[key]
@@ -256,13 +257,16 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
   if (next.team) next = { ...next, money: next.money + salaryOf(next) * scale }
 
   // 턴이 지나면 컨디션이 조금씩 저절로 회복된다 (3개월 기준 금액에 턴 길이 배율)
-  next = { ...next, condition: clamp(next.condition + rules.conditionRecoveryPerBase * scale, 0, 100) }
+  next = { ...next, condition: clamp(next.condition + (rules.conditionRecoveryPerBase + housingRecovery(next)) * scale, 0, 100) }
+  // 홍보 에이전시: 턴마다 명성이 조금씩 오른다
+  if (prFame(next) > 0) next = { ...next, fame: next.fame + prFame(next) * scale }
 
   const months = modes[next.mode].turnMonths
   next = {
     ...next,
-    slumpMonths: Math.max(0, next.slumpMonths - months),
-    injuredMonths: Math.max(0, next.injuredMonths - months),
+    // 재활 트레이너가 있으면 부상·슬럼프에서 더 빨리 돌아온다
+    slumpMonths: Math.max(0, next.slumpMonths - months * medicSpeed(next)),
+    injuredMonths: Math.max(0, next.injuredMonths - months * medicSpeed(next)),
     turnInSeason: next.turnInSeason + 1,
     turnCount: next.turnCount + 1,
   }
