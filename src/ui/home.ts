@@ -17,7 +17,7 @@ import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
 import { runEvent } from './eventFlow.ts'
 import { ACTION_GROUPS, MODE_INFO } from './labels.ts'
-import { actionCost, actionRisks, actionTags, describeChange, previewTurn } from './preview.ts'
+import { actionCost, actionRisks, actionTags, previewTurn } from './preview.ts'
 import { openSheet } from './sheet.ts'
 import { playTimeline, scheduleBar } from './calendarUi.ts'
 import { conditionHelp, conditionText } from './conditionHelp.ts'
@@ -30,6 +30,7 @@ import { equipmentCost } from '../engine/economy.ts'
 import { salaryOf } from '../engine/teams.ts'
 import { formatMoney } from './format.ts'
 import { runGuide } from './guide.ts'
+import { turnChangeGraph } from './turnResult.ts'
 
 const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; base: number }>
 const BAR_MAX = gacha.statMax
@@ -143,14 +144,13 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     let next = r.state
     // 시간이 흘러가는 연출 (대회가 끝나는 시점마다 결과 카드)
     await playTimeline({ before, calendar: r.calendar, actions: picked.map(slotName), brief: before.mode === 'precise' })
-    const lines = describeChange(before, next, 'exact')
     await openSheet<void>((close) =>
       h(
         'div',
         { class: 'stack-tight' },
         h('p', { class: 'eyebrow' }, `${modes[before.mode].turnMonths}개월이 지났다`),
         ...r.notes.map((n) => h('p', { class: 'risk' }, `⚠ ${n}`)),
-        lines.length > 0 ? h('ul', { class: 'plain' }, ...lines.map((l) => h('li', {}, l))) : h('p', { class: 'muted' }, '눈에 띄는 변화가 없다.'),
+        turnChangeGraph(before, next),
         h('button', { class: 'btn primary', onclick: () => close() }, '다음'),
       ),
     )
@@ -250,7 +250,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         'div',
         { class: 'turn-bar', 'data-guide': 'turnbar' },
         h('div', { class: 'picked-bar' }, pickedChip(0), pickedChip(1)),
-        preview && (preview.ok ? h('p', { class: 'preview' }, h('span', { class: 'muted small' }, '예상 '), preview.lines.join(' · ') || '변화 없음') : h('p', { class: 'error' }, preview.error)),
+        preview && !preview.ok && h('p', { class: 'error' }, preview.error),
         error && h('p', { class: 'error', role: 'alert' }, error),
         h('button', { class: 'btn primary', disabled: picked.length !== 2 || busy || (preview !== null && !preview.ok), onclick: playTurn }, picked.length === 2 ? '턴 진행' : `행동을 ${2 - picked.length}개 더 고르세요`),
         h('button', { class: 'btn ghost small', onclick: () => ctx.toTitle() }, '타이틀로 (자동 저장됨)'),

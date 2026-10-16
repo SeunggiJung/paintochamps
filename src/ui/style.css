@@ -291,3 +291,24 @@ input[type='text'] {
 .picked-chip { flex: 1; min-height: 36px; padding: 4px 10px; border-radius: 10px; border: 2px dashed var(--line); background: var(--bg); color: var(--muted); font: inherit; font-size: 0.9rem; text-align: center; }
 button.picked-chip { border: 2px solid var(--accent); background: #232a47; color: var(--text); font-weight: 700; cursor: pointer; }
 .guide-help { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; width: 28px; height: 28px; font: inherit; cursor: pointer; }
+
+/* 턴 결과 변화 그래프: 기존(파랑) + 증가(초록) / 감소(빨강) */
+.change-graph { display: flex; flex-direction: column; gap: 8px; }
+.change-legend { display: flex; align-items: center; gap: 6px; }
+.change-legend i { width: 14px; height: 8px; border-radius: 3px; display: inline-block; margin-left: 6px; }
+.change-legend i:first-child { margin-left: 0; }
+.change-row { display: grid; grid-template-columns: 4.5em 1fr 9.5em; align-items: center; gap: 8px; }
+.change-line { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.change-vals { text-align: right; font-variant-numeric: tabular-nums; font-size: 0.9rem; white-space: nowrap; }
+.change-vals b { font-weight: 700; }
+.change-vals em { font-style: normal; font-weight: 700; }
+.change-vals .up { color: #4cd18a; }
+.change-vals .down { color: var(--danger); }
+.change-vals .flat { color: var(--muted); }
+.change-bar { display: flex; height: 12px; background: #12141c; border-radius: 6px; overflow: hidden; }
+.seg.kept { background: var(--accent); }
+.seg.gain { background: #4cd18a; transform-origin: left; animation: grow 0.6s ease-out 0.2s backwards; }
+.seg.loss { background: var(--danger); opacity: 0.85; }
+.change-bar .seg { height: 100%; flex: none; }
+@keyframes grow { from { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .seg.gain { animation: none; } }
