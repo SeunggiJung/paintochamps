@@ -106,7 +106,7 @@ input[type='text'] {
 }
 
 /* 육성 메인 */
-.home { padding-bottom: 170px; }
+.home { padding-bottom: 220px; }
 .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .card, .status { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
 .status p { margin: 0; }
@@ -273,3 +273,21 @@ input[type='text'] {
 
 .title-sub { margin: 0; color: var(--accent); font-weight: 600; }
 .title { padding-top: 56px; }
+
+/* 첫 접속 말풍선 가이드 */
+.guide { position: fixed; inset: 0; z-index: 40; }
+.guide-spot { position: fixed; border-radius: 14px; border: 2px solid var(--accent); box-shadow: 0 0 0 9999px #000b; pointer-events: none; transition: top 0.2s, left 0.2s, width 0.2s, height 0.2s; }
+.guide-card { position: fixed; left: 16px; right: 16px; max-width: 448px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 16px; background: var(--panel); border: 1px solid var(--accent); }
+.guide-card.top { top: 16px; }
+.guide-card.bottom { bottom: 16px; }
+.guide-card.mid { top: 50%; transform: translateY(-50%); }
+.guide-text { margin: 0; line-height: 1.6; }
+.guide-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.guide-actions .btn.primary { min-width: 110px; }
+@media (prefers-reduced-motion: reduce) { .guide-spot { transition: none; } }
+
+/* 고른 행동 (턴 진행 바 위) */
+.picked-bar { display: flex; gap: 6px; }
+.picked-chip { flex: 1; min-height: 36px; padding: 4px 10px; border-radius: 10px; border: 2px dashed var(--line); background: var(--bg); color: var(--muted); font: inherit; font-size: 0.9rem; text-align: center; }
+button.picked-chip { border: 2px solid var(--accent); background: #232a47; color: var(--text); font-weight: 700; cursor: pointer; }
+.guide-help { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; width: 28px; height: 28px; font: inherit; cursor: pointer; }

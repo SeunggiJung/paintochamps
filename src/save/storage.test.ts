@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createInitialState, type GameState } from '../engine/state.ts'
-import { clearGame, loadGame, loadMeta, recordFinish, saveGame, SAVE_KEY, type KeyValueStorage } from './storage.ts'
+import { clearGame, loadGame, loadMeta, markGuideDone, recordFinish, saveGame, SAVE_KEY, type KeyValueStorage } from './storage.ts'
 
 class MemoryStorage implements KeyValueStorage {
   data = new Map<string, string>()
@@ -94,5 +94,24 @@ describe('엔딩 도감·기록', () => {
 
   it('끝나지 않은 판은 기록할 수 없다', () => {
     expect(() => recordFinish(storage, make())).toThrow()
+  })
+})
+
+describe('첫 안내', () => {
+  it('처음에는 안 본 상태이고, 기록하면 유지되며 다른 기록은 그대로다', () => {
+    const storage = new MemoryStorage()
+    expect(loadMeta(storage).guideDone).toBe(false)
+    markGuideDone(storage)
+    const meta = loadMeta(storage)
+    expect(meta.guideDone).toBe(true)
+    expect(meta.finishedRuns).toBe(0)
+  })
+
+  it('옛 도감 데이터(guideDone 없음)도 안 본 상태로 읽힌다', () => {
+    const storage = new MemoryStorage()
+    storage.setItem('paintochamps:meta', JSON.stringify({ version: 1, tutorialDone: true, endings: {}, bestStage: 'basement', finishedRuns: 3 }))
+    const meta = loadMeta(storage)
+    expect(meta.guideDone).toBe(false)
+    expect(meta.finishedRuns).toBe(3)
   })
 })

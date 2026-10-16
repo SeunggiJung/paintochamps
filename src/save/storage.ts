@@ -71,6 +71,8 @@ export function clearGame(storage: KeyValueStorage): void {
 export interface MetaSave {
   version: 1
   tutorialDone: boolean
+  /** 육성 화면 첫 안내(말풍선 가이드)를 봤는지 */
+  guideDone: boolean
   endings: Partial<Record<EndingId, { count: number }>>
   bestStage: StageId
   finishedRuns: number
@@ -79,7 +81,7 @@ export interface MetaSave {
 const STAGE_RANK: StageId[] = ['basement', 'local_cup', 'amateur_team', 'pro2', 'pro1']
 
 export function emptyMeta(): MetaSave {
-  return { version: 1, tutorialDone: false, endings: {}, bestStage: 'basement', finishedRuns: 0 }
+  return { version: 1, tutorialDone: false, guideDone: false, endings: {}, bestStage: 'basement', finishedRuns: 0 }
 }
 
 export function loadMeta(storage: KeyValueStorage): MetaSave {
@@ -89,6 +91,13 @@ export function loadMeta(storage: KeyValueStorage): MetaSave {
     const m = JSON.parse(text) as Partial<MetaSave>
     return m && m.version === 1 && typeof m.endings === 'object' ? { ...emptyMeta(), ...m } : emptyMeta()
   }, emptyMeta())
+}
+
+/** 첫 안내를 봤다고 기록한다. */
+export function markGuideDone(storage: KeyValueStorage): MetaSave {
+  const next: MetaSave = { ...loadMeta(storage), guideDone: true }
+  safe(() => storage.setItem(META_KEY, JSON.stringify(next)), undefined)
+  return next
 }
 
 /** 판이 끝났을 때 호출한다. 엔딩 도감·튜토리얼 완료·최고 단계를 갱신해 저장하고 새 기록을 돌려준다. */

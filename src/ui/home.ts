@@ -11,7 +11,7 @@ import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
 import { trainingMenuOf } from '../engine/training.ts'
 import { ACTIONS, applyTurn, buyEquipment, checkEquipment, checkSlot, isRepeatable, turnsPerSeason, type Slot } from '../engine/turn.ts'
 import { STAT_KEYS } from '../engine/types.ts'
-import { saveGame } from '../save/storage.ts'
+import { markGuideDone, saveGame } from '../save/storage.ts'
 import { cleanTeamName, TEAM_NAME_MAX } from './newGame.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
@@ -29,9 +29,13 @@ import { teamIcon } from './teamIcon.ts'
 import { equipmentCost } from '../engine/economy.ts'
 import { salaryOf } from '../engine/teams.ts'
 import { formatMoney } from './format.ts'
+import { runGuide } from './guide.ts'
 
 const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; base: number }>
 const BAR_MAX = gacha.statMax
+
+/** 첫 접속 가이드가 가리키는 행동 묶음 */
+const GROUP_GUIDE: Record<string, string> = { 훈련: 'train', 회복: 'recover', '돈·명성': 'money' }
 
 /** 이 행동을 목록에 보여 줄지. 모드·팀·부상 같은 구조적 이유로 못 하는 행동은 아예 숨기고, 돈·명성 부족은 이유와 함께 비활성으로 보여 준다. */
 function listed(state: GameState, id: ActionId): boolean {
@@ -176,6 +180,12 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         ? h('button', { class: 'slot filled', onclick: () => ((picked = picked.filter((_, j) => j !== i)), render()) }, slotName(picked[i]), h('span', { class: 'muted small' }, '눌러서 빼기'))
         : h('div', { class: 'slot' }, `행동 ${i + 1}`)
 
+    /** 스크롤을 내려도 보이도록 턴 진행 바에 고른 행동을 항상 보여 준다. 누르면 뺀다. */
+    const pickedChip = (i: number) =>
+      picked[i]
+        ? h('button', { class: 'picked-chip', 'aria-label': `${slotName(picked[i])} 빼기`, onclick: () => ((picked = picked.filter((_, j) => j !== i)), render()) }, `${i + 1}. ${slotName(picked[i])} ✕`)
+        : h('div', { class: 'picked-chip' }, `${i + 1}. 행동을 고르세요`)
+
     const groups = ACTION_GROUPS.map((g) => ({
       title: g.title,
       items: g.ids.filter((id) => ACTIONS[id as ActionId] && listed(state, id as ActionId)),
@@ -197,8 +207,8 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     const parts = [
       h(
         'header',
-        { class: 'status' },
-        h('div', { class: 'row' }, h('h2', {}, `${state.name} · ${state.age}세`), h('span', { class: 'muted small' }, `${state.season}시즌 ${state.turnInSeason + 1}/${max}턴`)),
+        { class: 'status', 'data-guide': 'status' },
+        h('div', { class: 'row' }, h('h2', {}, `${state.name} · ${state.age}세`), h('span', { class: 'muted small' }, `${state.season}시즌 ${state.turnInSeason + 1}/${max}턴 `, h('button', { class: 'guide-help', 'aria-label': '게임 가이드 다시 보기', onclick: () => void showGuide() }, '?'))),
         h(
           'p',
           { class: 'muted small team-line' },
@@ -219,7 +229,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       scheduleBar(state),
       h(
         'section',
-        { class: 'card' },
+        { class: 'card', 'data-guide': 'stats' },
         h('div', { class: 'row' }, h('h3', {}, '능력치'), h('span', { class: 'power' }, `${genres[state.genre].name} 실력치 `, h('b', {}, String(power)))),
         ...STAT_KEYS.map((k) =>
           h(
@@ -232,13 +242,14 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
           ),
         ),
       ),
-      h('section', { class: 'card' }, h('h3', {}, `이번 ${modes[state.mode].turnMonths}개월, 행동 2개를 고르세요`), h('div', { class: 'slots' }, slotChip(0), slotChip(1)), h('p', { class: `muted small cond-hint tier-${tier.label}` }, `컨디션 ${tier.label}: ${tier.desc} (×${tier.coef})`)),
+      h('section', { class: 'card', 'data-guide': 'slots' }, h('h3', {}, `이번 ${modes[state.mode].turnMonths}개월, 행동 2개를 고르세요`), h('div', { class: 'slots' }, slotChip(0), slotChip(1)), h('p', { class: `muted small cond-hint tier-${tier.label}` }, `컨디션 ${tier.label}: ${tier.desc} (×${tier.coef})`)),
       state.injuredMonths > 0 && h('p', { class: 'notice' }, '부상 중이라 휴식·재활만 할 수 있다.'),
-      ...groups.map((g) => h('section', {}, h('h3', {}, g.title), g.title === '훈련' && h('p', { class: 'muted small' }, '훈련은 매 턴 무작위로 후보가 바뀝니다. 한 번에 능력치 3개가 오릅니다.'), h('div', { class: 'actions' }, ...g.items.map((id) => actionButton({ id: id as ActionId } as Slot, ACTIONS[id as ActionId].name))))),
-      h('section', {}, h('h3', {}, '장비'), h('p', { class: 'muted small' }, '행동을 쓰지 않고 한 턴에 하나까지 살 수 있습니다.'), h('div', { class: 'actions' }, ...equipRows)),
+      ...groups.map((g) => h('section', { 'data-guide': GROUP_GUIDE[g.title] }, h('h3', {}, g.title), g.title === '훈련' && h('p', { class: 'muted small' }, '훈련은 매 턴 무작위로 후보가 바뀝니다. 한 번에 능력치 3개가 오릅니다.'), h('div', { class: 'actions' }, ...g.items.map((id) => actionButton({ id: id as ActionId } as Slot, ACTIONS[id as ActionId].name))))),
+      h('section', { 'data-guide': 'equip' }, h('h3', {}, '장비'), h('p', { class: 'muted small' }, '행동을 쓰지 않고 한 턴에 하나까지 살 수 있습니다.'), h('div', { class: 'actions' }, ...equipRows)),
       h(
         'div',
-        { class: 'turn-bar' },
+        { class: 'turn-bar', 'data-guide': 'turnbar' },
+        h('div', { class: 'picked-bar' }, pickedChip(0), pickedChip(1)),
         preview && (preview.ok ? h('p', { class: 'preview' }, h('span', { class: 'muted small' }, '예상 '), preview.lines.join(' · ') || '변화 없음') : h('p', { class: 'error' }, preview.error)),
         error && h('p', { class: 'error', role: 'alert' }, error),
         h('button', { class: 'btn primary', disabled: picked.length !== 2 || busy || (preview !== null && !preview.ok), onclick: playTurn }, picked.length === 2 ? '턴 진행' : `행동을 ${2 - picked.length}개 더 고르세요`),
@@ -333,6 +344,14 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     )
   }
 
+  /** 말풍선 가이드를 띄우고 봤다고 기록한다 (처음 접속하거나 ? 를 눌렀을 때) */
+  const showGuide = async () => {
+    await runGuide(root)
+    ctx.meta = markGuideDone(ctx.storage)
+  }
+
   render()
+  // 화면에 붙은 뒤에 위치를 재야 해서 다음 프레임에 띄운다
+  if (!ctx.meta.guideDone && state.season === 1 && state.turnInSeason === 0) requestAnimationFrame(() => void showGuide())
   return root
 }
