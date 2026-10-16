@@ -2,19 +2,21 @@ import { applyEventChoice, availableChoices, choiceOutcomes, rollEvent, turnRng,
 import { rollGacha } from '../engine/gacha.ts'
 import { moneyScale } from '../engine/economy.ts'
 import { conditionCoef } from '../engine/growth.ts'
+import { autoTurn, PRESETS, setSeasonPlan, type SeasonPlan } from '../engine/plan.ts'
 import { genrePower } from '../engine/power.ts'
 import { createRng, mixSeed, type Rng } from '../engine/rng.ts'
 import { choosePrep, PREP, upcomingTest } from '../engine/routes.ts'
 import { acceptOffer, rollMidSeasonOffer, settleSeason } from '../engine/season.ts'
 import { createInitialState, type ActionId, type EquipmentId, type GameState, type ModeId } from '../engine/state.ts'
 import { chooseSeasonTraining, trainingMenuOf } from '../engine/training.ts'
-import { ACTIONS, applyTurn, buyEquipment, checkSlot, startNextSeason, turnsPerSeason, type Slot, type TurnChoice } from '../engine/turn.ts'
+import { buyEquipment, startNextSeason, turnsPerSeason } from '../engine/turn.ts'
 import type { GenreId } from '../engine/types.ts'
 
 /**
- * casual: 컨디션만 관리하며 훈련하는 단순한 플레이 (장비·이벤트 판단 없음, 이벤트는 첫 선택지)
- * skilled: 한 턴 앞을 보고 행동을 고르고, 위험한 행동은 기댓값으로 비교하고, 이벤트 선택지도 비교하는 숙련 플레이
- * random: 가능한 행동·선택지 중 아무거나 고르는 플레이 (잘 모르고 눌러 보는 사람)
+ * 플레이어는 시즌 시작에 계획(방침·훈련·레슨·장비)만 세우고 시즌 중 행동은 자동으로 흘러간다.
+ * casual: 앞의 훈련 후보와 균형 방침으로 하는 단순한 플레이 (장비·이벤트 판단 없음, 이벤트는 첫 선택지)
+ * skilled: 시즌 전체를 미리 돌려 보고 가장 좋은 계획을 고르고, 장비를 사고, 이벤트 선택지도 비교하는 숙련 플레이
+ * random: 훈련·방침·레슨·장비를 무작위로 정하는 플레이 (잘 모르고 눌러 보는 사람)
  */
 export type BotPolicy = 'casual' | 'skilled' | 'random'
 
@@ -26,13 +28,7 @@ export interface BotOptions {
   onTurn?: (s: GameState) => void
 }
 
-const ACTION_IDS = Object.keys(ACTIONS) as ActionId[]
-const ACTION_SLOTS: Slot[] = ACTION_IDS.map((id) => ({ id }))
-/** 지금 고를 수 있는 행동만 (무작위로 나오는 훈련은 이번 턴 후보만) */
-const slotsFor = (s: GameState): Slot[] => ACTION_SLOTS.filter((slot) => checkSlot(s, slot) === null)
 const EQUIPMENT_IDS: EquipmentId[] = ['keyboard', 'mouse', 'monitor', 'pc']
-
-const isRisky = (slot: Slot) => !!ACTIONS[slot.id].outcomes
 
 /** 숙련 봇이 상태를 얼마나 좋게 보는지: 실력치 + 컨디션(성장 효율) + 명성·돈 + 장비 − 방탕·부상·슬럼프 */
 function value(s: GameState): number {
@@ -51,98 +47,63 @@ function value(s: GameState): number {
   )
 }
 
-const SAMPLES = 4
-
-/** 위험한 행동이 들어 있으면 여러 번 굴려 평균을 낸다 (실제 결과를 미리 보지 않도록 봇 자신의 난수를 쓴다) */
-function expectedValue(s: GameState, choice: TurnChoice, rng: Rng): number | null {
-  const risky = isRisky(choice[0]) || isRisky(choice[1])
-  const n = risky ? SAMPLES : 1
-  let total = 0
-  for (let k = 0; k < n; k++) {
-    const r = applyTurn(s, choice, risky ? rng : undefined, false)
-    if (!r.ok) return null
-    total += value(r.state)
-  }
-  return total / n
-}
-
-/** 장비는 행동 칸을 쓰지 않고 한 턴에 하나까지 산다. 숙련은 가치가 오르는 것만, 무작위는 절반 확률로 아무거나, 단순은 사지 않는다. */
+/** 시즌 시작의 장비 구매: 숙련은 가치가 오르는 동안 계속, 무작위는 절반 확률로 아무거나(최대 두 번), 단순은 사지 않는다. */
 function shop(s: GameState, policy: BotPolicy, rng: Rng): GameState {
   if (policy === 'casual') return s
-  const options = EQUIPMENT_IDS.map((item) => buyEquipment(s, item)).filter((r) => r.ok).map((r) => (r.ok ? r.state : s))
-  if (options.length === 0) return s
+  const options = (cur: GameState) => EQUIPMENT_IDS.map((item) => buyEquipment(cur, item)).flatMap((r) => (r.ok ? [r.state] : []))
   if (policy === 'random') {
-    // 예전에 장비가 행동 후보 중 하나로 뽑히던 빈도(두 칸 중 한 번 이상)와 맞춘다
-    const pSlot = EQUIPMENT_IDS.length / (ACTION_IDS.length + EQUIPMENT_IDS.length)
-    return rng() < 1 - (1 - pSlot) ** 2 ? options[Math.floor(rng() * options.length)] : s
+    let cur = s
+    for (let k = 0; k < 2; k++) {
+      const opts = options(cur)
+      if (opts.length > 0 && rng() < 0.5) cur = opts[Math.floor(rng() * opts.length)]
+    }
+    return cur
   }
-  const best = options.reduce((a, b) => (value(b) > value(a) ? b : a))
-  return value(best) > value(s) ? best : s
+  let cur = s
+  for (;;) {
+    const opts = options(cur)
+    if (opts.length === 0) return cur
+    const best = opts.reduce((a, b) => (value(b) > value(a) ? b : a))
+    if (value(best) <= value(cur)) return cur
+    cur = best
+  }
 }
 
-function skilledChoice(s: GameState, rng: Rng): TurnChoice {
-  const slots = slotsFor(s)
-  let best: TurnChoice = [{ id: 'rest' }, { id: 'rest' }]
+/** 이 계획으로 이번 시즌을 끝까지 돌려 본 결과의 가치 (시험 진행이라 대회는 건너뛴다) */
+function seasonValue(s: GameState, plan: SeasonPlan, training: ActionId): number {
+  let cur = chooseSeasonTraining(setSeasonPlan(s, plan), training)
+  for (let t = 0; t < turnsPerSeason(s.mode); t++) {
+    const { result } = autoTurn(cur, undefined, false)
+    if (!result.ok) break
+    cur = result.state
+  }
+  // 계획의 목적은 성장이라, 돈·명성이 아니라 실력치와 컨디션으로 비교한다
+  return genrePower(cur.stats, cur.genre) + 80 * conditionCoef(cur.condition) + 0.2 * cur.condition
+}
+
+/** 시즌 계획 세우기: 단순은 앞의 훈련+균형, 무작위는 전부 무작위, 숙련은 모든 조합을 시즌 단위로 돌려 보고 가장 좋은 것 */
+function planSeason(s: GameState, policy: BotPolicy, rng: Rng): GameState {
+  const menu = trainingMenuOf(s)
+  if (policy === 'casual') return chooseSeasonTraining(setSeasonPlan(s, { preset: 'balanced', lesson: false }), menu[0])
+  if (policy === 'random') {
+    const preset = PRESETS[Math.floor(rng() * PRESETS.length)].id
+    return chooseSeasonTraining(setSeasonPlan(s, { preset, lesson: rng() < 0.5 }), menu[Math.floor(rng() * menu.length)])
+  }
+  let best: { plan: SeasonPlan; training: ActionId } = { plan: { preset: 'balanced', lesson: false }, training: menu[0] }
   let bestValue = -Infinity
-  for (let i = 0; i < slots.length; i++) {
-    for (let j = i; j < slots.length; j++) {
-      const choice: TurnChoice = [slots[i], slots[j]]
-      const v = expectedValue(s, choice, rng)
-      if (v !== null && v > bestValue) {
-        bestValue = v
-        best = choice
+  for (const training of menu) {
+    for (const p of PRESETS) {
+      for (const lesson of [false, true]) {
+        const plan: SeasonPlan = { preset: p.id, lesson }
+        const v = seasonValue(s, plan, training)
+        if (v > bestValue) {
+          bestValue = v
+          best = { plan, training }
+        }
       }
     }
   }
-  return best
-}
-
-function randomChoice(s: GameState, rng: Rng): TurnChoice {
-  const valid: TurnChoice[] = []
-  const slots = slotsFor(s)
-  for (let i = 0; i < slots.length; i++) {
-    for (let j = i; j < slots.length; j++) {
-      const choice: TurnChoice = [slots[i], slots[j]]
-      if (applyTurn(s, choice, rng, false).ok) valid.push(choice)
-    }
-  }
-  return valid.length ? valid[Math.floor(rng() * valid.length)] : [{ id: 'rest' }, { id: 'rest' }]
-}
-
-/** 시즌 훈련 고르기: 숙련은 후보마다 그 훈련만 두 번 해 본 결과로 비교하고, 무작위는 아무거나, 단순은 앞의 후보(어떤 게 좋은지 따지지 않는다) */
-function pickSeasonTraining(s: GameState, policy: BotPolicy, rng: Rng): ActionId {
-  const menu = trainingMenuOf(s)
-  if (policy === 'casual') return menu[0]
-  if (policy === 'random') return menu[Math.floor(rng() * menu.length)]
-  let best = menu[0]
-  let bestValue = -Infinity
-  // 훈련 하나를 시즌 내내 하게 되므로, 이 훈련으로 몇 턴 진행해 본 결과로 비교한다 (컨디션이 나쁘면 쉬며 이어 간다)
-  const horizon = Math.min(turnsPerSeason(s.mode), 6)
-  for (const id of menu) {
-    let cur = chooseSeasonTraining(s, id)
-    for (let t = 0; t < horizon; t++) {
-      const choice: TurnChoice = cur.condition >= 60 ? [{ id }, { id }] : cur.condition >= 45 ? [{ id }, { id: 'rest' }] : [{ id: 'rest' }, { id: 'rest' }]
-      const r = applyTurn(cur, choice, undefined, false)
-      if (!r.ok) break
-      cur = r.state
-    }
-    const v = value(cur)
-    if (v > bestValue) {
-      bestValue = v
-      best = id
-    }
-  }
-  return best
-}
-
-function casualChoice(s: GameState): TurnChoice {
-  // 시즌 훈련 하나를 하고, 컨디션이 나쁘면 쉰다
-  const rest: Slot = { id: 'rest' }
-  const first: Slot = s.seasonTraining && checkSlot(s, { id: s.seasonTraining }) === null ? { id: s.seasonTraining } : rest
-  const second: Slot = rest
-  if (s.injuredMonths > 0 || s.condition < 45) return [rest, rest]
-  if (s.condition < 65) return [first, rest]
-  return [first, second]
+  return chooseSeasonTraining(setSeasonPlan(s, best.plan), best.training)
 }
 
 function pickEventChoice(s: GameState, event: GameEvent, policy: BotPolicy, rng: Rng): number {
@@ -176,11 +137,12 @@ export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: Bot
   let s = createInitialState({ name: '봇', genre, mode, seed, gacha: rollGacha(rng, genre) })
   let turn = 0
   while (!s.finished) {
-    if (!s.seasonTraining) s = chooseSeasonTraining(s, pickSeasonTraining(s, opts.policy, botRng))
-    s = shop(s, opts.policy, botRng)
-    const choice = opts.policy === 'skilled' ? skilledChoice(s, botRng) : opts.policy === 'random' ? randomChoice(s, botRng) : casualChoice(s)
-    let r = applyTurn(s, choice)
-    if (!r.ok) r = applyTurn(s, [{ id: 'rest' }, { id: 'rest' }])
+    // 시즌이 시작될 때 장비를 사고 계획을 세운다. 시즌 중에는 계획대로 자동으로 흘러간다.
+    if (!s.seasonTraining) {
+      s = shop(s, opts.policy, botRng)
+      s = planSeason(s, opts.policy, botRng)
+    }
+    const { result: r } = autoTurn(s)
     if (!r.ok) throw new Error(`${genre}/${mode}/${seed} turn ${turn}: ${r.error}`)
     s = r.state
     turn++

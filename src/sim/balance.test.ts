@@ -9,9 +9,10 @@ import { formatReport, runBatch } from './report.ts'
  * 전체 수치를 파일로 받아볼 수 있다. (판 수는 BALANCE_RUNS, 기본 100)
  *   BALANCE_OUT=report.txt BALANCE_RUNS=150 npx vitest run src/sim
  *
- * random: 가능한 행동·선택지 중 아무거나 고르는 플레이 (잘 모르고 눌러 보는 사람)
- * casual: 컨디션만 관리하며 훈련하는 단순한 플레이
- * skilled: 한 턴 앞을 보고 행동을 고르고, 위험한 행동은 기댓값으로 비교하고, 이벤트 선택지도 비교하는 플레이
+ * 시즌 중 행동은 시즌 계획대로 자동으로 흘러가므로, 봇의 차이는 계획·장비·이벤트 선택에서 나온다.
+ * random: 방침·훈련·레슨·장비를 무작위로 정하는 플레이 (잘 모르고 눌러 보는 사람)
+ * casual: 앞의 훈련 후보와 기본 방침(균형)만 쓰고 장비는 사지 않는 단순한 플레이
+ * skilled: 시즌을 미리 돌려 보고 가장 좋은 계획을 고르고, 장비를 사고, 이벤트 선택지도 비교하는 플레이
  * 아래 기준은 초안이다. 플레이 테스트로 느낌이 달라지면 숫자를 바꾼다.
  */
 const RUNS = Number(process.env.BALANCE_RUNS ?? 100)
@@ -65,35 +66,25 @@ describe('난이도: 월드는 쉽게 갈 수 없고, 우승은 더 어렵다', 
     }
   })
 
-  it('아무거나 고르면 뒤처진다 (무작위 플레이의 최종 실력치는 숙련보다 표준·정밀 150, 튜토리얼 120 이상 낮고, 월드는 거의 못 간다)', () => {
+  // 2026-10-16 시즌 계획(자동 진행) 개편: 시즌 중 행동은 컨디션에 맞춰 자동으로 흘러가서, 아무렇게나 눌러도 컨디션이 무너지지 않는다.
+  // 그래서 예전처럼 "무작위가 단순 플레이보다 한참 못하다"는 성립하지 않고, 격차는 방침·훈련·레슨·장비를 알고 고르는 데서 나온다.
+  it('방침·훈련·장비를 알고 고르는 숙련 플레이는 기본 계획만 누르는 단순 플레이보다 뚜렷하게 앞선다 (최종 실력치 120 이상)', () => {
+    for (const r of reports) expect(r.skilled.avgFinal.power - r.casual.avgFinal.power).toBeGreaterThanOrEqual(120)
+  })
+
+  it('계획을 아무렇게나 정하면 숙련보다 뒤처지고(최종 실력치 80 이상 낮다) 월드에는 거의 못 간다 (30% 이하)', () => {
     for (const r of reports) {
-      // 튜토리얼은 1회차라 위험 행동(술·유흥·도박)이 막혀 있어 더 관대하다
-      const minGap = r.skilled.mode === 'tutorial' ? 120 : 150
-      expect(r.skilled.avgFinal.power - r.random.avgFinal.power).toBeGreaterThanOrEqual(minGap)
-      expect(r.random.reachedWorld).toBeLessThanOrEqual(0.05)
+      expect(r.skilled.avgFinal.power - r.random.avgFinal.power).toBeGreaterThanOrEqual(80)
+      expect(r.random.reachedWorld).toBeLessThanOrEqual(0.3)
+      expect(r.random.worldTitle).toBeLessThanOrEqual(0.02)
     }
   })
 
-  it('표준·정밀 모드에서 무작위는 단순 플레이보다도 못하다', () => {
-    // 튜토리얼은 제외: 6개월 턴에서 단순 봇의 정책이 효율을 잃는 것으로 보여 비교가 맞지 않는다 (트러블슈팅 참고)
-    for (const r of reports.filter((x) => x.skilled.mode !== 'tutorial')) {
-      expect(r.random.avgFinal.power).toBeLessThan(r.casual.avgFinal.power)
-    }
-  })
-
-  it('튜토리얼은 첫 플레이라 무작위도 표준·정밀보다 덜 불리하다', () => {
-    for (const genre of genres) {
-      const power = (mode: ModeId) => reports.find((x) => x.skilled.genre === genre && x.skilled.mode === mode)!.random.avgFinal.power
-      expect(power('tutorial')).toBeGreaterThan(power('standard'))
-      expect(power('tutorial')).toBeGreaterThan(power('precise'))
-    }
-  })
-
-  it('정밀 모드는 선택지가 많아 숙련과 무작위의 격차가 표준 모드보다 크다', () => {
+  it('정밀 모드는 계획이 더 잘게 나뉘어 있어, 아는 사람과 기본 계획만 누르는 사람의 격차가 표준 모드보다 크다', () => {
     for (const genre of genres) {
       const gap = (mode: ModeId) => {
         const r = reports.find((x) => x.skilled.genre === genre && x.skilled.mode === mode)!
-        return r.skilled.avgFinal.power - r.random.avgFinal.power
+        return r.skilled.avgFinal.power - r.casual.avgFinal.power
       }
       expect(gap('precise')).toBeGreaterThan(gap('standard'))
     }

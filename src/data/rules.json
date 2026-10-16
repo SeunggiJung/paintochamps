@@ -8,7 +8,7 @@
   },
   "baseMonths": 3,
   "growthRate": 0.28,
-  "growthExponent": 0.15,
+  "growthExponent": 0.30,
   "trainingMenuSize": 4,
   "coachSwap": { "options": 3, "minGap": 2, "gapRatio": 0.25 },
   "eventBase": 0.65,

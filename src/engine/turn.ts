@@ -124,19 +124,18 @@ export function checkSlot(state: GameState, slot: Slot): string | null {
   return null
 }
 
-/** 장비를 살 수 있는지 확인한다. 턴을 쓰지 않지만 한 턴에 하나까지다. 가능하면 null. */
+/** 장비를 살 수 있는지 확인한다. 턴을 쓰지 않고 돈만 있으면 몇 개든 살 수 있다(화면에서는 시즌 시작 계획 때). 가능하면 null. */
 export function checkEquipment(state: GameState, item: EquipmentId): string | null {
   const def = EQUIPMENT[item]
   if (!def) return '알 수 없는 장비다'
   if (state.finished) return '이미 끝난 커리어다'
   const level = state.equipment[item]
   if (level >= rules.equipment.maxLevel) return `${def.name}은(는) 이미 최고 단계다`
-  if (state.equipBoughtTurn === state.turnCount) return '장비는 한 턴에 하나만 살 수 있다'
   if (state.money < equipmentCost(item, level)) return `돈이 부족하다 (${equipmentCost(item, level).toLocaleString('ko-KR')}만 원 필요)`
   return null
 }
 
-/** 장비를 산다. 행동 칸을 쓰지 않고, 한 턴에 하나까지. */
+/** 장비를 산다. 행동 칸을 쓰지 않는다. */
 export function buyEquipment(state: GameState, item: EquipmentId): { ok: true; state: GameState } | { ok: false; error: string } {
   const error = checkEquipment(state, item)
   if (error) return { ok: false, error }
@@ -147,7 +146,6 @@ export function buyEquipment(state: GameState, item: EquipmentId): { ok: true; s
       ...state,
       money: state.money - equipmentCost(item, level),
       equipment: { ...state.equipment, [item]: level + 1 },
-      equipBoughtTurn: state.turnCount,
     },
   }
 }

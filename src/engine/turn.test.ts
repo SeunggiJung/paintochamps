@@ -207,12 +207,12 @@ describe('조건과 비용', () => {
     expect(r.state.turnInSeason).toBe(s.turnInSeason)
   })
 
-  it('장비는 한 턴에 하나만 살 수 있고, 다음 턴에는 다시 살 수 있다', () => {
+  it('장비는 턴 제한 없이 돈이 되는 만큼 연달아 살 수 있다 (시즌 시작 계획에서 한꺼번에 산다)', () => {
     const first = buyEquipment(make({ age: 20, money: 500 }), 'keyboard')
     if (!first.ok) throw new Error(first.error)
-    expect(buyEquipment(first.state, 'mouse').ok).toBe(false)
-    const next = run(first.state, [{ id: 'rest' }, { id: 'rest' }]).state
-    expect(buyEquipment(next, 'mouse').ok).toBe(true)
+    const second = buyEquipment(first.state, 'mouse')
+    expect(second.ok).toBe(true)
+    if (second.ok) expect(second.state.money).toBe(500 - 5 - 5)
   })
 
   it('돈이 부족하거나 최고 단계면 구매할 수 없다', () => {

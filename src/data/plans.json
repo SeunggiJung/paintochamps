@@ -1,0 +1,46 @@
+{
+  "presets": [
+    {
+      "id": "focus",
+      "name": "훈련 집중",
+      "desc": "컨디션이 조금 나빠도 훈련을 이어 갑니다. 훈련량은 가장 많지만 컨디션이 낮은 채로 하게 되어 효율이 떨어지고, 컨디션이 무너지면 부상·슬럼프 위험이 있습니다.",
+      "tiers": [
+        { "min": 50, "slots": ["train", "train"] },
+        { "min": 30, "slots": ["train", "rest"] },
+        { "min": 0, "slots": ["rest", "rest"] }
+      ]
+    },
+    {
+      "id": "balanced",
+      "name": "균형",
+      "desc": "컨디션이 좋으면 훈련을 두 번, 보통이면 훈련과 휴식을 번갈아 하고, 나쁘면 쉽니다. 무난한 방침입니다.",
+      "tiers": [
+        { "min": 60, "slots": ["train", "train"] },
+        { "min": 40, "slots": ["train", "rest"] },
+        { "min": 0, "slots": ["rest", "rest"] }
+      ]
+    },
+    {
+      "id": "care",
+      "name": "컨디션 관리",
+      "desc": "컨디션이 최상일 때만 훈련을 두 번 하고 나머지는 충분히 쉽니다. 훈련량은 줄어도 효율이 가장 좋고 부상·슬럼프 위험이 적습니다.",
+      "tiers": [
+        { "min": 80, "slots": ["train", "train"] },
+        { "min": 60, "slots": ["train", "rest"] },
+        { "min": 0, "slots": ["rest", "rest"] }
+      ]
+    },
+    {
+      "id": "money",
+      "name": "돈벌이 병행",
+      "desc": "훈련 한 번과 돈벌이(아르바이트·방송)를 함께 합니다. 돈과 명성이 모이지만 성장은 느립니다. 팀에 소속되면 방송은 명성이 쌓여야 할 수 있습니다.",
+      "tiers": [
+        { "min": 70, "slots": ["train", "money"] },
+        { "min": 45, "slots": ["train", "rest"] },
+        { "min": 0, "slots": ["rest", "rest"] }
+      ]
+    }
+  ],
+  "moneyOrder": ["part_time", "broadcast"],
+  "lesson": { "action": "private_lesson", "minCondition": 45 }
+}
