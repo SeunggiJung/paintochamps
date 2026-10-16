@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import competitions from '../data/competitions.json'
 import { advanceCalendar } from './calendar.ts'
-import { eventsFor, type EventDef } from './competitions.ts'
+import { eventsFor, isInvited, isUnofficial, type EventDef } from './competitions.ts'
 import { settleSeason } from './season.ts'
 import { createInitialState, type GameState } from './state.ts'
 import { applyTurn, startNextSeason, turnsPerSeason } from './turn.ts'
@@ -147,5 +147,40 @@ describe('시간에 따른 대회 진행', () => {
     const update = advanceCalendar(make({ stage: 'pro1', team: TEAM }, 150), 1)
     expect(update.beats.some((b) => b.kind === 'end' && b.eventId === 'world')).toBe(false)
     expect(eventsFor(update.state).some((e) => e.id === 'world')).toBe(true)
+  })
+})
+
+describe('비공식 초청 대회 (슈퍼 인비테이셔널)', () => {
+  const prev = (placement: number) => [{ season: 5, age: 23, stage: 'pro1' as const, events: [{ id: 'split2', name: '후반기 리그', placement, fieldSize: 10 }] }]
+  const invitational = () => eventsFor({ stage: 'pro1', genre: 'aos', mode: 'standard', season: 6 }).find((e) => e.id === 'invitational')!
+
+  it('2시즌에 한 번(짝수 시즌)만 일정에 있고, 비공식 대회로 분류된다', () => {
+    const idsAt = (season: number) => eventsFor({ stage: 'pro1', genre: 'aos', mode: 'standard', season }).map((e) => e.id)
+    expect(idsAt(5)).not.toContain('invitational')
+    expect(idsAt(6)).toContain('invitational')
+    expect(isUnofficial('invitational')).toBe(true)
+    expect(isUnofficial('world')).toBe(false)
+  })
+
+  it('명성이 부족하거나 직전 시즌 성적이 낮으면 초청받지 못한다', () => {
+    const ev = invitational()
+    expect(isInvited(make({ season: 6, fame: 200, history: prev(2) }), ev)).toBe(true)
+    expect(isInvited(make({ season: 6, fame: 10, history: prev(2) }), ev)).toBe(false)
+    expect(isInvited(make({ season: 6, fame: 200, history: prev(8) }), ev)).toBe(false)
+    expect(isInvited(make({ season: 6, fame: 200, history: [] }), ev)).toBe(false)
+    expect(isInvited(make({ season: 6, fame: 200, team: null, history: prev(2) }), ev)).toBe(false)
+  })
+
+  it('직전 시즌에 월드 챔피언십에 나갔다면 리그 성적이 낮아도 초청받는다', () => {
+    const history = [{ season: 5, age: 23, stage: 'pro1' as const, events: [{ id: 'split2', name: '후반기 리그', placement: 9, fieldSize: 10 }, { id: 'world', name: '월드 챔피언십', placement: 8, fieldSize: 16 }] }]
+    expect(isInvited(make({ season: 6, fame: 200, history }), invitational())).toBe(true)
+  })
+
+  it('초청받은 시즌에는 대회를 치르고 상금을 받는다. 초청이 없으면 불참으로 넘어간다', () => {
+    const invited = advanceCalendar(make({ season: 6, fame: 200, history: prev(2) }), 1)
+    expect(invited.state.seasonRun!.runs.some((r) => r.id === 'invitational')).toBe(true)
+    const none = advanceCalendar(make({ season: 6, fame: 10, history: prev(2) }), 1)
+    expect(none.state.seasonRun!.runs.some((r) => r.id === 'invitational')).toBe(false)
+    expect(none.state.seasonRun!.skipped).toContain('invitational')
   })
 })

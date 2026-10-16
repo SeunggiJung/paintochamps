@@ -1,4 +1,5 @@
 import type { CalendarBeat, CalendarUpdate } from '../engine/calendar.ts'
+import { isInvited } from '../engine/competitions.ts'
 import { eventsFor } from '../engine/season.ts'
 import type { GameState, StandingRow } from '../engine/state.ts'
 import { runOf } from '../engine/calendar.ts'
@@ -162,7 +163,8 @@ export function scheduleBar(state: GameState): HTMLElement | null {
       ...events.map((ev) => {
         const rec = run.runs.find((r) => r.id === ev.id)
         const skipped = run.skipped.includes(ev.id)
-        let text = '예정'
+        // 초청 대회는 시작 전에 초청 여부를 미리 알려 준다 (조건은 알려 주지 않는다)
+        let text = ev.invite ? (isInvited(state, ev) ? '초청 받음' : '초청 미정') : '예정'
         let cls = 'upcoming'
         if (skipped) {
           text = '불참'

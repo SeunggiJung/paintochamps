@@ -80,6 +80,12 @@
           "id": "world", "span": [0.86, 1], "name": "월드 챔피언십", "format": "elimination", "needs": "world", "world": true,
           "field": { "names": "intl", "tier": "intl", "size": 16 }, "k": 2, "bestOf": 5, "big": true,
           "rewards": [{ "upTo": 1, "fame": 50, "money": 500 }, { "upTo": 2, "fame": 30, "money": 250 }, { "upTo": 4, "fame": 20, "money": 120 }, { "upTo": 99, "fame": 8, "money": 50 }]
+        },
+        {
+          "id": "invitational", "span": [0.55, 0.65], "name": "슈퍼 인비테이셔널", "format": "elimination", "unofficial": true, "everyNSeasons": 2,
+          "invite": { "minFame": 80, "anyOf": [{ "event": "split2", "top": 4 }, { "played": "world" }] },
+          "field": { "names": "intl", "tier": "intl", "size": 16 }, "k": 2, "bestOf": 5, "big": true,
+          "rewards": [{ "upTo": 1, "fame": 25, "money": 1200 }, { "upTo": 2, "fame": 15, "money": 600 }, { "upTo": 4, "fame": 8, "money": 300 }, { "upTo": 99, "fame": 3, "money": 100 }]
         }
       ],
       "fps": [
@@ -130,6 +136,12 @@
           "id": "world", "span": [0.92, 1], "name": "챔피언스", "format": "elimination", "needs": "world", "world": true,
           "field": { "names": "intl", "tier": "intl", "size": 16 }, "k": 2, "bestOf": 5, "big": true,
           "rewards": [{ "upTo": 1, "fame": 50, "money": 500 }, { "upTo": 2, "fame": 30, "money": 250 }, { "upTo": 4, "fame": 20, "money": 120 }, { "upTo": 99, "fame": 8, "money": 50 }]
+        },
+        {
+          "id": "invitational", "span": [0.55, 0.65], "name": "슈퍼 인비테이셔널", "format": "elimination", "unofficial": true, "everyNSeasons": 2,
+          "invite": { "minFame": 80, "anyOf": [{ "event": "stage2", "top": 4 }, { "played": "world" }] },
+          "field": { "names": "intl", "tier": "intl", "size": 16 }, "k": 2, "bestOf": 5, "big": true,
+          "rewards": [{ "upTo": 1, "fame": 25, "money": 1200 }, { "upTo": 2, "fame": 15, "money": 600 }, { "upTo": 4, "fame": 8, "money": 300 }, { "upTo": 99, "fame": 3, "money": 100 }]
         }
       ]
     }
