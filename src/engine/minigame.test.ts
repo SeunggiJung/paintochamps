@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyWarmup, miniGameFor, MINIGAME, puzzleTier, shootingTier, warmupBonus } from './minigame.ts'
+import { applyWarmup, MINIGAME, MINIGAME_IDS, numbersTier, patternTier, puzzleTier, reactionTier, rollMiniGame, shootingTier, warmupBonus } from './minigame.ts'
 import { chooseSeasonTraining } from './training.ts'
 import { createInitialState, type GameState } from './state.ts'
 import { applyTurn } from './turn.ts'
@@ -56,7 +56,34 @@ describe('턴 끝 미니게임 (훈련 효율 보너스)', () => {
     expect(warmupBonus({ ...make(), warmup: undefined } as unknown as GameState)).toBe(0)
   })
 
-  it('미니게임 종류는 턴마다 번갈아 나온다', () => {
-    expect(miniGameFor(make({ turnCount: 0 }))).not.toBe(miniGameFor(make({ turnCount: 1 })))
+  it('새 게임 3종도 점수가 좋을수록 등급이 오른다', () => {
+    expect(reactionTier(250)).toBe('great')
+    expect(reactionTier(350)).toBe('good')
+    expect(reactionTier(500)).toBe('miss')
+    expect(numbersTier(6, true)).toBe('great')
+    expect(numbersTier(10, true)).toBe('good')
+    expect(numbersTier(20, true)).toBe('miss')
+    expect(numbersTier(3, false)).toBe('miss')
+    expect(patternTier(MINIGAME.pattern.great)).toBe('great')
+    expect(patternTier(MINIGAME.pattern.good)).toBe('good')
+    expect(patternTier(2)).toBe('miss')
+  })
+
+  it('턴마다 약 30%만 뜨고, 종류는 5종이 모두 나오며, 같은 턴은 같은 결과다 (튜토리얼처럼 턴 번호가 홀수만 나와도 편중되지 않는다)', () => {
+    const seen = new Set<string>()
+    let shown = 0
+    const N = 4000
+    for (let i = 0; i < N; i++) {
+      const s = make({ seed: 100 + i, turnCount: 2 * (i % 7) + 1 })
+      const g = rollMiniGame(s)
+      expect(rollMiniGame(s)).toBe(g)
+      if (g) {
+        shown++
+        seen.add(g)
+      }
+    }
+    expect(shown / N).toBeGreaterThan(0.26)
+    expect(shown / N).toBeLessThan(0.34)
+    expect([...seen].sort()).toEqual([...MINIGAME_IDS].sort())
   })
 })

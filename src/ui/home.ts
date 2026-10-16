@@ -17,6 +17,7 @@ import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
 import { runEvent } from './eventFlow.ts'
 import { MODE_INFO } from './labels.ts'
+import { rollMiniGame } from '../engine/minigame.ts'
 import { offerMiniGame } from './miniGame.ts'
 import { actionTags } from './preview.ts'
 import { openSheet } from './sheet.ts'
@@ -126,8 +127,9 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     const event = rollEvent(next, turnRng(next))
     if (event) next = await runEvent(next, event)
     next = await askMidSeasonOffer(rollMidSeasonOffer(next))
-    // 시즌이 이어질 때만: 쉬는 시간 미니게임(건너뛰어도 되고, 잘하면 다음 턴 훈련 효율이 조금 오른다)
-    if (!next.finished && !next.pendingOffers && next.turnInSeason < turnsPerSeason(next.mode)) next = await offerMiniGame(next)
+    // 시즌이 이어질 때 가끔(약 30%): 쉬는 시간 미니게임(건너뛰어도 되고, 잘하면 다음 턴 훈련 효율이 조금 오른다)
+    const mini = !next.finished && !next.pendingOffers && next.turnInSeason < turnsPerSeason(next.mode) ? rollMiniGame(next) : null
+    if (mini) next = await offerMiniGame(next, mini)
     state = next
     busy = false
     saveGame(ctx.storage, state)

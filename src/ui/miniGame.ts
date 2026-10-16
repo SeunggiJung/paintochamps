@@ -1,4 +1,4 @@
-import { applyWarmup, miniGameFor, MINIGAME, puzzleTier, shootingTier, type WarmupTier } from '../engine/minigame.ts'
+import { applyWarmup, MINIGAME, numbersTier, patternTier, puzzleTier, reactionTier, shootingTier, type MiniGameId, type WarmupTier } from '../engine/minigame.ts'
 import { createRng, mixSeed, shuffled, type Rng } from '../engine/rng.ts'
 import type { GameState } from '../engine/state.ts'
 import { h } from './dom.ts'
@@ -13,11 +13,10 @@ const TIER_TEXT: Record<WarmupTier, string> = {
 const pct = (v: number) => `+${Math.round(v * 100)}%`
 
 /**
- * 턴이 끝난 뒤 가볍게 즐기는 미니게임(턴마다 사격·퍼즐이 번갈아 나온다).
+ * 턴이 끝난 뒤 가끔(`rollMiniGame`) 뜨는 가벼운 미니게임. 어떤 게임인지는 kind로 받는다.
  * 결과에 따라 다음 턴 훈련 효율이 조금 오르고, 건너뛰거나 못 해도 손해는 없다. 보너스를 반영한 상태를 돌려준다.
  */
-export async function offerMiniGame(state: GameState): Promise<GameState> {
-  const kind = miniGameFor(state)
+export async function offerMiniGame(state: GameState, kind: MiniGameId): Promise<GameState> {
   const info = MINIGAME[kind]
   const play = await openSheet<boolean>((close) =>
     h(
@@ -33,7 +32,7 @@ export async function offerMiniGame(state: GameState): Promise<GameState> {
   )
   if (!play) return state
   const rng = createRng(mixSeed(state.seed, state.turnCount, 0x3149))
-  const tier = kind === 'shooting' ? await playShooting(rng) : await playPuzzle(rng)
+  const tier = await PLAYERS[kind](rng)
   const bonus = tier === 'miss' ? 0 : MINIGAME.bonus[tier]
   await openSheet<void>((close) =>
     h(
@@ -160,4 +159,183 @@ function playPuzzle(rng: Rng): Promise<WarmupTier> {
       h('button', { class: 'btn ghost small', onclick: () => close('miss') }, '그만둔다'),
     )
   }, { autofocus: false })
+}
+
+/** 반응속도: 화면이 초록으로 바뀌는 순간 누른다. 평균 반응 시간으로 평가하고, 너무 일찍 누르면 그 판을 다시 한다. */
+function playReaction(rng: Rng): Promise<WarmupTier> {
+  const cfg = MINIGAME.reaction
+  return openSheet<WarmupTier>((close) => {
+    const times: number[] = []
+    let phase: 'idle' | 'wait' | 'go' = 'idle'
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let goAt = 0
+    const pad = h('button', { class: 'mg-react' })
+    const roundEl = h('b', {}, '1')
+    const show = (cls: string, text: string) => {
+      pad.className = `mg-react ${cls}`
+      pad.textContent = text
+    }
+    const next = () => {
+      phase = 'wait'
+      show('wait', '초록색이 되면 누르세요')
+      timer = setTimeout(() => {
+        phase = 'go'
+        goAt = performance.now()
+        show('go', '지금!')
+      }, cfg.minWaitMs + rng() * (cfg.maxWaitMs - cfg.minWaitMs))
+    }
+    pad.addEventListener('pointerdown', (e) => {
+      e.preventDefault()
+      if (phase === 'idle') return next()
+      if (phase === 'wait') {
+        clearTimeout(timer)
+        phase = 'idle'
+        return show('early', '너무 빨라요! 눌러서 다시')
+      }
+      times.push(performance.now() - goAt)
+      if (times.length >= cfg.rounds) {
+        phase = 'idle'
+        return close(reactionTier(times.reduce((a, b) => a + b, 0) / times.length))
+      }
+      roundEl.textContent = String(times.length + 1)
+      phase = 'idle'
+      show('idle', `${Math.round(times[times.length - 1])}ms — 눌러서 다음`)
+    })
+    show('idle', '눌러서 시작')
+
+    return h(
+      'div',
+      { class: 'stack-tight' },
+      h('p', { class: 'eyebrow' }, cfg.name),
+      h('p', { class: 'row' }, h('span', {}, '라운드 ', roundEl, `/${cfg.rounds}`), h('span', { class: 'muted small' }, `평균 ${cfg.greatMs}ms 이하면 최고`)),
+      pad,
+      h('button', { class: 'btn ghost small', onclick: () => (clearTimeout(timer), close('miss')) }, '그만둔다'),
+    )
+  }, { autofocus: false })
+}
+
+/** 숫자 순서 터치: 흩어진 숫자를 1부터 순서대로 누른다. 끝까지 걸린 시간으로 평가한다. */
+function playNumbers(rng: Rng): Promise<WarmupTier> {
+  const cfg = MINIGAME.numbers
+  return openSheet<WarmupTier>((close) => {
+    const order = shuffled(rng, Array.from({ length: cfg.count }, (_, i) => i + 1))
+    let want = 1
+    let startedAt = 0
+    const nextEl = h('b', {}, '1')
+    const cells = order.map((n) => {
+      const btn = h('button', { class: 'mg-card', 'aria-label': `숫자 ${n}` }, String(n))
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault()
+        if (n !== want) {
+          btn.classList.add('wrong')
+          setTimeout(() => btn.classList.remove('wrong'), 200)
+          return
+        }
+        if (want === 1) startedAt = performance.now()
+        btn.classList.add('open')
+        btn.disabled = true
+        want++
+        nextEl.textContent = want > cfg.count ? '-' : String(want)
+        if (want > cfg.count) close(numbersTier((performance.now() - startedAt) / 1000, true))
+      })
+      return btn
+    })
+    return h(
+      'div',
+      { class: 'stack-tight' },
+      h('p', { class: 'eyebrow' }, cfg.name),
+      h('p', { class: 'row' }, h('span', {}, '다음 숫자 ', nextEl), h('span', { class: 'muted small' }, `${cfg.greatSec}초 이하면 최고 (1을 누르면 시작)`)),
+      h('div', { class: 'mg-grid three' }, ...cells),
+      h('button', { class: 'btn ghost small', onclick: () => close('miss') }, '그만둔다'),
+    )
+  }, { autofocus: false })
+}
+
+const PADS = [
+  { c: '#5b8cff', label: '파랑' },
+  { c: '#4cc38a', label: '초록' },
+  { c: '#ff6b7a', label: '빨강' },
+  { c: '#ffb740', label: '노랑' },
+]
+
+/** 패턴 기억: 깜빡이는 순서를 보고 똑같이 누른다. 라운드마다 한 칸씩 길어지고, 한 번 틀리면 끝난다. */
+function playPattern(rng: Rng): Promise<WarmupTier> {
+  const cfg = MINIGAME.pattern
+  return openSheet<WarmupTier>((close) => {
+    const seq = Array.from({ length: cfg.maxLength }, () => Math.floor(rng() * PADS.length))
+    let length = cfg.startLength
+    let cleared = 0
+    let input = 0
+    let accepting = false
+    let over = false
+    const statusEl = h('span', {}, '잘 보세요')
+    const flash = (btn: HTMLElement, ms: number) => {
+      btn.classList.add('lit')
+      setTimeout(() => btn.classList.remove('lit'), ms)
+    }
+    const pads: HTMLElement[] = PADS.map((p, i) => {
+      const btn = h('button', { class: 'mg-pad', 'aria-label': p.label })
+      btn.style.setProperty('--pad', p.c)
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault()
+        if (!accepting || over) return
+        flash(btn, 160)
+        if (seq[input] !== i) {
+          over = true
+          accepting = false
+          statusEl.textContent = '틀렸어요!'
+          setTimeout(() => close(patternTier(cleared)), 600)
+          return
+        }
+        input++
+        if (input < length) return
+        cleared = length
+        accepting = false
+        if (length >= cfg.maxLength) {
+          over = true
+          setTimeout(() => close(patternTier(cleared)), 400)
+          return
+        }
+        length++
+        statusEl.textContent = '좋아요! 다음은 더 길어요'
+        setTimeout(show, 800)
+      })
+      return btn
+    })
+    function show() {
+      if (over) return
+      accepting = false
+      input = 0
+      statusEl.textContent = '잘 보세요'
+      seq.slice(0, length).forEach((p, k) =>
+        setTimeout(() => {
+          if (!over) flash(pads[p], 420)
+          if (k === length - 1) {
+            setTimeout(() => {
+              accepting = !over
+              statusEl.textContent = '따라 누르세요'
+            }, 500)
+          }
+        }, 600 + k * 700),
+      )
+    }
+    setTimeout(show, 300)
+
+    return h(
+      'div',
+      { class: 'stack-tight' },
+      h('p', { class: 'eyebrow' }, cfg.name),
+      h('p', { class: 'row' }, statusEl, h('span', { class: 'muted small' }, `${cfg.great}칸 이상이면 최고`)),
+      h('div', { class: 'mg-grid two' }, ...pads),
+      h('button', { class: 'btn ghost small', onclick: () => ((over = true), close(patternTier(cleared))) }, '그만둔다'),
+    )
+  }, { autofocus: false })
+}
+
+const PLAYERS: Record<MiniGameId, (rng: Rng) => Promise<WarmupTier>> = {
+  shooting: playShooting,
+  puzzle: playPuzzle,
+  reaction: playReaction,
+  numbers: playNumbers,
+  pattern: playPattern,
 }

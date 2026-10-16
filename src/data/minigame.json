@@ -1,5 +1,9 @@
 {
+  "chance": 0.3,
   "bonus": { "good": 0.04, "great": 0.08 },
   "shooting": { "name": "에임 워밍업", "desc": "20초 동안 나타나는 표적을 눌러 맞히세요.", "seconds": 20, "spawnMs": 650, "lifeMs": 1100, "good": 12, "great": 20 },
-  "puzzle": { "name": "짝 맞추기", "desc": "뒤집힌 카드 12장에서 같은 그림 6쌍을 찾으세요. 적게 뒤집을수록 좋습니다.", "pairs": 6, "goodMoves": 16, "greatMoves": 11 }
+  "puzzle": { "name": "짝 맞추기", "desc": "뒤집힌 카드 12장에서 같은 그림 6쌍을 찾으세요. 적게 뒤집을수록 좋습니다.", "pairs": 6, "goodMoves": 16, "greatMoves": 11 },
+  "reaction": { "name": "반응속도 테스트", "desc": "화면이 초록색으로 바뀌는 순간 바로 누르세요. 5번의 평균 반응속도로 평가합니다. 너무 일찍 누르면 다시 합니다.", "rounds": 5, "minWaitMs": 1000, "maxWaitMs": 3000, "greatMs": 300, "goodMs": 380 },
+  "numbers": { "name": "숫자 순서 터치", "desc": "흩어진 1~9를 순서대로 최대한 빨리 누르세요.", "count": 9, "greatSec": 8, "goodSec": 12 },
+  "pattern": { "name": "패턴 기억", "desc": "깜빡이는 순서를 기억했다가 똑같이 눌러 보세요. 한 번 틀리면 끝납니다.", "startLength": 3, "maxLength": 8, "good": 5, "great": 7 }
 }
