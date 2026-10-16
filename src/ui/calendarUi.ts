@@ -97,7 +97,7 @@ export function playTimeline({ before, calendar, actions, brief }: TimelineInput
       activity,
       eventPill,
       h('div', { class: 'bar' }, fill),
-      h('p', { class: 'muted small' }, '화면을 누르면 빠르게 넘어갑니다'),
+      h('button', { class: 'btn ghost small skip-btn', onclick: () => (fast = true) }, '스킵하기 ', h('span', { 'aria-hidden': 'true' }, '⏩')),
     )
     let fast = false
     root.addEventListener('click', () => (fast = true))

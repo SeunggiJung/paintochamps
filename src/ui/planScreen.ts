@@ -6,6 +6,7 @@ import { planOf, PRESETS, setSeasonPlan, type PresetId } from '../engine/plan.ts
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
 import { chooseSeasonTraining, trainingMenuOf } from '../engine/training.ts'
 import { ACTIONS, buyEquipment, checkEquipment } from '../engine/turn.ts'
+import { confirmSheet } from './confirm.ts'
 import { h } from './dom.ts'
 import { formatMoney } from './format.ts'
 import { actionCost, actionTags } from './preview.ts'
@@ -86,7 +87,14 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
               {
                 class: 'choice',
                 disabled: !!reason,
-                onclick: () => {
+                onclick: async () => {
+                  const cost = equipmentCost(item, level)
+                  const ok = await confirmSheet({
+                    title: '장비 구매',
+                    message: `${EQUIPMENT[item].name} Lv${level} → Lv${level + 1}을(를) ${formatMoney(cost)}에 살까요? (보유 ${formatMoney(state.money)})`,
+                    ok: '구매',
+                  })
+                  if (!ok) return
                   const r = buyEquipment(state, item)
                   if (r.ok) state = r.state
                   draw()
@@ -112,7 +120,14 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
               {
                 class: 'choice',
                 disabled: !!reason,
-                onclick: () => {
+                onclick: async () => {
+                  const cost = facilityCost(state, id)
+                  const ok = await confirmSheet({
+                    title: '시설 투자',
+                    message: `${def.name} Lv${level} → Lv${level + 1}에 ${formatMoney(cost)}을(를) 쓸까요? (보유 ${formatMoney(state.money)})`,
+                    ok: '투자',
+                  })
+                  if (!ok) return
                   const r = buyFacility(state, id)
                   if (r.ok) state = r.state
                   draw()

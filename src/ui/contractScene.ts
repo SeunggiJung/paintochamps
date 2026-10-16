@@ -71,6 +71,7 @@ export async function showContract(state: GameState, offer: Offer, kind: 'join' 
         h('h2', {}, `${offer.team.name}`),
         terms && h('p', { class: 'muted' }, `월급 ${formatMoney(terms.profile.salary)} / 3개월 · ${perkLabel(offer, state.stage)}`),
       ),
+      h('button', { class: 'btn ghost small skip-btn', onclick: skip }, '스킵하기 ', h('span', { 'aria-hidden': 'true' }, '⏩')),
       h('button', { class: 'btn primary c-ok', onclick: () => close() }, '확인'),
     )
     return root

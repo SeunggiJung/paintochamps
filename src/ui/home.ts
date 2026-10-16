@@ -14,6 +14,7 @@ import { STAT_KEYS } from '../engine/types.ts'
 import { markGuideDone, saveGame } from '../save/storage.ts'
 import { cleanTeamName, TEAM_NAME_MAX } from './newGame.ts'
 import type { Ctx } from './app.ts'
+import { confirmSheet } from './confirm.ts'
 import { h } from './dom.ts'
 import { runEvent } from './eventFlow.ts'
 import { MODE_INFO } from './labels.ts'
@@ -307,7 +308,27 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       h('h2', {}, `${state.name} · ${state.age}세`),
       h('p', { class: 'muted' }, '이번 시즌의 모든 턴을 마쳤습니다. 대회 결과를 확인하세요. (진행 상황은 저장되어 있습니다.)'),
       prepCard(),
-      h('button', { class: 'btn primary', onclick: async () => (await askTeamName(), ctx.toSeason(state)) }, '시즌 결산 보기'),
+      h(
+        'button',
+        {
+          class: 'btn primary',
+          onclick: async () => {
+            const test = upcomingTest(state)
+            if (test && !state.testPrep) {
+              const ok = await confirmSheet({
+                title: `${testName(test.id)} 준비를 안 했어요`,
+                message: '시험 준비(집중·컨디션·조언)를 고르지 않고 결산으로 넘어갈까요? 준비하면 합격 확률이 올라갑니다.',
+                ok: '준비 없이 넘어가기',
+                cancel: '돌아가서 준비하기',
+              })
+              if (!ok) return
+            }
+            await askTeamName()
+            ctx.toSeason(state)
+          },
+        },
+        '시즌 결산 보기',
+      ),
       h('button', { class: 'btn ghost small', onclick: () => ctx.toTitle() }, '타이틀로'),
     )
   }
