@@ -4,6 +4,7 @@ import { h } from './dom.ts'
 import { STAT_LABEL } from './labels.ts'
 import { describeChange, previewDetail } from './preview.ts'
 import { openSheet } from './sheet.ts'
+import { hasChange, turnChangeGraph } from './turnResult.ts'
 
 /** 선택지 아래에 붙일 결과 미리보기 문구. 정밀 모드는 판정이 있다는 사실만 알려 준다. */
 function choiceHint(state: GameState, event: GameEvent, index: number): string {
@@ -41,13 +42,12 @@ export async function runEvent(state: GameState, event: GameEvent): Promise<Game
   const after = applyEventChoice(state, event, picked)
   const outcomes = choiceOutcomes(state, event, picked)
   const success = outcomes.length === 2 ? JSON.stringify(after) === JSON.stringify(outcomes[0].state) : null
-  const lines = describeChange(state, after, 'exact')
   await openSheet<void>((close) =>
     h(
       'div',
       { class: 'stack-tight' },
       h('p', { class: 'eyebrow' }, success === null ? event.choices[picked].label : success ? '성공!' : '실패...'),
-      lines.length > 0 ? h('ul', { class: 'plain' }, ...lines.map((l) => h('li', {}, l))) : h('p', { class: 'muted' }, '눈에 띄는 변화는 없었다.'),
+      hasChange(state, after) ? turnChangeGraph(state, after, { onlyChanged: true }) : h('p', { class: 'muted' }, '눈에 띄는 변화는 없었다.'),
       h('button', { class: 'btn primary', onclick: () => close() }, '확인'),
     ),
   )

@@ -4,12 +4,11 @@ import { genrePower } from '../engine/power.ts'
 import { acceptOffer, eventsFor, settleSeason, stageName, type EventResult, type SeasonReport } from '../engine/season.ts'
 import type { GameState } from '../engine/state.ts'
 import { startNextSeason } from '../engine/turn.ts'
-import { STAT_KEYS } from '../engine/types.ts'
 import { recordFinish, saveGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
-import { statName } from './statHelp.ts'
-import { formatMoney } from './format.ts'
+import { formatMoney, formatMoneyDelta } from './format.ts'
+import { changeLine, statChangeBars } from './turnResult.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
 
@@ -132,11 +131,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         'section',
         { class: 'card' },
         h('div', { class: 'row' }, h('h3', {}, '능력치 변동'), h('span', { class: 'power' }, `${genre} 실력치 `, h('b', {}, `${powerBefore} → ${powerAfter} `), delta(powerAfter - powerBefore))),
-        ...STAT_KEYS.map((k) => {
-          const from = Math.round(startStats[k])
-          const to = Math.round(before.stats[k])
-          return h('div', { class: 'delta-row' }, statName(k, before.genre), h('span', { class: 'delta-vals muted' }, `${from} → ${to}`), delta(to - from))
-        }),
+        statChangeBars(startStats, before.stats),
       ),
       h(
         'section',
@@ -163,8 +158,8 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         'section',
         { class: 'card' },
         h('h3', {}, '이번 시즌 합계'),
-        h('div', { class: 'delta-row' }, h('span', { class: 'stat-name' }, '명성'), h('span', { class: 'delta-vals muted' }, `${Math.round(before.fame)} → ${Math.round(settled.fame)}`), delta(fameGain)),
-        h('div', { class: 'delta-row' }, h('span', { class: 'stat-name' }, '돈'), h('span', { class: 'delta-vals muted' }, `${formatMoney(before.money)} → ${formatMoney(settled.money)}`), delta(moneyGain)),
+        changeLine('명성', String(Math.round(before.fame)), String(Math.round(settled.fame)), fameGain === 0 ? '±0' : signed(fameGain), fameGain),
+        changeLine('돈', formatMoney(before.money), formatMoney(settled.money), moneyGain === 0 ? '±0' : formatMoneyDelta(moneyGain), moneyGain),
       ),
       offersCard(),
       state.finished && h('section', { class: 'card' }, h('h3', {}, '기록'), h('p', { class: 'muted' }, state.rerolls > 0 ? `능력치 뽑기를 ${state.rerolls}번 다시 뽑았다.` : '능력치 뽑기를 한 번에 확정했다.')),
