@@ -109,6 +109,20 @@ describe('엔딩 도감·기록', () => {
     expect(meta.endings.hobbyist?.last?.name).toBe('새이름')
   })
 
+  it('업적을 달성한 판은 도감의 업적 기록에 쌓인다', () => {
+    const ev = (id: string) => ({ id, name: id, placement: 1, fieldSize: 10 })
+    const history = [{ season: 7, age: 22, stage: 'pro1' as const, events: ['split1', 'mid_qualifier', 'midseason', 'split2', 'playoffs', 'world'].map(ev) }]
+    const state = make({ finished: 'legend', worldTitles: 1, stage: 'pro1', history })
+    const first = recordFinish(storage, state)
+    expect(first.achievements.golden_road?.count).toBe(1)
+    expect(first.achievements.rookie_champion?.count).toBe(1)
+    expect(recordFinish(storage, state).achievements.golden_road?.count).toBe(2)
+  })
+
+  it('옛 도감(업적 없음)도 읽힌다', () => {
+    expect(loadMeta(storage).achievements).toEqual({})
+  })
+
   it('끝나지 않은 판은 기록할 수 없다', () => {
     expect(() => recordFinish(storage, make())).toThrow()
   })

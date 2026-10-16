@@ -1,3 +1,4 @@
+import { earnedAchievements, type AchievementId } from '../engine/achievements.ts'
 import { STAT_KEYS } from '../engine/types.ts'
 import type { EndingId, GameState, StageId } from '../engine/state.ts'
 
@@ -90,6 +91,8 @@ export interface MetaSave {
   /** 육성 화면 첫 안내(말풍선 가이드)를 봤는지 */
   guideDone: boolean
   endings: Partial<Record<EndingId, { count: number; last?: FinishSummary }>>
+  /** 달성한 업적. 횟수와 가장 최근 판 요약 (옛 도감에는 없을 수 있다) */
+  achievements: Partial<Record<AchievementId, { count: number; last?: FinishSummary }>>
   bestStage: StageId
   finishedRuns: number
 }
@@ -117,7 +120,7 @@ export function finishSummary(state: GameState): FinishSummary {
 }
 
 export function emptyMeta(): MetaSave {
-  return { version: 1, tutorialDone: false, guideDone: false, endings: {}, bestStage: 'basement', finishedRuns: 0 }
+  return { version: 1, tutorialDone: false, guideDone: false, endings: {}, achievements: {}, bestStage: 'basement', finishedRuns: 0 }
 }
 
 export function loadMeta(storage: KeyValueStorage): MetaSave {
@@ -147,6 +150,7 @@ export function recordFinish(storage: KeyValueStorage, state: GameState): MetaSa
     ...meta,
     tutorialDone: meta.tutorialDone || state.mode === 'tutorial',
     endings: { ...meta.endings, [state.finished]: { count: prev + 1, last: finishSummary(state) } },
+    achievements: { ...meta.achievements, ...Object.fromEntries(earnedAchievements(state).map((id) => [id, { count: (meta.achievements[id]?.count ?? 0) + 1, last: finishSummary(state) }])) },
     bestStage,
     finishedRuns: meta.finishedRuns + 1,
   }

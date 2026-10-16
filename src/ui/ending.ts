@@ -1,9 +1,10 @@
 import genres from '../data/genres.json'
+import { achievementDef } from '../engine/achievements.ts'
 import { endingDef } from '../engine/endings.ts'
 import { stageName } from '../engine/season.ts'
 import type { EndingId, GameState } from '../engine/state.ts'
 import { bestStageOf } from '../save/storage.ts'
-import type { Ctx } from './app.ts'
+import type { Ctx, EndingInfo } from './app.ts'
 import { celebrate } from './confetti.ts'
 import { h } from './dom.ts'
 import { MODE_INFO } from './labels.ts'
@@ -35,14 +36,14 @@ function bestOfSeason(events: GameState['history'][number]['events']): string {
   return `${best.name} ${best.placement}위 / ${best.fieldSize}팀`
 }
 
-/** 커리어가 끝났을 때 보는 엔딩 화면. isNew면 도감에 처음 기록된 엔딩이다. */
-export function endingScreen(ctx: Ctx, state: GameState, isNew: boolean): HTMLElement {
+/** 커리어가 끝났을 때 보는 엔딩 화면. */
+export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements }: EndingInfo): HTMLElement {
   const id = state.finished
   if (!id) throw new Error('끝나지 않은 판이다')
   const def = endingDef(id)
   const best = bestStageOf(state)
 
-  if (id === 'legend' || id === 'hidden_loyal') requestAnimationFrame(() => celebrate('UR'))
+  if (id === 'legend' || id === 'hidden_loyal' || achievements.length > 0) requestAnimationFrame(() => celebrate('UR'))
   else if (id === 'world_finalist') requestAnimationFrame(() => celebrate('SR'))
 
   const row = (label: string, value: string) => h('div', { class: 'kv-row' }, h('span', { class: 'muted' }, label), h('b', {}, value))
@@ -59,6 +60,10 @@ export function endingScreen(ctx: Ctx, state: GameState, isNew: boolean): HTMLEl
       h('p', { class: 'headline-title' }, def.name),
       h('p', { class: 'event-text' }, def.epilogue.replaceAll('{name}', state.name)),
     ),
+    ...achievements.map((a) => {
+      const def = achievementDef(a.id)
+      return h('section', { class: 'card achievement' }, h('p', { class: 'eyebrow' }, a.isNew ? '업적 달성!' : '업적 (재달성)'), h('p', { class: 'headline-title' }, `🏅 ${def.name}`), h('p', { class: 'muted' }, def.desc))
+    }),
     h(
       'section',
       { class: 'card' },

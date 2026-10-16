@@ -326,3 +326,4 @@ button.picked-chip { border: 2px solid var(--accent); background: #232a47; color
 .codex-card .ending-art { width: 64px; height: 64px; font-size: 2rem; margin: 0; border-radius: 14px; }
 .codex-card.locked { opacity: 0.8; }
 .codex-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.card.achievement { text-align: center; border-color: var(--grade-UR); }

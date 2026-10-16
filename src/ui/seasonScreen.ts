@@ -1,6 +1,7 @@
 import endings from '../data/endings.json'
 import genres from '../data/genres.json'
 import { genrePower } from '../engine/power.ts'
+import { earnedAchievements } from '../engine/achievements.ts'
 import { acceptOffer, eventsFor, retire, settleSeason, stageName, type EventResult, type SeasonReport } from '../engine/season.ts'
 import type { GameState } from '../engine/state.ts'
 import { startNextSeason } from '../engine/turn.ts'
@@ -57,9 +58,11 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
 
   const proceed = () => {
     if (state.finished) {
-      const isNew = !ctx.meta.endings[state.finished]
+      const before = ctx.meta
+      const isNew = !before.endings[state.finished]
+      const achievements = earnedAchievements(state).map((id) => ({ id, isNew: !before.achievements[id] }))
       ctx.meta = recordFinish(ctx.storage, state)
-      ctx.toEnding(state, isNew)
+      ctx.toEnding(state, { isNew, achievements })
       return
     }
     const next = startNextSeason(state)
