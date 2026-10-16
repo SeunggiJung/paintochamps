@@ -1,4 +1,5 @@
 import type { GameState } from '../engine/state.ts'
+import { ENDINGS } from '../engine/endings.ts'
 import { clearGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
@@ -36,7 +37,7 @@ export function titleScreen(ctx: Ctx, saved: GameState | null): HTMLElement {
     h('h1', {}, '방구석 겜돌이에서 프로게이머되기'),
     h('p', { class: 'title-sub' }, '16세, 방구석에서 월드 챔피언십 우승을 향한 15년'),
     titleHero(),
-    h('div', { class: 'stack' }, resume, newGame),
+    h('div', { class: 'stack' }, resume, newGame, h('button', { class: 'btn ghost', onclick: () => ctx.toCodex() }, `엔딩 도감 (${ENDINGS.filter((e) => ctx.meta.endings[e.id]).length}/${ENDINGS.length})`)),
     ctx.meta.finishedRuns > 0 && h('p', { class: 'muted small' }, `완주 ${ctx.meta.finishedRuns}회`),
   )
 }

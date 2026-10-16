@@ -67,18 +67,54 @@ export function clearGame(storage: KeyValueStorage): void {
   safe(() => storage.removeItem(SAVE_KEY), undefined)
 }
 
+/** 한 판을 마친 기록 요약. 도감과 엔딩 화면에 보여 준다. */
+export interface FinishSummary {
+  name: string
+  genre: GameState['genre']
+  mode: GameState['mode']
+  /** 마지막 나이 */
+  age: number
+  seasons: number
+  /** 이번 판에서 오른 가장 높은 단계 */
+  bestStage: StageId
+  worldAppearances: number
+  worldTitles: number
+  /** 능력치 뽑기를 다시 뽑은 횟수 */
+  rerolls: number
+}
+
 /** 판을 넘어 유지되는 기록: 엔딩 도감, 튜토리얼 완료 여부 */
 export interface MetaSave {
   version: 1
   tutorialDone: boolean
   /** 육성 화면 첫 안내(말풍선 가이드)를 봤는지 */
   guideDone: boolean
-  endings: Partial<Record<EndingId, { count: number }>>
+  endings: Partial<Record<EndingId, { count: number; last?: FinishSummary }>>
   bestStage: StageId
   finishedRuns: number
 }
 
 const STAGE_RANK: StageId[] = ['basement', 'local_cup', 'amateur_team', 'pro2', 'pro1']
+
+/** 강등당해도 이번 판에서 오른 가장 높은 단계 */
+export function bestStageOf(state: GameState, from: StageId = 'basement'): StageId {
+  const reached = [state.stage, from, ...state.history.map((h) => h.stage)]
+  return reached.reduce((a, b) => (STAGE_RANK.indexOf(b) > STAGE_RANK.indexOf(a) ? b : a))
+}
+
+export function finishSummary(state: GameState): FinishSummary {
+  return {
+    name: state.name,
+    genre: state.genre,
+    mode: state.mode,
+    age: state.age,
+    seasons: state.season,
+    bestStage: bestStageOf(state),
+    worldAppearances: state.worldAppearances,
+    worldTitles: state.worldTitles,
+    rerolls: state.rerolls,
+  }
+}
 
 export function emptyMeta(): MetaSave {
   return { version: 1, tutorialDone: false, guideDone: false, endings: {}, bestStage: 'basement', finishedRuns: 0 }
@@ -106,12 +142,11 @@ export function recordFinish(storage: KeyValueStorage, state: GameState): MetaSa
   const meta = loadMeta(storage)
   const prev = meta.endings[state.finished]?.count ?? 0
   // 강등당해도 지금까지 오른 가장 높은 단계를 기록한다
-  const reached = [state.stage, meta.bestStage, ...state.history.map((h) => h.stage)]
-  const bestStage = reached.reduce((a, b) => (STAGE_RANK.indexOf(b) > STAGE_RANK.indexOf(a) ? b : a))
+  const bestStage = bestStageOf(state, meta.bestStage)
   const next: MetaSave = {
     ...meta,
     tutorialDone: meta.tutorialDone || state.mode === 'tutorial',
-    endings: { ...meta.endings, [state.finished]: { count: prev + 1 } },
+    endings: { ...meta.endings, [state.finished]: { count: prev + 1, last: finishSummary(state) } },
     bestStage,
     finishedRuns: meta.finishedRuns + 1,
   }

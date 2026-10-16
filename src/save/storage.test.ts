@@ -92,6 +92,23 @@ describe('엔딩 도감·기록', () => {
     expect(meta.bestStage).toBe('pro2')
   })
 
+  it('엔딩마다 가장 최근 판의 요약(이름·나이·최고 단계·뽑기 횟수)을 남긴다', () => {
+    const history = [{ season: 4, age: 19, stage: 'pro1' as const, events: [] }]
+    const meta = recordFinish(storage, make({ finished: 'legend', name: '민수', age: 23, season: 8, stage: 'pro2', history, worldTitles: 1, worldAppearances: 2, rerolls: 3 }))
+    expect(meta.endings.legend?.last).toMatchObject({ name: '민수', age: 23, seasons: 8, bestStage: 'pro1', worldTitles: 1, worldAppearances: 2, rerolls: 3 })
+    const next = recordFinish(storage, make({ finished: 'legend', name: '지수' }))
+    expect(next.endings.legend?.count).toBe(2)
+    expect(next.endings.legend?.last?.name).toBe('지수')
+  })
+
+  it('옛 도감(요약 없음)도 읽히고 이어서 기록된다', () => {
+    storage.setItem('paintochamps:meta', JSON.stringify({ version: 1, tutorialDone: true, endings: { hobbyist: { count: 2 } }, bestStage: 'basement', finishedRuns: 2 }))
+    expect(loadMeta(storage).endings.hobbyist?.last).toBeUndefined()
+    const meta = recordFinish(storage, make({ finished: 'hobbyist', name: '새이름' }))
+    expect(meta.endings.hobbyist?.count).toBe(3)
+    expect(meta.endings.hobbyist?.last?.name).toBe('새이름')
+  })
+
   it('끝나지 않은 판은 기록할 수 없다', () => {
     expect(() => recordFinish(storage, make())).toThrow()
   })

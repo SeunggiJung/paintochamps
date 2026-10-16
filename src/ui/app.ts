@@ -1,5 +1,7 @@
 import type { GameState } from '../engine/state.ts'
 import { loadGame, loadMeta, type KeyValueStorage } from '../save/storage.ts'
+import { codexScreen } from './codex.ts'
+import { endingScreen } from './ending.ts'
 import { createScreen, type NewGameDraft } from './create.ts'
 import { gachaScreen } from './gachaScreen.ts'
 import { homeScreen } from './home.ts'
@@ -15,6 +17,9 @@ export interface Ctx {
   toGacha(draft: NewGameDraft): void
   toHome(state: GameState): void
   toSeason(state: GameState): void
+  /** 커리어가 끝난 뒤의 엔딩 화면. isNew는 도감에 처음 기록되는 엔딩인지 */
+  toEnding(state: GameState, isNew: boolean): void
+  toCodex(): void
 }
 
 export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
@@ -30,6 +35,8 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     toGacha: (draft) => show(gachaScreen(ctx, draft)),
     toHome: (state) => show(homeScreen(ctx, state)),
     toSeason: (state) => show(seasonScreen(ctx, state)),
+    toEnding: (state, isNew) => show(endingScreen(ctx, state, isNew)),
+    toCodex: () => show(codexScreen(ctx)),
   }
   ctx.toTitle()
 }

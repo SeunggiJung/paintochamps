@@ -312,3 +312,17 @@ button.picked-chip { border: 2px solid var(--accent); background: #232a47; color
 .change-bar .seg { height: 100%; flex: none; }
 @keyframes grow { from { transform: scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { .seg.gain { animation: none; } }
+
+/* 엔딩 화면·도감 */
+.ending-art { width: 96px; height: 96px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(145deg, #2a3358, #1c2030); border: 2px solid var(--line); flex: none; margin: 0 auto; }
+.ending-art.locked { color: var(--muted); font-weight: 900; background: #12141c; border-style: dashed; }
+.card.headline.gold .ending-art { border-color: var(--grade-UR); box-shadow: 0 0 24px #ffb74099; }
+.ending .headline { text-align: center; align-items: center; }
+.ending .event-text { text-align: left; }
+.new-chip { background: var(--grade-UR); color: #2a1a00; font-weight: 700; align-self: center; }
+.kv-row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
+.kv-row b { text-align: right; }
+.codex-card { display: flex; flex-direction: row; align-items: center; gap: 14px; }
+.codex-card .ending-art { width: 64px; height: 64px; font-size: 2rem; margin: 0; border-radius: 14px; }
+.codex-card.locked { opacity: 0.8; }
+.codex-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }

@@ -1,7 +1,7 @@
 import endings from '../data/endings.json'
 import genres from '../data/genres.json'
 import { genrePower } from '../engine/power.ts'
-import { acceptOffer, eventsFor, settleSeason, stageName, type EventResult, type SeasonReport } from '../engine/season.ts'
+import { acceptOffer, eventsFor, retire, settleSeason, stageName, type EventResult, type SeasonReport } from '../engine/season.ts'
 import type { GameState } from '../engine/state.ts'
 import { startNextSeason } from '../engine/turn.ts'
 import { recordFinish, saveGame } from '../save/storage.ts'
@@ -11,6 +11,7 @@ import { formatMoney, formatMoneyDelta } from './format.ts'
 import { changeLine, statChangeBars } from './turnResult.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
+import { openSheet } from './sheet.ts'
 
 const ENDING_NAME = Object.fromEntries(endings.order.map((e) => [e.id, e.name]))
 
@@ -56,14 +57,32 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
 
   const proceed = () => {
     if (state.finished) {
-      recordFinish(ctx.storage, state)
-      ctx.toTitle() // 엔딩 화면(2단계 ④)이 붙기 전까지는 타이틀로 돌아간다
+      const isNew = !ctx.meta.endings[state.finished]
+      ctx.meta = recordFinish(ctx.storage, state)
+      ctx.toEnding(state, isNew)
       return
     }
     const next = startNextSeason(state)
     saveGame(ctx.storage, next)
     ctx.toHome(next)
     scrollTo(0, 0)
+  }
+
+  /** 자진 은퇴: 지금까지의 기록으로 커리어를 마무리한다 (되돌릴 수 없어서 한 번 더 묻는다) */
+  const askRetire = async () => {
+    const yes = await openSheet<boolean>((close) =>
+      h(
+        'div',
+        { class: 'stack-tight' },
+        h('p', { class: 'eyebrow' }, '은퇴'),
+        h('p', { class: 'event-text' }, '지금 은퇴하면 커리어가 끝나고 엔딩을 보게 된다. 되돌릴 수 없다.'),
+        h('button', { class: 'btn primary', onclick: () => close(false) }, '계속 도전한다'),
+        h('button', { class: 'btn ghost small', onclick: () => close(true) }, '은퇴한다'),
+      ),
+    )
+    if (!yes) return
+    state = retire(state)
+    proceed()
   }
 
   const choose = async (index: number | null) => {
@@ -168,6 +187,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         { class: 'btn primary', disabled: !!state.pendingOffers, onclick: proceed },
         state.finished ? '커리어 마무리' : state.pendingOffers ? '제안을 골라 주세요' : `${before.season + 1}시즌 시작`,
       ),
+      !state.finished && h('button', { class: 'btn ghost small', onclick: askRetire }, '여기서 은퇴하기'),
     ]
     root.replaceChildren(...parts.filter((p): p is HTMLElement => !!p))
   }

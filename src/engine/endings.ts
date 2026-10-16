@@ -15,7 +15,19 @@ interface When {
   notMode?: GameState['mode']
 }
 
-export const ENDINGS = endingData.order as { id: EndingId; name: string; when: When }[]
+export interface EndingDef {
+  id: EndingId
+  name: string
+  when: When
+  /** 도감에 해금된 뒤 보여 주는 설명 */
+  desc: string
+  /** 아직 못 본 엔딩에 보여 주는 조건 힌트 */
+  hint: string
+  /** 엔딩 화면 문구. {name}은 선수 이름으로 바뀐다 */
+  epilogue: string
+}
+
+export const ENDINGS = endingData.order as EndingDef[]
 
 function matches(state: GameState, w: When): boolean {
   if (w.minWorldTitles !== undefined && state.worldTitles < w.minWorldTitles) return false
@@ -39,4 +51,8 @@ export function evaluateEnding(state: GameState): EndingId {
 
 export function endingName(id: EndingId): string {
   return ENDINGS.find((e) => e.id === id)!.name
+}
+
+export function endingDef(id: EndingId): EndingDef {
+  return ENDINGS.find((e) => e.id === id)!
 }

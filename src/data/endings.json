@@ -1,13 +1,53 @@
 {
   "order": [
-    { "id": "hidden_loyal",   "name": "원클럽 레전드",          "when": { "minWorldTitles": 1, "debutTeam": true, "notMode": "tutorial" } },
-    { "id": "legend",         "name": "레전드",                 "when": { "minWorldTitles": 1 } },
-    { "id": "world_finalist", "name": "월드 파이널리스트",      "when": { "minWorldAppearances": 1 } },
-    { "id": "pro1_regular",   "name": "프로 1부 주전 은퇴",     "when": { "minSeasonsInPro1": 5 } },
-    { "id": "pro2_veteran",   "name": "2부 리그의 터주대감",    "when": { "stage": "pro2" } },
-    { "id": "coach",          "name": "코치·감독",              "when": { "everPro": true, "minTeamwork": 700 } },
-    { "id": "streamer",       "name": "스트리머",               "when": { "minFame": 70 } },
-    { "id": "hobbyist",       "name": "취미로 남은 겜돌이",     "when": { "everPro": false } }
+    {
+      "id": "hidden_loyal", "name": "원클럽 레전드", "when": { "minWorldTitles": 1, "debutTeam": true, "notMode": "tutorial" },
+      "desc": "1부에 처음 올라간 팀을 떠나지 않고 월드 챔피언십에서 우승했다.",
+      "hint": "한 팀과 끝까지 함께하며 정상에 서면 열린다. (튜토리얼 제외)",
+      "epilogue": "트로피를 든 {name}의 유니폼에는 데뷔하던 날과 같은 팀 로고가 있다. 수많은 이적 제안에도 이 팀만 지켰다. 팬들은 그를 '우리 팀의 영원한 에이스'라고 부른다."
+    },
+    {
+      "id": "legend", "name": "레전드", "when": { "minWorldTitles": 1 },
+      "desc": "월드 챔피언십에서 우승했다.",
+      "hint": "월드 챔피언십 정상에 서면 열린다.",
+      "epilogue": "방구석에서 시작한 {name}이(가) 마침내 세계 정상에 섰다. 폭죽이 터지는 무대 위에서 그는 처음 PC방 대회에 나가던 날을 떠올렸다. 그 이름은 오래도록 기록으로 남을 것이다."
+    },
+    {
+      "id": "world_finalist", "name": "월드 파이널리스트", "when": { "minWorldAppearances": 1 },
+      "desc": "월드 챔피언십 무대에 섰지만 우승은 하지 못했다.",
+      "hint": "월드 챔피언십 무대에 서 보면 열린다.",
+      "epilogue": "{name}은(는) 세계 무대의 조명 아래 서 본 선수다. 우승 트로피는 손에 닿지 않았지만, 그 무대에 올랐다는 사실만으로 충분히 자랑스러운 커리어였다."
+    },
+    {
+      "id": "pro1_regular", "name": "프로 1부 주전 은퇴", "when": { "minSeasonsInPro1": 5 },
+      "desc": "프로 1부에서 다섯 시즌 이상 뛴 베테랑으로 은퇴했다.",
+      "hint": "프로 1부에서 오래 살아남으면 열린다. (5시즌 이상)",
+      "epilogue": "{name}은(는) 화려한 우승은 없었어도 1부 리그에서 꾸준히 팀을 지킨 주전이었다. 은퇴 경기에서 팬들은 오랫동안 박수를 멈추지 않았다."
+    },
+    {
+      "id": "pro2_veteran", "name": "2부 리그의 터주대감", "when": { "stage": "pro2" },
+      "desc": "프로 2부 리그에서 커리어를 마무리했다.",
+      "hint": "프로 무대에는 올랐지만 1부에 자리 잡지 못하고 마치면 열린다.",
+      "epilogue": "{name}은(는) 2부 리그의 터줏대감으로 불렸다. 1부의 문턱은 끝내 넘지 못했지만, 매 경기 최선을 다하는 모습으로 후배들에게 본보기가 되었다."
+    },
+    {
+      "id": "coach", "name": "코치·감독", "when": { "everPro": true, "minTeamwork": 700 },
+      "desc": "프로를 경험하고 뛰어난 팀워크를 바탕으로 지도자가 되었다.",
+      "hint": "프로를 거치고 팀워크를 크게 키우면 지도자의 길이 열린다.",
+      "epilogue": "선수 생활을 마친 {name}은(는) 코치가 되어 신인들을 이끈다. 팀원들과 호흡을 맞추던 경험이 이제는 누구보다 든든한 지도 철학이 되었다."
+    },
+    {
+      "id": "streamer", "name": "스트리머", "when": { "minFame": 70 },
+      "desc": "높은 명성을 바탕으로 인기 스트리머가 되었다.",
+      "hint": "명성을 크게 쌓은 채 커리어를 마치면 열린다.",
+      "epilogue": "{name}의 방송에는 오늘도 수만 명이 모인다. 대회 무대 대신 채팅창 속에서, 그는 여전히 게임을 사랑하는 사람으로 살아간다."
+    },
+    {
+      "id": "hobbyist", "name": "취미로 남은 겜돌이", "when": { "everPro": false },
+      "desc": "프로의 문턱을 넘지 못했지만, 게임은 평생의 취미로 남았다.",
+      "hint": "프로 무대에 오르지 않고 커리어를 마치면 열린다.",
+      "epilogue": "프로의 꿈은 이루지 못했지만 {name}은(는) 여전히 퇴근 후 게임 앞에 앉는다. 그때 방구석에서 보낸 시간은 후회가 아니라 소중한 추억이다."
+    }
   ],
   "fallbackIfPro": "pro2_veteran"
 }
