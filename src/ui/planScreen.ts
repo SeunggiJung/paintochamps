@@ -6,7 +6,8 @@ import { planOf, PRESETS, setSeasonPlan, type PresetId } from '../engine/plan.ts
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
 import { chooseSeasonTraining, trainingMenuOf } from '../engine/training.ts'
 import { ACTIONS, buyEquipment, checkEquipment } from '../engine/turn.ts'
-import { confirmSheet } from './confirm.ts'
+import { openUpgrade } from './upgradeSheet.ts'
+import { upgradeArt } from './upgradeArt.ts'
 import { h } from './dom.ts'
 import { formatMoney } from './format.ts'
 import { actionCost, actionTags } from './preview.ts'
@@ -85,23 +86,29 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
             return h(
               'button',
               {
-                class: 'choice',
+                class: 'choice with-art',
                 disabled: !!reason,
                 onclick: async () => {
-                  const cost = equipmentCost(item, level)
-                  const ok = await confirmSheet({
-                    title: '장비 구매',
-                    message: `${EQUIPMENT[item].name} Lv${level} → Lv${level + 1}을(를) ${formatMoney(cost)}에 살까요? (보유 ${formatMoney(state.money)})`,
-                    ok: '구매',
+                  await openUpgrade({
+                    kind: item,
+                    name: EQUIPMENT[item].name,
+                    level,
+                    max: rules.equipment.maxLevel,
+                    costText: formatMoney(equipmentCost(item, level)),
+                    moneyText: formatMoney(state.money),
+                    effectText: '훈련 효율이 올라갑니다.',
+                    buy: () => {
+                      const r = buyEquipment(state, item)
+                      if (r.ok) state = r.state
+                      return r.ok
+                    },
                   })
-                  if (!ok) return
-                  const r = buyEquipment(state, item)
-                  if (r.ok) state = r.state
                   draw()
                 },
               },
-              h('strong', {}, maxed ? `${EQUIPMENT[item].name} (최고)` : `${EQUIPMENT[item].name} Lv${level} → Lv${level + 1} · ${formatMoney(equipmentCost(item, level))}`),
-              h('span', { class: 'muted small' }, reason ?? '구매'),
+              upgradeArt(item, level, rules.equipment.maxLevel, 'mini'),
+              h('div', { class: 'choice-text' }, h('strong', {}, maxed ? `${EQUIPMENT[item].name} (최고)` : `${EQUIPMENT[item].name} Lv${level} → Lv${level + 1} · ${formatMoney(equipmentCost(item, level))}`),
+              h('span', { class: 'muted small' }, reason ?? '구매')),
             )
           }),
         ),
@@ -118,23 +125,29 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
             return h(
               'button',
               {
-                class: 'choice',
+                class: 'choice with-art',
                 disabled: !!reason,
                 onclick: async () => {
-                  const cost = facilityCost(state, id)
-                  const ok = await confirmSheet({
-                    title: '시설 투자',
-                    message: `${def.name} Lv${level} → Lv${level + 1}에 ${formatMoney(cost)}을(를) 쓸까요? (보유 ${formatMoney(state.money)})`,
-                    ok: '투자',
+                  await openUpgrade({
+                    kind: id,
+                    name: def.name,
+                    level,
+                    max: def.maxLevel,
+                    costText: formatMoney(facilityCost(state, id)),
+                    moneyText: formatMoney(state.money),
+                    effectText: `${def.desc} (${def.unit})`,
+                    buy: () => {
+                      const r = buyFacility(state, id)
+                      if (r.ok) state = r.state
+                      return r.ok
+                    },
                   })
-                  if (!ok) return
-                  const r = buyFacility(state, id)
-                  if (r.ok) state = r.state
                   draw()
                 },
               },
-              h('strong', {}, level >= def.maxLevel ? `${def.name} (최고)` : `${def.name} Lv${level} → Lv${level + 1} · ${formatMoney(facilityCost(state, id))}`),
-              h('span', { class: 'muted small' }, `${def.desc} (${def.unit})${reason && level < def.maxLevel ? ` — ${reason}` : ''}`),
+              upgradeArt(id, level, def.maxLevel, 'mini'),
+              h('div', { class: 'choice-text' }, h('strong', {}, level >= def.maxLevel ? `${def.name} (최고)` : `${def.name} Lv${level} → Lv${level + 1} · ${formatMoney(facilityCost(state, id))}`),
+              h('span', { class: 'muted small' }, `${def.desc} (${def.unit})${reason && level < def.maxLevel ? ` — ${reason}` : ''}`)),
             )
           }),
         ),
