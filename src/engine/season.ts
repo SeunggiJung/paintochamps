@@ -58,6 +58,13 @@ function makeScoutOffers(rng: Rng, kind: 'amateur' | 'pro', exclude: Set<string>
   return { kind: 'scout', offers }
 }
 
+/** 프로 2부 → 1부 콜업 제안: 지금 소속 팀의 1군 콜업이 첫 번째, 나머지는 다른 구단에서 온다. 모두 1부 팀이다. */
+function makeCallupOffers(rng: Rng, own: GameState['team']): PendingOffers {
+  const others = pickTeams(rng, 'pro', own ? OFFERS.callupCount - 1 : OFFERS.callupCount, new Set(own ? [own.id] : []))
+  const teams = own ? [own, ...others] : others
+  return { kind: 'callup', stage: 'pro1', offers: teams.map((team) => ({ team, perk: rng() < 0.5 ? 'salary' : 'playtime' })) }
+}
+
 /**
  * 시즌 중간 이적 제안. 팀에 소속된 선수가 명성을 쌓으면 한 턴을 마칠 때마다 다른 팀에서 연락이 올 수 있다.
  * 시즌당 한 번, 마지막 턴 뒤에는 오지 않는다(결산이 따로 있다). 거절할 수 있다(kind: 'transfer').
@@ -139,17 +146,12 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
     let team = next.team
     if (state.stage === 'amateur_team') team = null
     if (state.stage === 'pro2') team = pickTeams(rng, 'amateur', 1, new Set())[0]
-    next = { ...next, stage: lower, team, path: 'open' }
+    next = { ...next, stage: lower, team, path: 'open', salaryMult: 1, negotiatedSeason: 0 }
   } else if (!worldChampion && state.stage === 'pro2') {
+    // 프로 2부 → 1부는 자동 승급이 아니라 1부 팀의 콜업 제안이다. 지금 팀(1군 콜업)과 다른 구단에서 온다. 거절하면 2부에 남는다.
     const cond = STAGES[state.stage].next!
     const power = genrePower(state.stats, state.genre)
-    if (power >= cond.minPower && next.fame >= (cond.minFame ?? 0)) {
-      promoted = true
-      const upper = STAGE_ORDER[idx + 1]
-      next = { ...next, stage: upper }
-      if (upper === 'pro1' && next.debutTeamId === null && next.team) next = { ...next, debutTeamId: next.team.id }
-      if (cond.scout) pendingOffers = makeScoutOffers(rng, cond.scout, new Set(next.team ? [next.team.id] : []))
-    }
+    if (power >= cond.minPower && next.fame >= (cond.minFame ?? 0)) pendingOffers = makeCallupOffers(rng, next.team)
   } else if (!worldChampion && (state.stage === 'basement' || state.stage === 'local_cup' || state.stage === 'amateur_team')) {
     const step = routeStep(advanced, next, {
       placementOf: (id) => results.find((r) => r.id === id)?.placement,
@@ -194,15 +196,21 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
   if (!pending) throw new Error('받은 제안이 없다')
   if (index === null) {
     if (pending.kind === 'scout') throw new Error('입단 제안은 하나를 골라야 한다')
-    return { ...state, pendingOffers: null }
+    return { ...state, pendingOffers: null } // 이적·콜업 제안은 거절할 수 있다 (콜업을 거절하면 2부에 남는다)
   }
   const offer = pending.offers[index]
   if (!offer) throw new Error('없는 제안이다')
+  // 콜업이면 1부로 올라가고, 처음 올라가는 팀이 데뷔 팀이 된다. 팀을 옮기면 월급 협상은 새로 시작한다.
+  const stage = pending.kind === 'callup' ? 'pro1' : state.stage
   return {
     ...state,
+    stage,
+    debutTeamId: stage === 'pro1' && state.debutTeamId === null ? offer.team.id : state.debutTeamId,
     team: offer.team,
-    money: state.money + (offer.perk === 'salary' ? OFFERS.salaryMoney * moneyScale(state.stage) : 0),
+    money: state.money + (offer.perk === 'salary' ? OFFERS.salaryMoney * moneyScale(stage) : 0),
     fame: state.fame + (offer.perk === 'playtime' ? OFFERS.playtimeFame : 0),
+    salaryMult: 1,
+    negotiatedSeason: 0,
     pendingOffers: null,
   }
 }

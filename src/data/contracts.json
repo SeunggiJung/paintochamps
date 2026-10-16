@@ -5,5 +5,13 @@
   "moneyScale": { "basement": 1, "local_cup": 1, "amateur_team": 2, "pro2": 8, "pro1": 30 },
   "leagueSize": { "amateur_team": 6, "pro2": 6, "pro1": 10 },
   "strengthSpread": { "min": 0.8, "max": 1.4 },
-  "teamWeight": 0.3
+  "teamWeight": 0.3,
+  "negotiation": {
+    "fameChance": 0.002,
+    "maxFameChance": 0.25,
+    "asks": [
+      { "id": "fair", "name": "조금 더 요구한다", "raise": 0.15, "chance": 0.7 },
+      { "id": "high", "name": "크게 요구한다", "raise": 0.35, "chance": 0.4, "failMental": -60 }
+    ]
+  }
 }

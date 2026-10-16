@@ -64,7 +64,7 @@ export function salaryOf(state: GameState): number {
   if (!state.team) return 0
   if (isTrainee(state)) return contracts.traineeSalary
   const profile = teamProfile(state.seed, state.season, state.team, state.stage, state.fame)
-  return profile?.salary ?? 0
+  return Math.round((profile?.salary ?? 0) * (state.salaryMult ?? 1))
 }
 
 /** 리그 평균 대비 팀 강도: 평균보다 표준편차의 반 이상 위면 강팀, 반 이상 아래면 약팀 */
@@ -102,18 +102,18 @@ export interface OfferTerms {
 }
 
 /** 제안을 받은 팀의 조건 요약. 이적·입단 결정에 쓰는 정보다. */
-export function offerTerms(state: GameState, offer: Offer): OfferTerms | null {
-  const profile = teamProfile(state.seed, state.season, offer.team, state.stage, state.fame)
+export function offerTerms(state: GameState, offer: Offer, stage: StageId = state.stage): OfferTerms | null {
+  const profile = teamProfile(state.seed, state.season, offer.team, stage, state.fame)
   if (!profile) return null
   const myPower = genrePower(state.stats, state.genre)
   const gap = profile.power - myPower
-  const tier = TIER_OF_STAGE[state.stage]!
+  const tier = TIER_OF_STAGE[stage]!
   return {
     profile,
     myPower,
     gap,
     salaryDelta: profile.salary - salaryOf(state),
-    strength: strengthOf(state.stage, profile.power),
+    strength: strengthOf(stage, profile.power),
     boost: contracts.teamWeight * (profile.power - TIERS[tier].mean),
   }
 }

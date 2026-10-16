@@ -70,8 +70,10 @@ export interface Offer {
 }
 
 export interface PendingOffers {
-  /** scout: 승급에 따른 입단 제안(반드시 하나 고른다), transfer: 1부 이적 제안(거절 가능) */
-  kind: 'scout' | 'transfer'
+  /** scout: 승급에 따른 입단 제안(반드시 하나 고른다), transfer: 1부 이적 제안(거절 가능), callup: 프로 2부 → 1부 콜업 제안(거절하면 2부에 남는다) */
+  kind: 'scout' | 'transfer' | 'callup'
+  /** 제안한 팀이 뛰는 단계. 없으면 지금 단계(콜업은 프로 1부) */
+  stage?: StageId
   offers: Offer[]
 }
 
@@ -161,6 +163,10 @@ export interface GameState {
   facilities: Partial<Record<FacilityId, number>>
   /** 턴 끝 미니게임으로 얻은 다음 턴 훈련 효율 보너스 비율(0.05 = +5%). 턴이 지나면 0으로 돌아간다. (옛 세이브에는 없을 수 있다 — warmupBonus) */
   warmup: number
+  /** 월급 협상으로 정해진 배율(1이면 팀의 제시액 그대로). 팀을 옮기면 1로 돌아간다. (옛 세이브에는 없을 수 있다) */
+  salaryMult: number
+  /** 월급 협상을 마지막으로 한 시즌 (시즌당 한 번). 계약을 새로 맺으면 0으로 돌아가 다시 협상할 수 있다. */
+  negotiatedSeason: number
   /** 이번 시즌에 고를 수 있는 무작위 훈련 후보. 시즌이 시작될 때 뽑는다. (옛 세이브에는 없을 수 있다 — trainingMenuOf) */
   trainingMenu: ActionId[]
   /** 이번 시즌에 정한 훈련. 시즌 동안 이 훈련만 할 수 있고, 시즌이 시작되면 null로 돌아가 후보 중에서 다시 고른다. 코치가 교체를 제안하면 바뀐다. (옛 세이브에는 없을 수 있다) */
@@ -239,6 +245,8 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     equipment: { keyboard: 0, mouse: 0, monitor: 0, pc: 0 },
     facilities: {},
     warmup: 0,
+    salaryMult: 1,
+    negotiatedSeason: 0,
     trainingMenu: drawTrainingMenu(seed, 0, false),
     seasonTraining: null,
     trainingSwapSeason: 0,

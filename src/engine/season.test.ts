@@ -96,12 +96,30 @@ describe('승급과 강등', () => {
     expect(() => startNextSeason(state)).toThrow()
   })
 
-  it('프로 2부 → 1부는 R 650이면 팀을 유지한 채 올라가고, 1부 데뷔 팀이 기록된다', () => {
+  it('프로 2부에서 조건을 채우면 자동 승급이 아니라 1부 팀의 콜업 제안이 온다 (지금 팀의 1군 콜업이 첫 번째)', () => {
+    const { state, report } = settleSeason(atSeasonEnd({ stage: 'pro2', team: TEAM, power: 900, everPro: true }))
+    // 압도적으로 강하면 2부 1위이므로 강등되지 않는다. 제안을 고르기 전까지는 2부다.
+    expect(state.stage).toBe('pro2')
+    expect(report.promoted).toBe(false)
+    expect(state.pendingOffers?.kind).toBe('callup')
+    expect(state.pendingOffers?.stage).toBe('pro1')
+    expect(state.pendingOffers?.offers[0].team).toEqual(TEAM)
+    expect(new Set(state.pendingOffers?.offers.map((o) => o.team.id)).size).toBe(state.pendingOffers?.offers.length)
+    expect(() => startNextSeason(state)).toThrow()
+  })
+
+  it('콜업을 받아들이면 1부로 올라가고 그 팀이 1부 데뷔 팀이 된다. 거절하면 2부에 남는다', () => {
     const { state } = settleSeason(atSeasonEnd({ stage: 'pro2', team: TEAM, power: 900, everPro: true }))
-    // 압도적으로 강하면 2부 1위이므로 강등되지 않는다
-    expect(state.stage).toBe('pro1')
-    expect(state.debutTeamId).toBe('org_0')
-    expect(state.team).toEqual(TEAM)
+    const other = state.pendingOffers!.offers[1]
+    const up = acceptOffer(state, 1)
+    expect(up.stage).toBe('pro1')
+    expect(up.team).toEqual(other.team)
+    expect(up.debutTeamId).toBe(other.team.id)
+    expect(up.pendingOffers).toBeNull()
+    const stay = acceptOffer(state, null)
+    expect(stay.stage).toBe('pro2')
+    expect(stay.team).toEqual(TEAM)
+    expect(startNextSeason(stay).stage).toBe('pro2')
   })
 
   it('실력이 형편없으면 하위권으로 강등된다 (프로 2부 → 아마추어, 소속 팀 변경)', () => {
