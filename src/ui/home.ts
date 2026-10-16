@@ -8,7 +8,7 @@ import { genrePower } from '../engine/power.ts'
 import { choosePrep, expectedScore, PREP, testItems, testName, upcomingTest } from '../engine/routes.ts'
 import { acceptOffer, eventsFor, rollMidSeasonOffer, stageName } from '../engine/season.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
-import { trainingMenuOf } from '../engine/training.ts'
+import { applyCoachSwap, chooseSeasonTraining, coachSwapOffer, trainingMenuOf, type CoachOffer } from '../engine/training.ts'
 import { ACTIONS, applyTurn, buyEquipment, checkEquipment, checkSlot, isRepeatable, turnsPerSeason, type Slot } from '../engine/turn.ts'
 import { STAT_KEYS } from '../engine/types.ts'
 import { markGuideDone, saveGame } from '../save/storage.ts'
@@ -41,7 +41,7 @@ const GROUP_GUIDE: Record<string, string> = { 훈련: 'train', 회복: 'recover'
 /** 이 행동을 목록에 보여 줄지. 모드·팀·부상 같은 구조적 이유로 못 하는 행동은 아예 숨기고, 돈·명성 부족은 이유와 함께 비활성으로 보여 준다. */
 function listed(state: GameState, id: ActionId): boolean {
   const a = ACTIONS[id]
-  if (a.pool && !trainingMenuOf(state).includes(id)) return false
+  if (a.pool && state.seasonTraining !== id) return false
   if (a.modes && !a.modes.includes(state.mode)) return false
   const { inTeam, injured, slump } = a.requires ?? {}
   if (inTeam !== undefined && (state.team !== null) !== inTeam) return false
@@ -105,6 +105,41 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     return chips.map((c) => h('span', { class: 'chip warn' }, c))
   }
 
+  /** 훈련 후보 하나를 보여 주는 버튼 (능력치 방향·컨디션 소모) */
+  const trainingChoice = (id: ActionId, pick: () => void) =>
+    h('button', { class: 'choice', onclick: pick }, h('strong', {}, ACTIONS[id].name), h('span', { class: 'muted small' }, actionTags({ id }, state).join(' · ')))
+
+  /** 시즌 시작에 이번 시즌 훈련을 정한다. 후보는 시즌마다 무작위로 나오고, 정하면 시즌 동안 이 훈련만 할 수 있다. */
+  const pickSeasonTraining = async () => {
+    const id = await openSheet<ActionId>((close) =>
+      h(
+        'div',
+        { class: 'stack-tight' },
+        h('p', { class: 'eyebrow' }, `${state.season}시즌 훈련 계획`),
+        h('p', { class: 'event-text' }, state.team ? '이번 시즌에 할 훈련을 정하자. 시즌 동안은 이 훈련만 한다. 성적이 부진하면 코치가 바꿔 보자고 제안할 수도 있다.' : '이번 시즌에 할 훈련을 정하자. 시즌 동안은 이 훈련만 한다. (팀에 들어가면 코치가 성적에 따라 교체를 제안해 준다.)'),
+        h('div', { class: 'choices vertical' }, ...trainingMenuOf(state).map((t) => trainingChoice(t, () => close(t)))),
+      ),
+    )
+    state = chooseSeasonTraining(state, id)
+    saveGame(ctx.storage, state)
+    render()
+  }
+
+  /** 코치의 훈련 교체 제안: 무작위 후보 중 하나로 바꾸거나 지금 훈련을 유지한다. 어느 쪽이든 이번 시즌 제안은 끝난다. */
+  const askCoachSwap = async (s: GameState, offer: CoachOffer): Promise<GameState> => {
+    const picked = await openSheet<ActionId | null>((close) =>
+      h(
+        'div',
+        { class: 'stack-tight' },
+        h('p', { class: 'eyebrow' }, '코치의 제안'),
+        h('p', { class: 'event-text' }, `${offer.eventName}에서 지금 ${offer.rank}위야. 우리 전력과 네 실력이면 ${offer.expected}위권은 해야 하는데... 지금 하는 ${ACTIONS[s.seasonTraining!].name}을(를) 다른 훈련으로 바꿔 볼래?`),
+        h('div', { class: 'choices vertical' }, ...offer.options.map((t) => h('button', { class: 'choice', onclick: () => close(t) }, h('strong', {}, `${ACTIONS[t].name}으로 바꾼다`), h('span', { class: 'muted small' }, actionTags({ id: t }, s).join(' · '))))),
+        h('button', { class: 'btn ghost small', onclick: () => close(null) }, `지금 훈련(${ACTIONS[s.seasonTraining!].name})을 유지한다`),
+      ),
+    )
+    return applyCoachSwap(s, picked)
+  }
+
   /** 시즌 도중 다른 팀에서 온 이적 제안. 하나를 골라 옮기거나 남는다. */
   const askMidSeasonOffer = async (s: GameState): Promise<GameState> => {
     const pending = s.pendingOffers
@@ -154,6 +189,8 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         h('button', { class: 'btn primary', onclick: () => close() }, '다음'),
       ),
     )
+    const coach = coachSwapOffer(next, r.calendar.beats)
+    if (coach) next = await askCoachSwap(next, coach)
     const event = rollEvent(next, turnRng(next))
     if (event) next = await runEvent(next, event)
     next = await askMidSeasonOffer(rollMidSeasonOffer(next))
@@ -242,9 +279,10 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
           ),
         ),
       ),
+      !state.seasonTraining && h('section', { class: 'card', 'data-guide': 'train' }, h('h3', {}, '시즌 훈련'), h('p', { class: 'muted small' }, '이번 시즌에 할 훈련을 정해야 훈련을 할 수 있습니다.'), h('button', { class: 'btn primary', disabled: busy, onclick: () => void pickSeasonTraining() }, '훈련 계획 세우기')),
       h('section', { class: 'card', 'data-guide': 'slots' }, h('h3', {}, `이번 ${modes[state.mode].turnMonths}개월, 행동 2개를 고르세요`), h('div', { class: 'slots' }, slotChip(0), slotChip(1)), h('p', { class: `muted small cond-hint tier-${tier.label}` }, `컨디션 ${tier.label}: ${tier.desc} (×${tier.coef})`)),
       state.injuredMonths > 0 && h('p', { class: 'notice' }, '부상 중이라 휴식·재활만 할 수 있다.'),
-      ...groups.map((g) => h('section', { 'data-guide': GROUP_GUIDE[g.title] }, h('h3', {}, g.title), g.title === '훈련' && h('p', { class: 'muted small' }, '훈련은 매 턴 무작위로 후보가 바뀝니다. 한 번에 능력치 3개가 오릅니다.'), h('div', { class: 'actions' }, ...g.items.map((id) => actionButton({ id: id as ActionId } as Slot, ACTIONS[id as ActionId].name))))),
+      ...groups.map((g) => h('section', { 'data-guide': GROUP_GUIDE[g.title] }, h('h3', {}, g.title), g.title === '훈련' && h('p', { class: 'muted small' }, '이번 시즌에 정한 훈련입니다. 두 칸 모두 넣을 수 있고, 한 번에 능력치 3개가 오릅니다.'), h('div', { class: 'actions' }, ...g.items.map((id) => actionButton({ id: id as ActionId } as Slot, ACTIONS[id as ActionId].name))))),
       h('section', { 'data-guide': 'equip' }, h('h3', {}, '장비'), h('p', { class: 'muted small' }, '행동을 쓰지 않고 한 턴에 하나까지 살 수 있습니다.'), h('div', { class: 'actions' }, ...equipRows)),
       h(
         'div',
@@ -351,7 +389,10 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
   }
 
   render()
-  // 화면에 붙은 뒤에 위치를 재야 해서 다음 프레임에 띄운다
-  if (!ctx.meta.guideDone && state.season === 1 && state.turnInSeason === 0) requestAnimationFrame(() => void showGuide())
+  // 화면에 붙은 뒤에 위치를 재야 해서 다음 프레임에 띄운다. 가이드를 먼저 보고, 그다음에 이번 시즌 훈련을 정한다.
+  requestAnimationFrame(async () => {
+    if (!ctx.meta.guideDone && state.season === 1 && state.turnInSeason === 0) await showGuide()
+    if (!state.seasonTraining && !seasonOver()) await pickSeasonTraining()
+  })
   return root
 }

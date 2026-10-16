@@ -119,7 +119,7 @@ describe('applyEventChoice', () => {
   it('슬럼프: 성장이 절반이 되고 턴이 지나면 줄어든다', () => {
     const slumped = applyEventChoice(make({ age: 20, condition: 20 }), byId('slump'), 0)
     expect(slumped.slumpMonths).toBeCloseTo(3 * slumpDurationFactor(100))
-    const base = make({ age: 20, condition: 100 })
+    const base = make({ age: 20, condition: 100, seasonTraining: 'video_review' })
     const normal = applyTurn(base, [{ id: 'video_review' }, { id: 'rest' }])
     const slump = applyTurn({ ...base, slumpMonths: 6 }, [{ id: 'video_review' }, { id: 'rest' }])
     if (!normal.ok || !slump.ok) throw new Error('turn failed')

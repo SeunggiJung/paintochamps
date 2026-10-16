@@ -7,8 +7,8 @@ import { createRng, mixSeed, type Rng } from '../engine/rng.ts'
 import { choosePrep, PREP, upcomingTest } from '../engine/routes.ts'
 import { acceptOffer, rollMidSeasonOffer, settleSeason } from '../engine/season.ts'
 import { createInitialState, type ActionId, type EquipmentId, type GameState, type ModeId } from '../engine/state.ts'
-import { trainingMenuOf } from '../engine/training.ts'
-import { ACTIONS, applyTurn, buyEquipment, checkSlot, startNextSeason, type Slot, type TurnChoice } from '../engine/turn.ts'
+import { chooseSeasonTraining, trainingMenuOf } from '../engine/training.ts'
+import { ACTIONS, applyTurn, buyEquipment, checkSlot, startNextSeason, turnsPerSeason, type Slot, type TurnChoice } from '../engine/turn.ts'
 import type { GenreId } from '../engine/types.ts'
 
 /**
@@ -109,11 +109,36 @@ function randomChoice(s: GameState, rng: Rng): TurnChoice {
   return valid.length ? valid[Math.floor(rng() * valid.length)] : [{ id: 'rest' }, { id: 'rest' }]
 }
 
+/** 시즌 훈련 고르기: 숙련은 후보마다 그 훈련만 두 번 해 본 결과로 비교하고, 무작위는 아무거나, 단순은 앞의 후보(어떤 게 좋은지 따지지 않는다) */
+function pickSeasonTraining(s: GameState, policy: BotPolicy, rng: Rng): ActionId {
+  const menu = trainingMenuOf(s)
+  if (policy === 'casual') return menu[0]
+  if (policy === 'random') return menu[Math.floor(rng() * menu.length)]
+  let best = menu[0]
+  let bestValue = -Infinity
+  // 훈련 하나를 시즌 내내 하게 되므로, 이 훈련으로 몇 턴 진행해 본 결과로 비교한다 (컨디션이 나쁘면 쉬며 이어 간다)
+  const horizon = Math.min(turnsPerSeason(s.mode), 6)
+  for (const id of menu) {
+    let cur = chooseSeasonTraining(s, id)
+    for (let t = 0; t < horizon; t++) {
+      const choice: TurnChoice = cur.condition >= 60 ? [{ id }, { id }] : cur.condition >= 45 ? [{ id }, { id: 'rest' }] : [{ id: 'rest' }, { id: 'rest' }]
+      const r = applyTurn(cur, choice, undefined, false)
+      if (!r.ok) break
+      cur = r.state
+    }
+    const v = value(cur)
+    if (v > bestValue) {
+      bestValue = v
+      best = id
+    }
+  }
+  return best
+}
+
 function casualChoice(s: GameState): TurnChoice {
-  // 나온 훈련 후보 중 앞의 것을 고르고(어떤 게 좋은지 따지지 않는다), 나머지는 랭크전 연습
-  const menu = trainingMenuOf(s).map((id): Slot => ({ id })).filter((slot) => checkSlot(s, slot) === null)
+  // 시즌 훈련 하나를 하고, 컨디션이 나쁘면 쉰다
   const rest: Slot = { id: 'rest' }
-  const first: Slot = menu[0] ?? rest
+  const first: Slot = s.seasonTraining && checkSlot(s, { id: s.seasonTraining }) === null ? { id: s.seasonTraining } : rest
   const second: Slot = rest
   if (s.injuredMonths > 0 || s.condition < 45) return [rest, rest]
   if (s.condition < 65) return [first, rest]
@@ -151,6 +176,7 @@ export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: Bot
   let s = createInitialState({ name: '봇', genre, mode, seed, gacha: rollGacha(rng, genre) })
   let turn = 0
   while (!s.finished) {
+    if (!s.seasonTraining) s = chooseSeasonTraining(s, pickSeasonTraining(s, opts.policy, botRng))
     s = shop(s, opts.policy, botRng)
     const choice = opts.policy === 'skilled' ? skilledChoice(s, botRng) : opts.policy === 'random' ? randomChoice(s, botRng) : casualChoice(s)
     let r = applyTurn(s, choice)

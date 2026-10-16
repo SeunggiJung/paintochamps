@@ -12,7 +12,7 @@ import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { ActionId, EquipmentId, GameState } from './state.ts'
 import { equipmentCost, moneyScale } from './economy.ts'
 import { salaryOf } from './teams.ts'
-import { drawTrainingMenu, trainingMenuOf } from './training.ts'
+import { drawTrainingMenu } from './training.ts'
 import { STAT_KEYS, type StatKey, type Stats } from './types.ts'
 
 interface Outcome {
@@ -40,9 +40,9 @@ interface ActionDef {
   outcomes?: Outcome[]
   requires?: { inTeam?: boolean; minFame?: number; injured?: boolean; slump?: boolean }
   allowWhenInjured?: boolean
-  /** true면 매 턴 무작위로 뽑힌 후보(trainingMenu)에 있을 때만 고를 수 있는 훈련 */
+  /** true면 시즌 훈련 후보(trainingMenu) 중 시즌 초에 정한 하나(seasonTraining)만 할 수 있는 훈련 */
   pool?: boolean
-  /** true면 한 턴에 같은 행동을 두 번 고를 수 없다 (훈련류. pool 훈련은 늘 해당) */
+  /** true면 한 턴에 같은 행동을 두 번 고를 수 없다 (특별 훈련류) */
   noRepeat?: boolean
   /** 이 모드에서만 할 수 있다. 없으면 모든 모드. (정밀 모드는 선택지가 더 많다) */
   modes?: GameState['mode'][]
@@ -94,17 +94,19 @@ export function moneyCostOf(state: Pick<GameState, 'stage' | 'mode'>, id: Action
   return Math.max(0, -(ACTIONS[id].money ?? 0)) * turnScale(state.mode) * moneyScale(state.stage)
 }
 
-/** 같은 행동을 한 턴에 두 번 고를 수 있는지. 훈련은 한 번만, 휴식·아르바이트 같은 건 두 번도 된다. */
+/** 같은 행동을 한 턴에 두 번 고를 수 있는지. 시즌 훈련은 하나뿐이라 두 칸에 모두 넣을 수 있고, 특별 훈련(noRepeat)만 한 번이다. */
 export function isRepeatable(id: ActionId): boolean {
-  const a = ACTIONS[id]
-  return !(a?.pool || a?.noRepeat)
+  return !ACTIONS[id]?.noRepeat
 }
 
 /** 선택 가능한지 확인한다. 가능하면 null, 아니면 이유를 돌려준다. */
 export function checkSlot(state: GameState, slot: Slot): string | null {
   const action = ACTIONS[slot.id]
   if (!action) return '알 수 없는 행동이다'
-  if (action.pool && !trainingMenuOf(state).includes(slot.id)) return '이번 턴에는 나오지 않은 훈련이다'
+  if (action.pool) {
+    if (!state.seasonTraining) return '이번 시즌에 할 훈련을 먼저 정해야 한다'
+    if (state.seasonTraining !== slot.id) return '이번 시즌에 정한 훈련이 아니다'
+  }
   if (action.modes && !action.modes.includes(state.mode)) {
     // 튜토리얼은 1회차 전용이라, 튜토리얼만 빠진 행동은 "2회차부터"라고 알려 준다
     return action.modes.includes('standard') ? `${action.name}은(는) 2회차부터 할 수 있다` : `${action.name}은(는) 정밀 모드에서만 할 수 있다`
@@ -266,8 +268,6 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
     turnInSeason: next.turnInSeason + 1,
     turnCount: next.turnCount + 1,
   }
-  next = { ...next, trainingMenu: drawTrainingMenu(next.seed, next.turnCount, next.team !== null) }
-
   // 시간이 흘러 기간이 시작·절반·끝에 닿은 대회를 진행하고 결과를 공개한다 (미리보기·AI 평가는 건너뛴다)
   const phase = next.turnInSeason / turnsPerSeason(next.mode)
   const update: CalendarUpdate = calendar ? advanceCalendar(next, phase) : { state: next, beats: [], running: [], phaseBefore: phase, phaseAfter: phase }
@@ -292,7 +292,18 @@ export function startNextSeason(state: GameState): GameState {
       stats[key] = Math.max(0, stats[key] - rules.ageDecline.amountPerSeason)
     }
   }
-  return { ...state, stats, seasonStartStats: { ...stats }, age: state.age + 1, season: state.season + 1, turnInSeason: 0, seasonRun: null }
+  return {
+    ...state,
+    stats,
+    seasonStartStats: { ...stats },
+    age: state.age + 1,
+    season: state.season + 1,
+    turnInSeason: 0,
+    seasonRun: null,
+    // 새 시즌의 훈련 후보를 뽑고, 이번 시즌 훈련은 플레이어가 다시 정한다
+    trainingMenu: drawTrainingMenu(state.seed, state.season + 1, state.team !== null),
+    seasonTraining: null,
+  }
 }
 
 /** 30세 시즌이 끝났으면 커리어가 끝난다. */

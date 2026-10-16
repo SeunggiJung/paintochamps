@@ -47,6 +47,7 @@ export function showBeat(beat: CalendarBeat): Promise<void> {
         h('p', { class: 'eyebrow' }, `${beat.name} · 중간 순위`),
         h('h2', {}, `현재 ${beat.rank}위 / ${beat.size}팀`),
         tableView(beat.table),
+        beat.expected !== null && h('p', { class: 'small' }, `팀 전력과 실력으로 본 예상 순위는 ${beat.expected}위였다.`),
         h('p', { class: 'muted small' }, '리그는 계속된다. 남은 경기에서 순위가 바뀔 수 있다.'),
         h('button', { class: 'btn primary', onclick: () => close() }, '계속'),
       )

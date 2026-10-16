@@ -6,7 +6,7 @@ import { rollAt } from './newGame.ts'
 import { actionCost, actionRisks, actionTags, describeChange, previewDetail, previewTurn } from './preview.ts'
 
 const make = (mode: 'tutorial' | 'standard' | 'precise') =>
-  ({ ...createInitialState({ name: 't', genre: 'fps', mode, gacha: rollAt(1, 'fps', 0), seed: 1 }), trainingMenu: TRAINING_POOL })
+  ({ ...createInitialState({ name: 't', genre: 'fps', mode, gacha: rollAt(1, 'fps', 0), seed: 1 }), trainingMenu: TRAINING_POOL, seasonTraining: 'basics' as const })
 
 describe('턴 미리보기', () => {
   it('정밀 모드만 방향 표시(hint)를 쓴다', () => {
@@ -49,7 +49,7 @@ describe('턴 미리보기', () => {
 
   it('미리보기의 확정 효과가 실제 턴 결과와 일치한다 (확률 행동이 없을 때)', () => {
     const s = make('standard')
-    const choice = [{ id: 'basics' }, { id: 'video_review' }] as const
+    const choice = [{ id: 'basics' }, { id: 'basics' }] as const
     const r = applyTurn(s, choice)
     expect(r.ok).toBe(true)
     if (r.ok) expect(previewTurn(s, choice)).toEqual({ ok: true, lines: describeChange(s, r.state) })

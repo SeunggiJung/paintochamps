@@ -5,8 +5,8 @@ import { equipmentCost } from './economy.ts'
 import { conditionCoef, conditionTier, equipmentEfficiency, growthDelta } from './growth.ts'
 import { settleSeason } from './season.ts'
 import { createInitialState, type GameState, type ModeId } from './state.ts'
-import { applyTurn, buyEquipment, eventChance, isCareerOver, isRepeatable, startNextSeason, turnScale, type TurnChoice } from './turn.ts'
-import { TRAINING_POOL } from './training.ts'
+import { applyTurn, buyEquipment, eventChance, isCareerOver, isRepeatable, startNextSeason, turnScale, turnsPerSeason, type TurnChoice } from './turn.ts'
+import { chooseSeasonTraining, TRAINING_POOL } from './training.ts'
 import type { GenreId, Stats } from './types.ts'
 
 const TEAM = { id: 'org_0', name: '나이트호크' }
@@ -20,7 +20,7 @@ function make(overrides: Partial<GameState> = {}, genre: GenreId = 'fps', mode: 
     seed: 1,
     gacha: { stats: FLAT, trait: { id: 'quick_hands', name: '손이 빠름', stat: 'reaction' }, grade: 'R', power: 100 },
   })
-  // 훈련 후보는 매 턴 무작위로 뽑히지만, 테스트에서는 모든 훈련을 고를 수 있게 둔다
+  // 훈련은 시즌 초에 후보 중 하나를 정한다. 테스트에서는 각 테스트가 seasonTraining을 직접 정하고, 후보는 전체로 둔다
   return { ...base, trainingMenu: TRAINING_POOL, ...overrides }
 }
 
@@ -86,8 +86,8 @@ describe('턴 길이', () => {
 
   it('같은 행동의 6개월 턴 효과는 3개월 턴의 2배다 (같은 능력치에서 시작할 때)', () => {
     const choice: TurnChoice = [{ id: 'video_review' }, { id: 'rest' }]
-    const std = run(make({ age: 20 }, 'fps', 'standard'), choice)
-    const tut = run(make({ age: 20 }, 'fps', 'tutorial'), choice)
+    const std = run(make({ age: 20, seasonTraining: 'video_review' }, 'fps', 'standard'), choice)
+    const tut = run(make({ age: 20, seasonTraining: 'video_review' }, 'fps', 'tutorial'), choice)
     // 컨디션 계수가 둘 다 1.0이므로 정확히 2배 (튜토리얼은 입문용 성장 보너스가 붙는다)
     expect(tut.delta.stats.judgment).toBeCloseTo(std.delta.stats.judgment * 2 * modes.tutorial.growthBonus)
   })
@@ -95,77 +95,93 @@ describe('턴 길이', () => {
 
 describe('행동', () => {
   it('랭크전 연습은 장르 가중치 상위 3개 능력치를 올린다 (FPS: 정확도·반응속도 등)', () => {
-    const r = run(make({ age: 20 }), [{ id: 'rank_practice' }, { id: 'rest' }])
+    const r = run(make({ age: 20, seasonTraining: 'rank_practice' }), [{ id: 'rank_practice' }, { id: 'rest' }])
     expect(r.delta.stats.accuracy).toBeGreaterThan(0)
     expect(r.delta.stats.reaction).toBeGreaterThan(0)
     expect(r.delta.stats.judgment).toBe(0)
-    const aos = run(make({ age: 20 }, 'aos'), [{ id: 'rank_practice' }, { id: 'rest' }])
+    const aos = run(make({ age: 20, seasonTraining: 'rank_practice' }, 'aos'), [{ id: 'rank_practice' }, { id: 'rest' }])
     expect(aos.delta.stats.judgment).toBeGreaterThan(0)
     expect(aos.delta.stats.teamwork).toBeGreaterThan(0)
     expect(aos.delta.stats.accuracy).toBe(0)
   })
 
   it('시작 특성은 해당 능력치만 1.2배로 키운다', () => {
-    const r = run(make({ age: 20 }), [{ id: 'basics' }, { id: 'rest' }])
+    const r = run(make({ age: 20, seasonTraining: 'basics' }), [{ id: 'basics' }, { id: 'rest' }])
     // basics: 반응속도(특성 대상) 70, 정확도 50. 같은 s=100이므로 비율은 (70 × 1.2) ÷ 50
     expect(r.delta.stats.reaction / r.delta.stats.accuracy).toBeCloseTo((70 * 1.2) / 50)
   })
 
   it('훈련은 능력치를 세 개 올린다', () => {
-    const r = run(make({ age: 20 }), [{ id: 'video_review' }, { id: 'rest' }])
+    const r = run(make({ age: 20, seasonTraining: 'video_review' }), [{ id: 'video_review' }, { id: 'rest' }])
     const raised = Object.entries(r.delta.stats).filter(([k, v]) => v > 0 && k !== 'mental')
     expect(raised.length + (r.delta.stats.mental > 0 ? 1 : 0)).toBe(3)
   })
 
-  it('훈련 후보에 없는 훈련은 고를 수 없고, 턴이 끝나면 후보가 새로 뽑힌다', () => {
+  it('시즌 훈련을 정하기 전에는 훈련을 고를 수 없고, 정한 훈련만 할 수 있다', () => {
     const s = make({ age: 20, trainingMenu: ['basics', 'video_review', 'aim_lab', 'concentration'] })
-    expect(applyTurn(s, [{ id: 'sparring' }, { id: 'rest' }]).ok).toBe(false)
-    const next = run(s, [{ id: 'basics' }, { id: 'rest' }]).state
+    expect(applyTurn(s, [{ id: 'basics' }, { id: 'rest' }]).ok).toBe(false)
+    const chosen = chooseSeasonTraining(s, 'basics')
+    expect(applyTurn(chosen, [{ id: 'basics' }, { id: 'rest' }]).ok).toBe(true)
+    expect(applyTurn(chosen, [{ id: 'video_review' }, { id: 'rest' }]).ok).toBe(false)
+    // 후보에 없는 훈련은 정할 수 없다
+    expect(() => chooseSeasonTraining(s, 'sparring')).toThrow()
+  })
+
+  it('훈련 후보와 시즌 훈련은 시즌 동안 바뀌지 않고, 새 시즌이 시작되면 후보를 새로 뽑고 훈련을 다시 정한다', () => {
+    const s = make({ age: 20, trainingMenu: ['basics', 'video_review', 'aim_lab', 'concentration'] })
+    const chosen = chooseSeasonTraining(s, 'basics')
+    const after = run(chosen, [{ id: 'basics' }, { id: 'rest' }]).state
+    expect(after.trainingMenu).toEqual(chosen.trainingMenu)
+    expect(after.seasonTraining).toBe('basics')
+    const ended = { ...after, turnInSeason: turnsPerSeason(after.mode), history: [{ season: after.season, age: after.age, stage: after.stage, events: [] }] }
+    const next = startNextSeason(ended)
+    expect(next.seasonTraining).toBeNull()
     expect(next.trainingMenu).toHaveLength(rules.trainingMenuSize)
     expect(next.trainingMenu).not.toEqual(s.trainingMenu)
-    // 같은 시드·같은 턴이면 같은 후보
-    expect(run(s, [{ id: 'basics' }, { id: 'rest' }]).state.trainingMenu).toEqual(next.trainingMenu)
+    // 같은 시드·같은 시즌이면 같은 후보
+    expect(startNextSeason(ended).trainingMenu).toEqual(next.trainingMenu)
   })
 
   it('능력치가 높을수록 덜 오른다', () => {
-    const low = run(make({ age: 20 }), [{ id: 'video_review' }, { id: 'rest' }])
-    const high = run(make({ age: 20, stats: { ...FLAT, judgment: 800 } }), [{ id: 'video_review' }, { id: 'rest' }])
+    const low = run(make({ age: 20, seasonTraining: 'video_review' }), [{ id: 'video_review' }, { id: 'rest' }])
+    const high = run(make({ age: 20, seasonTraining: 'video_review', stats: { ...FLAT, judgment: 800 } }), [{ id: 'video_review' }, { id: 'rest' }])
     expect(high.delta.stats.judgment).toBeLessThan(low.delta.stats.judgment)
   })
 
   it('컨디션이 낮으면 성장이 줄고, 컨디션은 0~100을 벗어나지 않는다', () => {
-    const fresh = run(make({ age: 20, condition: 100 }), [{ id: 'video_review' }, { id: 'rest' }])
-    const tired = run(make({ age: 20, condition: 20 }), [{ id: 'video_review' }, { id: 'rest' }])
+    const fresh = run(make({ age: 20, condition: 100, seasonTraining: 'video_review' }), [{ id: 'video_review' }, { id: 'rest' }])
+    const tired = run(make({ age: 20, condition: 20, seasonTraining: 'video_review' }), [{ id: 'video_review' }, { id: 'rest' }])
     expect(tired.delta.stats.judgment).toBeLessThan(fresh.delta.stats.judgment)
     expect(fresh.state.condition).toBeLessThanOrEqual(100)
-    const crash = run(make({ age: 20, condition: 5 }), [{ id: 'rank_practice' }, { id: 'part_time' }])
+    const crash = run(make({ age: 20, condition: 5, seasonTraining: 'rank_practice' }), [{ id: 'rank_practice' }, { id: 'part_time' }])
     expect(crash.state.condition).toBeCloseTo(rules.conditionRecoveryPerBase) // 바닥까지 떨어진 뒤 턴 회복분만 남는다
   })
 
   it('두 번째 행동은 첫 번째 행동으로 줄어든 컨디션 기준으로 계산한다', () => {
-    // 컨디션 85(완벽 ×1.15)에서 랭크전을 하면 70(좋음 ×1.0)이 되어, 뒤에 하는 에임 연습은 처음부터 하는 것보다 덜 오른다
-    const both = run(make({ age: 20, condition: 85 }), [{ id: 'rank_practice' }, { id: 'aim_lab' }])
-    const rankOnly = run(make({ age: 20, condition: 85 }), [{ id: 'rank_practice' }, { id: 'rest' }])
-    const aimFresh = run(make({ age: 20, condition: 85 }), [{ id: 'aim_lab' }, { id: 'rest' }])
-    expect(both.delta.stats.accuracy - rankOnly.delta.stats.accuracy).toBeLessThan(aimFresh.delta.stats.accuracy)
+    // 컨디션 85(완벽 ×1.15)에서 랭크전을 하면 70(좋음 ×1.0)이 되어, 뒤에 하는 개인 레슨은 처음부터 하는 것보다 덜 오른다
+    const o = { age: 20, condition: 85, money: 1000, seasonTraining: 'rank_practice' as const }
+    const both = run(make(o), [{ id: 'rank_practice' }, { id: 'private_lesson' }])
+    const rankOnly = run(make(o), [{ id: 'rank_practice' }, { id: 'rest' }])
+    const lessonFresh = run(make(o), [{ id: 'private_lesson' }, { id: 'rest' }])
+    expect(both.delta.stats.accuracy - rankOnly.delta.stats.accuracy).toBeLessThan(lessonFresh.delta.stats.accuracy)
   })
 
-  it('같은 훈련은 한 턴에 두 번 고를 수 없고, 휴식 같은 행동은 두 번도 된다', () => {
-    const s = make({ age: 20 })
-    const twice = applyTurn(s, [{ id: 'rank_practice' }, { id: 'rank_practice' }])
+  it('시즌 훈련은 두 칸에 모두 넣을 수 있고, 개인 레슨 같은 특별 훈련은 한 턴에 한 번만 된다', () => {
+    const s = make({ age: 20, money: 1000, seasonTraining: 'rank_practice' })
+    expect(applyTurn(s, [{ id: 'rank_practice' }, { id: 'rank_practice' }]).ok).toBe(true)
+    const twice = applyTurn(s, [{ id: 'private_lesson' }, { id: 'private_lesson' }])
     expect(twice.ok).toBe(false)
     expect(twice.ok === false && twice.error).toContain('한 번만')
-    expect(isRepeatable('rank_practice')).toBe(false)
+    expect(isRepeatable('rank_practice')).toBe(true)
     expect(isRepeatable('private_lesson')).toBe(false)
     expect(isRepeatable('rest')).toBe(true)
-    expect(applyTurn(s, [{ id: 'rest' }, { id: 'rest' }]).ok).toBe(true)
   })
 })
 
 describe('조건과 비용', () => {
   it('팀 스크림은 팀 소속이 필요하고, 아르바이트는 팀 소속 전에만 가능하다', () => {
-    expect(applyTurn(make({ age: 20 }), [{ id: 'team_scrim' }, { id: 'rest' }]).ok).toBe(false)
-    expect(applyTurn(make({ age: 20, team: TEAM }), [{ id: 'team_scrim' }, { id: 'rest' }]).ok).toBe(true)
+    expect(applyTurn(make({ age: 20, seasonTraining: 'team_scrim' }), [{ id: 'team_scrim' }, { id: 'rest' }]).ok).toBe(false)
+    expect(applyTurn(make({ age: 20, team: TEAM, seasonTraining: 'team_scrim' }), [{ id: 'team_scrim' }, { id: 'rest' }]).ok).toBe(true)
     expect(applyTurn(make({ age: 20, team: TEAM }), [{ id: 'part_time' }, { id: 'rest' }]).ok).toBe(false)
   })
 
@@ -206,7 +222,7 @@ describe('조건과 비용', () => {
   })
 
   it('실패한 선택은 상태를 바꾸지 않는다 (원본 불변)', () => {
-    const s = make({ age: 20 })
+    const s = make({ age: 20, seasonTraining: 'basics' })
     const copy = structuredClone(s)
     applyTurn(s, [{ id: 'team_scrim' }, { id: 'rest' }])
     run(s, [{ id: 'basics' }, { id: 'rest' }])

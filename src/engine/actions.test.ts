@@ -150,7 +150,7 @@ describe('기부·봉사', () => {
 
 describe('부상·슬럼프 대처 행동', () => {
   it('부상 중에는 휴식과 재활만 할 수 있다', () => {
-    const hurt = make({ injuredMonths: 6 })
+    const hurt = make({ injuredMonths: 6, seasonTraining: 'basics' })
     expect(checkSlot(hurt, { id: 'basics' })).toContain('부상')
     expect(checkSlot(hurt, { id: 'gamble' })).toContain('부상')
     expect(checkSlot(hurt, { id: 'rest' })).toBeNull()
@@ -189,7 +189,7 @@ describe('정밀 모드 전용 행동 (선택지가 더 많고 함정도 많다)
   })
 
   it('강행군 훈련은 일반 훈련보다 많이 오르지만 부상 위험이 있다', () => {
-    const s = make({ condition: 100 }, 'precise')
+    const s = make({ condition: 100, seasonTraining: 'rank_practice' }, 'precise')
     const hard = run(s, { id: 'overtrain' }, REST, always(0.99))
     const normal = run(s, { id: 'rank_practice' }, REST, always(0.99))
     expect(hard.delta.stats.accuracy).toBeGreaterThan(normal.delta.stats.accuracy)
@@ -198,7 +198,7 @@ describe('정밀 모드 전용 행동 (선택지가 더 많고 함정도 많다)
   })
 
   it('함정 행동은 얻는 것이 거의 없다 (같은 칸에 훈련을 하는 쪽이 낫다)', () => {
-    const s = make({ condition: 100 }, 'precise')
+    const s = make({ condition: 100, seasonTraining: 'basics' }, 'precise')
     const train = run(s, { id: 'basics' }, REST, always(0.99))
     for (const id of ['impulse_shopping', 'community_flame', 'all_night_gaming'] as const) {
       const trap = run(s, { id }, REST, always(0.99))

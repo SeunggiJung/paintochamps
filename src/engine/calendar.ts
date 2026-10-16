@@ -14,7 +14,7 @@ import { runElimination, runLeagueDetailed, type Standing, type Team } from './t
  */
 
 export type CalendarBeat =
-  | { kind: 'mid'; phase: number; eventId: string; name: string; table: StandingRow[]; rank: number; size: number }
+  | { kind: 'mid'; phase: number; eventId: string; name: string; table: StandingRow[]; rank: number; size: number; expected: number | null }
   | {
       kind: 'end'
       phase: number
@@ -81,9 +81,12 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
   }
 
   let order: Team[]
+  let expected: number | undefined
   let mid: StandingRow[] | null = null
   let table: StandingRow[] | null = null
   if (ev.format === 'league') {
+    // 코치의 시즌 목표: 지금 팀 전력과 실력으로 본 전력 순위 (같으면 유리한 쪽으로 친다)
+    expected = 1 + teams.filter((t) => !t.isPlayer && t.power > power).length
     const { final, mid: midStandings } = runLeagueDetailed(rng, teams, ev.rounds ?? 1, ev.bestOf)
     order = final.map((s) => s.team)
     mid = rows(midStandings)
@@ -111,7 +114,7 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
 
   const reward = ev.rewards.find((r) => placement <= r.upTo) ?? ev.rewards[ev.rewards.length - 1]
   return {
-    record: { id: ev.id, name: ev.name, placement, fieldSize: order.length, fame: reward.fame, money: reward.money * moneyScale(state.stage), order, mid, table, advanced, revealed: 'none' },
+    record: { id: ev.id, name: ev.name, placement, fieldSize: order.length, fame: reward.fame, money: reward.money * moneyScale(state.stage), order, expected, mid, table, advanced, revealed: 'none' },
     qualified,
     points,
   }
@@ -159,7 +162,7 @@ export function advanceCalendar(state: GameState, toPhase: number): CalendarUpda
 
     const mp = midPhase(ev)
     if (rec.revealed === 'none' && mp !== null && rec.mid && mp <= toPhase && ev.span[1] > mp) {
-      beats.push({ kind: 'mid', phase: mp, eventId: ev.id, name: ev.name, table: rec.mid, rank: rec.mid.findIndex((r) => r.isPlayer) + 1, size: rec.mid.length })
+      beats.push({ kind: 'mid', phase: mp, eventId: ev.id, name: ev.name, table: rec.mid, rank: rec.mid.findIndex((r) => r.isPlayer) + 1, size: rec.mid.length, expected: rec.expected ?? null })
       rec = { ...rec, revealed: 'mid' }
     }
     if (rec.revealed !== 'end' && ev.span[1] <= toPhase) {

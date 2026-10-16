@@ -104,7 +104,7 @@ describe('초반 루트: 지역 대회와 아마추어 팀', () => {
   })
 
   it('정석 루트(아카데미 코칭)는 성장이 조금 더 빠르다', () => {
-    const base = at(100, { turnInSeason: 0, trainingMenu: ['basics', 'aim_lab', 'video_review'] })
+    const base = at(100, { turnInSeason: 0, trainingMenu: ['basics', 'aim_lab', 'video_review'], seasonTraining: 'basics' })
     const gain = (path: GameState['path']) => {
       const r = applyTurn({ ...base, path }, [{ id: 'basics' }, { id: 'rest' }])
       if (!r.ok) throw new Error(r.error)

@@ -92,6 +92,8 @@ export interface RunRecord {
   money: number
   /** 최종 순서(0번이 1위). 상위 팀을 이어받는 뒤 대회가 쓴다 */
   order: Team[]
+  /** 리그: 대회가 시작될 때 팀 전력과 플레이어 실력으로 본 기대 순위 (코치의 시즌 목표). 옛 세이브에는 없을 수 있다 */
+  expected?: number
   /** 리그: 절반 시점의 순위표와 최종 순위표 */
   mid: StandingRow[] | null
   table: StandingRow[] | null
@@ -155,8 +157,12 @@ export interface GameState {
   equipment: Record<EquipmentId, number>
   /** 마지막으로 장비를 산 턴(turnCount). 한 턴에 하나만 살 수 있다. */
   equipBoughtTurn: number
-  /** 이번 턴에 나온 무작위 훈련 후보. 턴이 끝날 때마다 새로 뽑는다. (옛 세이브에는 없을 수 있다 — trainingMenuOf) */
+  /** 이번 시즌에 고를 수 있는 무작위 훈련 후보. 시즌이 시작될 때 뽑는다. (옛 세이브에는 없을 수 있다 — trainingMenuOf) */
   trainingMenu: ActionId[]
+  /** 이번 시즌에 정한 훈련. 시즌 동안 이 훈련만 할 수 있고, 시즌이 시작되면 null로 돌아가 후보 중에서 다시 고른다. 코치가 교체를 제안하면 바뀐다. (옛 세이브에는 없을 수 있다) */
+  seasonTraining: ActionId | null
+  /** 코치가 훈련 교체를 제안한 마지막 시즌 (시즌당 한 번만 제안한다) */
+  trainingSwapSeason: number
   /** 초반 루트. 옛 세이브에는 없을 수 있다 (routes.ts가 기본값을 채운다) */
   path: PathId
   /** PC방 대회에 나간 횟수 */
@@ -227,6 +233,8 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     equipment: { keyboard: 0, mouse: 0, monitor: 0, pc: 0 },
     equipBoughtTurn: -1,
     trainingMenu: drawTrainingMenu(seed, 0, false),
+    seasonTraining: null,
+    trainingSwapSeason: 0,
     midOfferSeason: 0,
     seasonRun: null,
     path: 'rookie',

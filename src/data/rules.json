@@ -9,7 +9,8 @@
   "baseMonths": 3,
   "growthRate": 0.28,
   "growthExponent": 0.15,
-  "trainingMenuSize": 3,
+  "trainingMenuSize": 4,
+  "coachSwap": { "options": 3, "minGap": 2, "gapRatio": 0.25 },
   "eventBase": 0.65,
   "conditionTiers": [
     { "max": 30, "coef": 0.5, "label": "부진", "desc": "훈련 성과가 크게 떨어진다" },
