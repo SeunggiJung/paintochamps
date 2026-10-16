@@ -345,6 +345,7 @@ input[type='text'] {
 .mg-react.early { background: #6b5a1e; }
 .mg-pad { aspect-ratio: 1.6; border-radius: 14px; border: 2px solid var(--pad); background: color-mix(in srgb, var(--pad) 22%, var(--panel)); cursor: pointer; padding: 0; transition: background 0.08s; }
 .mg-pad.lit { background: var(--pad); }
+.minigame-score { margin: 0; font-size: 1.15rem; font-weight: 700; }
 .minigame-bonus { margin: 0; color: var(--grade-R); font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .mg-target { animation: none; } }
 
