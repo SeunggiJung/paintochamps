@@ -1,101 +1,45 @@
-import equipmentData from '../data/equipment.json'
 import gacha from '../data/gacha.json'
 import genres from '../data/genres.json'
 import modes from '../data/modes.json'
 import rules from '../data/rules.json'
 import { rollEvent, turnRng } from '../engine/events.ts'
+import { autoTurn, planChoice, planOf, presetDef } from '../engine/plan.ts'
 import { genrePower } from '../engine/power.ts'
 import { choosePrep, expectedScore, PREP, testItems, testName, upcomingTest } from '../engine/routes.ts'
 import { acceptOffer, eventsFor, rollMidSeasonOffer, stageName } from '../engine/season.ts'
-import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
-import { applyCoachSwap, chooseSeasonTraining, coachSwapOffer, trainingMenuOf, type CoachOffer } from '../engine/training.ts'
-import { ACTIONS, applyTurn, buyEquipment, checkEquipment, checkSlot, isRepeatable, turnsPerSeason, type Slot } from '../engine/turn.ts'
+import type { ActionId, GameState } from '../engine/state.ts'
+import { applyCoachSwap, coachSwapOffer, type CoachOffer } from '../engine/training.ts'
+import { ACTIONS, turnsPerSeason } from '../engine/turn.ts'
 import { STAT_KEYS } from '../engine/types.ts'
 import { markGuideDone, saveGame } from '../save/storage.ts'
 import { cleanTeamName, TEAM_NAME_MAX } from './newGame.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
 import { runEvent } from './eventFlow.ts'
-import { ACTION_GROUPS, MODE_INFO } from './labels.ts'
-import { actionCost, actionRisks, actionTags, previewTurn } from './preview.ts'
+import { MODE_INFO } from './labels.ts'
+import { actionTags } from './preview.ts'
 import { openSheet } from './sheet.ts'
 import { playTimeline, scheduleBar } from './calendarUi.ts'
 import { conditionHelp, conditionText } from './conditionHelp.ts'
 import { conditionTier } from '../engine/growth.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
+import { openPlanSheet } from './planScreen.ts'
 import { statName } from './statHelp.ts'
 import { teamIcon } from './teamIcon.ts'
-import { equipmentCost } from '../engine/economy.ts'
 import { salaryOf } from '../engine/teams.ts'
 import { formatMoney } from './format.ts'
 import { runGuide } from './guide.ts'
 import { turnChangeGraph } from './turnResult.ts'
 
-const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; base: number }>
 const BAR_MAX = gacha.statMax
-
-/** 첫 접속 가이드가 가리키는 행동 묶음 */
-const GROUP_GUIDE: Record<string, string> = { 훈련: 'train', 회복: 'recover', '돈·명성': 'money' }
-
-/** 이 행동을 목록에 보여 줄지. 모드·팀·부상 같은 구조적 이유로 못 하는 행동은 아예 숨기고, 돈·명성 부족은 이유와 함께 비활성으로 보여 준다. */
-function listed(state: GameState, id: ActionId): boolean {
-  const a = ACTIONS[id]
-  if (a.pool && state.seasonTraining !== id) return false
-  if (a.modes && !a.modes.includes(state.mode)) return false
-  const { inTeam, injured, slump } = a.requires ?? {}
-  if (inTeam !== undefined && (state.team !== null) !== inTeam) return false
-  if (injured && state.injuredMonths <= 0) return false
-  if (slump && state.slumpMonths <= 0) return false
-  if (state.injuredMonths > 0 && !a.allowWhenInjured) return false
-  return true
-}
 
 export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
   let state = initial
-  let picked: Slot[] = []
   let busy = false
   const root = h('main', { class: 'screen home' })
 
   const seasonOver = () => state.turnInSeason >= turnsPerSeason(state.mode)
-
-  const slotName = (s: Slot) => ACTIONS[s.id].name
-
-  /** 장비는 행동 칸을 쓰지 않고 바로 산다. (한 턴에 하나까지) */
-  const buy = (item: EquipmentId) => {
-    const r = buyEquipment(state, item)
-    if (!r.ok) return render(r.error)
-    state = r.state
-    saveGame(ctx.storage, state)
-    render()
-  }
-
-  const pick = (slot: Slot) => {
-    // 같은 훈련을 다시 누르면 선택이 취소된다 (훈련은 한 턴에 한 번만)
-    if (!isRepeatable(slot.id) && picked.some((p) => p.id === slot.id)) {
-      picked = picked.filter((p) => p.id !== slot.id)
-      render()
-      return
-    }
-    // 빈 칸부터 채우고, 둘 다 찼으면 두 번째 칸을 바꾼다
-    picked = picked.length < 2 ? [...picked, slot] : [picked[0], slot]
-    render()
-  }
-
-  const actionButton = (slot: Slot, title: string) => {
-    const reason = checkSlot(state, slot)
-    const tags = actionTags(slot, state)
-    const cost = actionCost(slot, state)
-    const risks = actionRisks(slot, state)
-    const taken = !isRepeatable(slot.id) && picked.some((p) => p.id === slot.id)
-    return h(
-      'button',
-      { class: `action${taken ? ' taken' : ''}`, disabled: !!reason || busy, onclick: () => pick(slot) },
-      h('span', { class: 'action-title' }, title, cost > 0 && h('em', {}, ` ${formatMoney(cost)}`), taken && h('span', { class: 'tag taken-tag' }, '선택됨')),
-      h('span', { class: 'muted small' }, reason ?? (taken ? '다시 누르면 취소' : tags.join(' · '))),
-      risks.length > 0 && !reason && h('span', { class: 'risk small' }, `⚠ ${risks.join(' / ')}`),
-    )
-  }
 
   const statusChips = () => {
     const chips: string[] = []
@@ -105,22 +49,9 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     return chips.map((c) => h('span', { class: 'chip warn' }, c))
   }
 
-  /** 훈련 후보 하나를 보여 주는 버튼 (능력치 방향·컨디션 소모) */
-  const trainingChoice = (id: ActionId, pick: () => void) =>
-    h('button', { class: 'choice', onclick: pick }, h('strong', {}, ACTIONS[id].name), h('span', { class: 'muted small' }, actionTags({ id }, state).join(' · ')))
-
-  /** 시즌 시작에 이번 시즌 훈련을 정한다. 후보는 시즌마다 무작위로 나오고, 정하면 시즌 동안 이 훈련만 할 수 있다. */
-  const pickSeasonTraining = async () => {
-    const id = await openSheet<ActionId>((close) =>
-      h(
-        'div',
-        { class: 'stack-tight' },
-        h('p', { class: 'eyebrow' }, `${state.season}시즌 훈련 계획`),
-        h('p', { class: 'event-text' }, state.team ? '이번 시즌에 할 훈련을 정하자. 시즌 동안은 이 훈련만 한다. 성적이 부진하면 코치가 바꿔 보자고 제안할 수도 있다.' : '이번 시즌에 할 훈련을 정하자. 시즌 동안은 이 훈련만 한다. (팀에 들어가면 코치가 성적에 따라 교체를 제안해 준다.)'),
-        h('div', { class: 'choices vertical' }, ...trainingMenuOf(state).map((t) => trainingChoice(t, () => close(t)))),
-      ),
-    )
-    state = chooseSeasonTraining(state, id)
+  /** 시즌 시작 계획(방침·훈련·레슨·장비)을 세운다. 정하면 시즌 중 행동은 컨디션에 맞춰 자동으로 흘러간다. */
+  const makePlan = async () => {
+    state = await openPlanSheet(state)
     saveGame(ctx.storage, state)
     render()
   }
@@ -162,23 +93,23 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     return acceptOffer(s, index)
   }
 
+  /** 다음 턴: 계획대로 자동으로 진행하고, 결과·대회·이벤트·제안만 플레이어에게 보여 준다. */
   const playTurn = async () => {
-    if (picked.length !== 2 || busy) return
+    if (busy || !state.seasonTraining) return
     // PC방 대회는 시즌 중간에 열리므로, 출전 전에 팀 이름을 정한다
     busy = true
     await askTeamName()
-    busy = false
-    const r = applyTurn(state, [picked[0], picked[1]])
+    const before = state
+    const { result: r, choice } = autoTurn(state)
     if (!r.ok) {
+      busy = false
       render(r.error)
       return
     }
-    busy = true
     render()
-    const before = state
     let next = r.state
     // 시간이 흘러가는 연출 (대회가 끝나는 시점마다 결과 카드)
-    await playTimeline({ before, calendar: r.calendar, actions: picked.map(slotName), brief: before.mode === 'precise' })
+    await playTimeline({ before, calendar: r.calendar, actions: choice.map((c) => ACTIONS[c.id].name), brief: before.mode === 'precise' })
     await openSheet<void>((close) =>
       h(
         'div',
@@ -195,11 +126,38 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     if (event) next = await runEvent(next, event)
     next = await askMidSeasonOffer(rollMidSeasonOffer(next))
     state = next
-    picked = []
     busy = false
     saveGame(ctx.storage, state)
     render()
     scrollTo(0, 0)
+  }
+
+  /** 이번 시즌 계획 카드: 방침·훈련·레슨과, 지금 컨디션에서 이번 턴에 자동으로 할 행동 */
+  const planCard = () => {
+    const tier = conditionTier(state.condition)
+    const train = state.seasonTraining
+    if (!train) {
+      return h(
+        'section',
+        { class: 'card', 'data-guide': 'plan' },
+        h('h3', {}, `${state.season}시즌 계획`),
+        h('p', { class: 'muted small' }, '이번 시즌의 방침과 훈련을 정해야 시즌이 시작됩니다.'),
+        h('button', { class: 'btn primary', disabled: busy, onclick: () => void makePlan() }, '계획 세우기'),
+      )
+    }
+    const plan = planOf(state)
+    const preset = presetDef(plan.preset)
+    const names = planChoice(state).map((c) => ACTIONS[c.id].name)
+    return h(
+      'section',
+      { class: 'card', 'data-guide': 'plan' },
+      h('h3', {}, `${state.season}시즌 계획`),
+      h('p', {}, h('b', {}, preset.name), ` · 훈련: ${ACTIONS[train].name}${plan.lesson ? ' · 개인 레슨' : ''}`),
+      h('p', { class: 'muted small' }, preset.desc),
+      state.injuredMonths > 0 && h('p', { class: 'notice' }, '부상 중이라 쉬면서 재활합니다.'),
+      h('p', { class: 'small' }, h('span', { class: 'muted' }, '이번 턴 예정 '), names.join(' · ')),
+      h('p', { class: `muted small cond-hint tier-${tier.label}` }, `컨디션 ${tier.label}: ${tier.desc} (×${tier.coef}) — 컨디션에 맞춰 알아서 훈련·휴식을 조절합니다.`),
+    )
   }
 
   function render(error = '') {
@@ -210,36 +168,6 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     const max = turnsPerSeason(state.mode)
     const power = Math.round(genrePower(state.stats, state.genre))
     const tier = conditionTier(state.condition)
-    const preview = picked.length === 2 ? previewTurn(state, [picked[0], picked[1]]) : null
-
-    const slotChip = (i: number) =>
-      picked[i]
-        ? h('button', { class: 'slot filled', onclick: () => ((picked = picked.filter((_, j) => j !== i)), render()) }, slotName(picked[i]), h('span', { class: 'muted small' }, '눌러서 빼기'))
-        : h('div', { class: 'slot' }, `행동 ${i + 1}`)
-
-    /** 스크롤을 내려도 보이도록 턴 진행 바에 고른 행동을 항상 보여 준다. 누르면 뺀다. */
-    const pickedChip = (i: number) =>
-      picked[i]
-        ? h('button', { class: 'picked-chip', 'aria-label': `${slotName(picked[i])} 빼기`, onclick: () => ((picked = picked.filter((_, j) => j !== i)), render()) }, `${i + 1}. ${slotName(picked[i])} ✕`)
-        : h('div', { class: 'picked-chip' }, `${i + 1}. 행동을 고르세요`)
-
-    const groups = ACTION_GROUPS.map((g) => ({
-      title: g.title,
-      items: g.ids.filter((id) => ACTIONS[id as ActionId] && listed(state, id as ActionId)),
-    })).filter((g) => g.items.length > 0)
-
-    const equipRows = (Object.keys(EQUIPMENT) as EquipmentId[]).map((item) => {
-      const level = state.equipment[item]
-      const maxed = level >= rules.equipment.maxLevel
-      const title = maxed ? `${EQUIPMENT[item].name} (최고)` : `${EQUIPMENT[item].name} Lv${level} → ${level + 1}`
-      const reason = checkEquipment(state, item)
-      return h(
-        'button',
-        { class: 'action', disabled: !!reason || busy, onclick: () => buy(item) },
-        h('span', { class: 'action-title' }, title, !maxed && h('em', {}, ` ${formatMoney(equipmentCost(item, level))}`)),
-        h('span', { class: 'muted small' }, reason ?? '훈련 효율↑ · 바로 구매 (턴 소모 없음)'),
-      )
-    })
 
     const parts = [
       h(
@@ -264,6 +192,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         statusChips().length > 0 && h('div', { class: 'chips' }, ...statusChips()),
       ),
       scheduleBar(state),
+      planCard(),
       h(
         'section',
         { class: 'card', 'data-guide': 'stats' },
@@ -279,18 +208,11 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
           ),
         ),
       ),
-      !state.seasonTraining && h('section', { class: 'card', 'data-guide': 'train' }, h('h3', {}, '시즌 훈련'), h('p', { class: 'muted small' }, '이번 시즌에 할 훈련을 정해야 훈련을 할 수 있습니다.'), h('button', { class: 'btn primary', disabled: busy, onclick: () => void pickSeasonTraining() }, '훈련 계획 세우기')),
-      h('section', { class: 'card', 'data-guide': 'slots' }, h('h3', {}, `이번 ${modes[state.mode].turnMonths}개월, 행동 2개를 고르세요`), h('div', { class: 'slots' }, slotChip(0), slotChip(1)), h('p', { class: `muted small cond-hint tier-${tier.label}` }, `컨디션 ${tier.label}: ${tier.desc} (×${tier.coef})`)),
-      state.injuredMonths > 0 && h('p', { class: 'notice' }, '부상 중이라 휴식·재활만 할 수 있다.'),
-      ...groups.map((g) => h('section', { 'data-guide': GROUP_GUIDE[g.title] }, h('h3', {}, g.title), g.title === '훈련' && h('p', { class: 'muted small' }, '이번 시즌에 정한 훈련입니다. 두 칸 모두 넣을 수 있고, 한 번에 능력치 3개가 오릅니다.'), h('div', { class: 'actions' }, ...g.items.map((id) => actionButton({ id: id as ActionId } as Slot, ACTIONS[id as ActionId].name))))),
-      h('section', { 'data-guide': 'equip' }, h('h3', {}, '장비'), h('p', { class: 'muted small' }, '행동을 쓰지 않고 한 턴에 하나까지 살 수 있습니다.'), h('div', { class: 'actions' }, ...equipRows)),
       h(
         'div',
         { class: 'turn-bar', 'data-guide': 'turnbar' },
-        h('div', { class: 'picked-bar' }, pickedChip(0), pickedChip(1)),
-        preview && !preview.ok && h('p', { class: 'error' }, preview.error),
         error && h('p', { class: 'error', role: 'alert' }, error),
-        h('button', { class: 'btn primary', disabled: picked.length !== 2 || busy || (preview !== null && !preview.ok), onclick: playTurn }, picked.length === 2 ? '턴 진행' : `행동을 ${2 - picked.length}개 더 고르세요`),
+        h('button', { class: 'btn primary', disabled: busy || !state.seasonTraining, onclick: playTurn }, state.seasonTraining ? '다음 턴 진행' : '먼저 시즌 계획을 세우세요'),
         h('button', { class: 'btn ghost small', onclick: () => ctx.toTitle() }, '타이틀로 (자동 저장됨)'),
       ),
     ]
@@ -389,10 +311,10 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
   }
 
   render()
-  // 화면에 붙은 뒤에 위치를 재야 해서 다음 프레임에 띄운다. 가이드를 먼저 보고, 그다음에 이번 시즌 훈련을 정한다.
+  // 화면에 붙은 뒤에 위치를 재야 해서 다음 프레임에 띄운다. 가이드를 먼저 보고, 그다음에 이번 시즌 계획을 세운다.
   requestAnimationFrame(async () => {
     if (!ctx.meta.guideDone && state.season === 1 && state.turnInSeason === 0) await showGuide()
-    if (!state.seasonTraining && !seasonOver()) await pickSeasonTraining()
+    if (!state.seasonTraining && !seasonOver()) await makePlan()
   })
   return root
 }

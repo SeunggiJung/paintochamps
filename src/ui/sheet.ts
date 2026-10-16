@@ -6,7 +6,7 @@ import { h } from './dom.ts'
  * 바깥을 눌러도 닫히지 않는다. (이벤트 선택처럼 반드시 답해야 하는 팝업이 많다.)
  * 기본은 화면 중앙에 뜬다. center: false를 주면 아래에서 올라오는 시트가 된다.
  */
-export function openSheet<T>(build: (close: (value: T) => void) => HTMLElement, options: { center?: boolean } = {}): Promise<T> {
+export function openSheet<T>(build: (close: (value: T) => void) => HTMLElement, options: { center?: boolean; autofocus?: boolean } = {}): Promise<T> {
   return new Promise((resolve) => {
     const previous = document.activeElement as HTMLElement | null
     const overlay = h('div', { class: `overlay${options.center === false ? '' : ' center'}` })
@@ -18,7 +18,7 @@ export function openSheet<T>(build: (close: (value: T) => void) => HTMLElement, 
     const panel = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' }, build(close))
     overlay.append(panel)
     document.body.append(overlay)
-    // 키보드 사용자를 위해 첫 버튼에 포커스를 준다
-    panel.querySelector<HTMLElement>('button:not(:disabled)')?.focus()
+    // 키보드 사용자를 위해 첫 버튼에 포커스를 준다 (선택 상태가 있는 시트처럼 첫 버튼이 선택된 것처럼 보이면 안 되는 곳은 autofocus: false)
+    if (options.autofocus !== false) panel.querySelector<HTMLElement>('button:not(:disabled)')?.focus()
   })
 }

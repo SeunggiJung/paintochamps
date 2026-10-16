@@ -1,6 +1,6 @@
 import genres from '../data/genres.json'
 import modes from '../data/modes.json'
-import { ACTIONS, applyTurn, moneyCostOf, type Slot, type TurnChoice } from '../engine/turn.ts'
+import { ACTIONS, moneyCostOf, type Slot } from '../engine/turn.ts'
 import { formatMoneyDelta } from './format.ts'
 import type { GameState } from '../engine/state.ts'
 import { STAT_KEYS } from '../engine/types.ts'
@@ -45,18 +45,6 @@ export function describeChange(before: GameState, after: GameState, detail: Prev
   return out
 }
 
-export type TurnPreview = { ok: true; lines: string[] } | { ok: false; error: string }
-
-/**
- * 고른 행동 두 개의 예상 효과. 확률로 일어나는 부작용은 빼고(rng가 늘 1이면 어떤 결과도 나오지 않는다)
- * 확정 효과만 계산하므로 실제 결과와 다를 수 있다.
- */
-export function previewTurn(state: GameState, choice: TurnChoice): TurnPreview {
-  const r = applyTurn(state, choice, () => 1, false)
-  if (!r.ok) return r
-  return { ok: true, lines: describeChange(state, r.state, previewDetail(state.mode)) }
-}
-
 /** 행동 하나가 건드리는 것을 숫자 없이 요약한다. (목록에서 뭘 하는 행동인지 알려 주는 용도) */
 export function actionTags(slot: Slot, state: GameState): string[] {
   const a = ACTIONS[slot.id]
@@ -80,14 +68,6 @@ export function actionTags(slot: Slot, state: GameState): string[] {
   if (a.injuredMonths && a.injuredMonths < 0) tags.push('부상 회복')
   if (a.slumpMonths && a.slumpMonths < 0) tags.push('슬럼프 회복')
   return tags
-}
-
-/** 행동에 붙은 확률 부작용 설명. hint면 숫자 없이 "위험 있음"만 알려 준다. */
-export function actionRisks(slot: Slot, state: GameState): string[] {
-  const outcomes = ACTIONS[slot.id].outcomes ?? []
-  if (outcomes.length === 0) return []
-  if (previewDetail(state.mode) === 'hint') return ['위험 있음']
-  return outcomes.map((o) => `${Math.round(o.chance * 100)}% ${o.label}`)
 }
 
 /** 행동 하나의 돈 비용(만 원, 올림). 벌기만 하는 행동이면 0. */

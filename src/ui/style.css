@@ -287,9 +287,6 @@ input[type='text'] {
 @media (prefers-reduced-motion: reduce) { .guide-spot { transition: none; } }
 
 /* 고른 행동 (턴 진행 바 위) */
-.picked-bar { display: flex; gap: 6px; }
-.picked-chip { flex: 1; min-height: 36px; padding: 4px 10px; border-radius: 10px; border: 2px dashed var(--line); background: var(--bg); color: var(--muted); font: inherit; font-size: 0.9rem; text-align: center; }
-button.picked-chip { border: 2px solid var(--accent); background: #232a47; color: var(--text); font-weight: 700; cursor: pointer; }
 .guide-help { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; width: 28px; height: 28px; font: inherit; cursor: pointer; }
 
 /* 턴 결과 변화 그래프: 기존(파랑) + 증가(초록) / 감소(빨강) */
