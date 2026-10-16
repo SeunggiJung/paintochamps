@@ -369,5 +369,352 @@
       },
       { "label": "아직 준비가 안 됐다며 거절한다", "effects": { "stats": { "focus": 30 } } }
     ]
+  },
+  {
+    "id": "cafe_regular_tip",
+    "when": { "stages": ["basement", "local_cup"] },
+    "weight": 2,
+    "text": "PC방 단골 형이 내 플레이를 한참 보더니 \"그렇게 하면 안 되고, 이렇게 해 봐\" 하며 말을 걸어왔다.",
+    "choices": [
+      { "label": "귀 기울여 듣고 따라 해 본다", "effects": { "stats": { "accuracy": 40, "judgment": 20 }, "condition": -3 } },
+      { "label": "내 방식이 있다며 흘려듣는다", "effects": { "stats": { "mental": 25 } } }
+    ]
+  },
+  {
+    "id": "parents_game_limit",
+    "when": { "ageMax": 18 },
+    "weight": 2,
+    "text": "부모님이 게임 시간을 하루 두 시간으로 줄이라고 하셨다. 대회를 준비하는 나에게는 큰 문제다.",
+    "choices": [
+      { "label": "성적을 올리겠다고 약속하고 공부도 한다", "effects": { "stats": { "focus": 40 }, "condition": -8, "money": 5 } },
+      {
+        "label": "진지하게 설득해 본다 (멘탈이 높을수록 성공)",
+        "check": { "stat": "mental", "success": { "stats": { "mental": 40 }, "condition": 5 }, "failure": { "stats": { "mental": -25 }, "condition": -10 } }
+      }
+    ]
+  },
+  {
+    "id": "online_flame",
+    "when": { "fame": { "min": 5 } },
+    "weight": 2,
+    "text": "커뮤니티에 내 플레이를 깎아내리는 글이 올라왔다. 댓글이 순식간에 수십 개가 달렸다.",
+    "choices": [
+      { "label": "아무것도 안 보고 연습에 집중한다", "effects": { "stats": { "focus": 30, "mental": 20 }, "condition": -3 } },
+      {
+        "label": "근거를 들어 조목조목 반박한다 (판단력이 높을수록 설득력 있다)",
+        "check": { "stat": "judgment", "success": { "fame": 3, "stats": { "judgment": 30 } }, "failure": { "fame": -1, "stats": { "mental": -30 }, "condition": -8 } }
+      }
+    ]
+  },
+  {
+    "id": "friend_team_proposal",
+    "when": { "stages": ["basement", "local_cup"], "team": false },
+    "weight": 2,
+    "text": "같이 게임하던 친구들이 팀을 만들자고 한다. 다들 실력은 비슷하지만 손발은 잘 맞는다.",
+    "choices": [
+      { "label": "합류해서 같이 연습한다", "effects": { "stats": { "teamwork": 60 }, "fame": 1, "condition": -5 } },
+      { "label": "혼자 갈고닦는 길을 택한다", "effects": { "stats": { "reaction": 25, "focus": 25 } } }
+    ]
+  },
+  {
+    "id": "gear_sale",
+    "when": { "money": { "min": 8 } },
+    "weight": 2,
+    "text": "자주 가는 쇼핑몰에서 게이밍 장비 깜짝 할인을 한다. 마침 쓰던 것이 낡았다.",
+    "choices": [
+      { "label": "바로 지른다", "effects": { "money": -8, "stats": { "accuracy": 25, "reaction": 15 }, "condition": 3 } },
+      { "label": "참고 돈을 모은다", "effects": { "stats": { "mental": 20 } } }
+    ]
+  },
+  {
+    "id": "insomnia_night",
+    "when": { "condition": { "max": 60 } },
+    "weight": 2,
+    "text": "대회 생각에 잠이 오지 않는다. 시계는 벌써 새벽 세 시를 가리킨다.",
+    "choices": [
+      { "label": "수면에 좋다는 차를 사 마시고 눕는다", "requires": { "minMoney": 5 }, "effects": { "money": -5, "condition": 15 } },
+      { "label": "차라리 일어나 영상을 돌려 본다", "effects": { "stats": { "judgment": 25 }, "condition": -8 } }
+    ]
+  },
+  {
+    "id": "school_festival_tournament",
+    "when": { "ageMax": 18 },
+    "weight": 2,
+    "text": "학교 축제에서 게임 대회를 연다고 한다. 반 친구들이 나를 대표로 밀고 있다.",
+    "choices": [
+      {
+        "label": "출전한다 (반응속도가 높을수록 유리)",
+        "check": { "stat": "reaction", "success": { "fame": 2, "stats": { "reaction": 30, "mental": 25 } }, "failure": { "stats": { "mental": -15 }, "condition": -3 } }
+      },
+      { "label": "구경하며 친구들을 응원한다", "effects": { "condition": 10, "stats": { "teamwork": 15 } } }
+    ]
+  },
+  {
+    "id": "old_friend_rematch",
+    "when": { "stages": ["basement", "local_cup"], "ageMin": 17 },
+    "weight": 2,
+    "text": "예전에 같이 게임하던 친구가 \"그때 이기고 도망갔지?\" 하며 맞대결을 걸어 왔다.",
+    "choices": [
+      {
+        "label": "받아들인다 (반응속도가 높을수록 유리)",
+        "check": { "stat": "reaction", "success": { "fame": 2, "stats": { "reaction": 30 } }, "failure": { "stats": { "mental": -15 } } }
+      },
+      { "label": "웃으며 사양한다", "effects": { "condition": 5, "stats": { "teamwork": 15 } } }
+    ]
+  },
+  {
+    "id": "scrim_other_team",
+    "when": { "stages": ["amateur_team", "pro2", "pro1"], "team": true },
+    "weight": 3,
+    "text": "다른 팀에서 연습 경기를 제안해 왔다. 우리 전술을 읽힐 수 있지만 얻는 것도 많다.",
+    "choices": [
+      {
+        "label": "수락한다 (판단력이 높을수록 잘 활용한다)",
+        "check": { "stat": "judgment", "success": { "stats": { "judgment": 40, "teamwork": 25 } }, "failure": { "stats": { "mental": -20 }, "fame": -1 } }
+      },
+      { "label": "거절하고 우리끼리 맞춘다", "effects": { "stats": { "teamwork": 20 }, "condition": 5 } }
+    ]
+  },
+  {
+    "id": "analyst_report",
+    "when": { "stages": ["pro2", "pro1"], "team": true },
+    "weight": 2,
+    "text": "팀 분석가가 상대 팀의 경기 자료를 한가득 정리해서 건넸다.",
+    "choices": [
+      { "label": "밤새 꼼꼼히 본다", "effects": { "stats": { "judgment": 45, "focus": 30 }, "condition": -10 } },
+      { "label": "핵심 요약만 훑어본다", "effects": { "stats": { "judgment": 20 }, "condition": -2 } }
+    ]
+  },
+  {
+    "id": "interview_request",
+    "when": { "fame": { "min": 20 } },
+    "weight": 2,
+    "text": "게임 전문 매체에서 인터뷰를 요청했다. 곤란한 질문이 나올 수도 있다.",
+    "choices": [
+      {
+        "label": "솔직하게 답한다 (멘탈이 높을수록 실수가 적다)",
+        "check": { "stat": "mental", "success": { "fame": 4, "stats": { "mental": 25 } }, "failure": { "fame": -2, "stats": { "mental": -20 } } }
+      },
+      { "label": "무난하게 준비된 답만 한다", "effects": { "fame": 1 } }
+    ]
+  },
+  {
+    "id": "fan_meetup",
+    "when": { "fame": { "min": 40 } },
+    "weight": 2,
+    "text": "팬들이 작은 팬미팅을 열어 달라고 요청한다. 준비에 돈과 시간이 든다.",
+    "choices": [
+      { "label": "자리를 마련해 직접 만난다", "requires": { "minMoney": 10 }, "effects": { "money": -10, "fame": 5, "stats": { "mental": 40 }, "condition": -4 } },
+      { "label": "온라인 사인 이벤트로 대신한다", "effects": { "fame": 2, "condition": -2 } }
+    ]
+  },
+  {
+    "id": "teammate_birthday",
+    "when": { "team": true },
+    "weight": 2,
+    "text": "오늘은 팀원의 생일이다. 다들 연습에 정신이 팔려 아무도 챙기지 못하고 있다.",
+    "choices": [
+      { "label": "케이크를 사 와서 깜짝 파티를 연다", "requires": { "minMoney": 5 }, "effects": { "money": -5, "stats": { "teamwork": 40, "mental": 15 } } },
+      { "label": "말로만 축하하고 넘어간다", "effects": { "stats": { "teamwork": 5 } } }
+    ]
+  },
+  {
+    "id": "overseas_bootcamp",
+    "when": { "stages": ["pro2", "pro1"], "team": true },
+    "weight": 2,
+    "text": "코치가 시즌 전에 해외 전지훈련을 가자고 한다. 비용은 꽤 들지만 환경을 바꿔 보는 것도 좋겠다.",
+    "choices": [
+      { "label": "참가한다", "requires": { "minMoney": 30 }, "effects": { "money": -30, "stats": { "focus": 45, "judgment": 35, "teamwork": 20 }, "condition": -12, "fame": 1 } },
+      { "label": "국내 숙소에서 조용히 훈련한다", "effects": { "stats": { "focus": 15 }, "condition": 5 } }
+    ]
+  },
+  {
+    "id": "team_bonus",
+    "when": { "stages": ["pro2", "pro1"], "team": true },
+    "weight": 2,
+    "text": "시즌 중간 평가에서 팀 성과 보너스가 나왔다. 어떻게 쓸지는 내 마음이다.",
+    "choices": [
+      { "label": "전부 저축한다", "effects": { "money": 40 } },
+      { "label": "절반은 팀 회식에 쓴다", "effects": { "money": 15, "stats": { "teamwork": 40, "mental": 15 } } }
+    ]
+  },
+  {
+    "id": "big_sponsor_deal",
+    "when": { "stages": ["pro2", "pro1"], "fame": { "min": 60 } },
+    "weight": 2,
+    "text": "큰 기업에서 광고 모델 계약을 제안했다. 돈은 크지만 촬영 일정이 연습 시간을 잡아먹는다.",
+    "choices": [
+      { "label": "계약한다", "effects": { "money": 60, "fame": 3, "condition": -10 } },
+      { "label": "정중히 거절하고 연습에 집중한다", "effects": { "stats": { "focus": 35, "mental": 20 } } }
+    ]
+  },
+  {
+    "id": "fan_gift",
+    "when": { "fame": { "min": 30 } },
+    "weight": 2,
+    "text": "팬이 직접 만든 응원 키링과 손편지를 보냈다. 글씨 하나하나에 정성이 보인다.",
+    "choices": [
+      { "label": "답장을 써서 정성껏 감사 인사를 한다", "effects": { "fame": 2, "stats": { "mental": 35 } } },
+      { "label": "가방에 달고 마음속으로 고마워한다", "effects": { "stats": { "mental": 20 } } }
+    ]
+  },
+  {
+    "id": "rival_stream_trash_talk",
+    "when": { "stages": ["pro2", "pro1"] },
+    "weight": 2,
+    "text": "라이벌 선수가 방송에서 \"그 정도 실력으로 우승 노려?\" 하고 나를 겨냥해 말했다.",
+    "choices": [
+      { "label": "대꾸하지 않고 연습으로 보여 준다", "effects": { "stats": { "focus": 35, "accuracy": 25 }, "condition": -8 } },
+      {
+        "label": "SNS에서 맞받아친다 (멘탈이 높을수록 성공)",
+        "check": { "stat": "mental", "success": { "fame": 4, "stats": { "mental": 25 } }, "failure": { "fame": -2, "stats": { "mental": -30 } } }
+      }
+    ]
+  },
+  {
+    "id": "retired_mentor_call",
+    "when": { "ageMin": 22, "team": true },
+    "weight": 2,
+    "text": "은퇴한 선배가 오랜만에 연락해 \"밥이나 먹자\"며 자신의 경험담을 풀어놓았다.",
+    "choices": [
+      { "label": "받아 적으며 귀 기울여 듣는다", "effects": { "stats": { "judgment": 40, "mental": 25 } } },
+      { "label": "편하게 수다만 떤다", "effects": { "condition": 10, "stats": { "mental": 15 } } }
+    ]
+  },
+  {
+    "id": "better_housing",
+    "when": { "money": { "min": 25 }, "ageMin": 18 },
+    "weight": 2,
+    "text": "지금 사는 방은 벽이 얇아 밤마다 소리가 새어 나온다. 조금 무리하면 더 좋은 집으로 옮길 수 있다.",
+    "choices": [
+      { "label": "이사한다", "requires": { "minMoney": 25 }, "effects": { "money": -25, "condition": 20, "stats": { "mental": 35 } } },
+      { "label": "귀마개를 쓰고 그냥 산다", "effects": { "stats": { "focus": 15 }, "condition": -3 } }
+    ]
+  },
+  {
+    "id": "family_dinner",
+    "when": { "money": { "min": 10 } },
+    "weight": 2,
+    "text": "오랜만에 가족이 다 같이 모일 수 있는 저녁이다. 연습을 쉬고 가야 할까?",
+    "choices": [
+      { "label": "내가 한턱내고 느긋하게 즐긴다", "requires": { "minMoney": 10 }, "effects": { "money": -10, "stats": { "mental": 35 }, "condition": 8 } },
+      { "label": "얻어먹고 일찍 들어와 연습한다", "effects": { "stats": { "focus": 15 }, "condition": 3 } }
+    ]
+  },
+  {
+    "id": "donate_gear",
+    "when": { "fame": { "min": 25 }, "money": { "min": 30 } },
+    "weight": 2,
+    "text": "후배들이 모이는 동네 PC방에 낡은 장비가 한가득이다. 새 장비를 기증하면 큰 도움이 될 것 같다.",
+    "choices": [
+      { "label": "장비를 기증한다", "requires": { "minMoney": 30 }, "effects": { "money": -30, "fame": 4, "stats": { "mental": 30 } } },
+      { "label": "응원 메시지만 남긴다", "effects": { "fame": 1 } }
+    ]
+  },
+  {
+    "id": "side_investment",
+    "when": { "money": { "min": 50 }, "ageMin": 20, "modes": ["standard", "precise"] },
+    "weight": 1,
+    "text": "아는 사람이 \"곧 뜰 게임 관련 사업이 있다\"며 투자를 권한다. 솔깃하지만 확실한 건 없다.",
+    "choices": [
+      { "label": "소액만 투자한다 (운)", "requires": { "minMoney": 40 }, "check": { "chance": 0.5, "success": { "money": 50, "stats": { "mental": 10 } }, "failure": { "money": -40, "stats": { "mental": -20 } } } },
+      { "label": "정중히 거절한다", "effects": { "stats": { "mental": 15 } } }
+    ]
+  },
+  {
+    "id": "wrist_pain_checkup",
+    "when": { "condition": { "max": 55 } },
+    "weight": 2,
+    "text": "요즘 손목이 뻐근하다. 아직 심하진 않은데 방치하면 안 될 것 같다.",
+    "choices": [
+      { "label": "정형외과에서 검진을 받는다", "requires": { "minMoney": 10 }, "effects": { "money": -10, "condition": 12 } },
+      { "label": "보호대를 차고 버틴다", "effects": { "condition": 3, "injuredMonths": 1 } }
+    ]
+  },
+  {
+    "id": "variety_show",
+    "when": { "fame": { "min": 50 } },
+    "weight": 2,
+    "text": "인기 예능 프로그램에서 게스트 출연 제안이 들어왔다. 얼굴을 알릴 기회지만 하루가 통째로 날아간다.",
+    "choices": [
+      { "label": "출연한다", "effects": { "money": 30, "fame": 4, "condition": -10 } },
+      { "label": "거절하고 연습한다", "effects": { "stats": { "focus": 25 }, "condition": 3 } }
+    ]
+  },
+  {
+    "id": "patch_meta_shift",
+    "when": { "stages": ["pro2", "pro1"] },
+    "weight": 2,
+    "text": "대규모 패치로 메타가 뒤집혔다. 지금까지 쓰던 방식이 통하지 않을 수도 있다.",
+    "choices": [
+      {
+        "label": "새 메타를 빠르게 익힌다 (판단력이 높을수록 성공)",
+        "check": { "stat": "judgment", "success": { "stats": { "judgment": 45, "focus": 20 } }, "failure": { "stats": { "judgment": -10, "mental": -15 } } }
+      },
+      { "label": "원래 스타일을 더 갈고닦는다", "effects": { "stats": { "accuracy": 30 } } }
+    ]
+  },
+  {
+    "id": "marathon_stream",
+    "when": { "fame": { "min": 10 }, "ageMin": 17 },
+    "weight": 2,
+    "text": "시청자들이 \"오늘 장시간 방송 해 주세요!\" 하고 채팅창을 달군다.",
+    "choices": [
+      { "label": "밤새 방송한다", "effects": { "money": 15, "fame": 2, "condition": -12 } },
+      { "label": "두 시간만 하고 마친다", "effects": { "money": 5, "fame": 1, "condition": -2 } }
+    ]
+  },
+  {
+    "id": "team_new_gear",
+    "when": { "stages": ["amateur_team", "pro2", "pro1"], "team": true },
+    "weight": 1,
+    "text": "구단이 연습실 장비를 새로 교체해 줬다. 반응이 빠르다며 팀원들이 신이 났다.",
+    "choices": [
+      { "label": "당장 새 장비로 감을 익힌다", "effects": { "stats": { "reaction": 30, "accuracy": 25 }, "condition": -4 } },
+      { "label": "팀원들과 소감을 나누며 분위기를 즐긴다", "effects": { "stats": { "teamwork": 35 }, "condition": 4 } }
+    ]
+  },
+  {
+    "id": "vacation_offer",
+    "when": { "condition": { "max": 70 }, "ageMin": 18 },
+    "weight": 2,
+    "text": "친구가 \"한동안 쉬었다 오자\"며 짧은 여행을 제안했다.",
+    "choices": [
+      { "label": "여행을 다녀온다", "requires": { "minMoney": 15 }, "effects": { "money": -15, "condition": 30, "stats": { "mental": 30 } } },
+      { "label": "집에서 푹 쉰다", "effects": { "condition": 10 } }
+    ]
+  },
+  {
+    "id": "mind_book",
+    "when": { "money": { "min": 5 } },
+    "weight": 2,
+    "text": "서점에서 \"중요한 순간에 흔들리지 않는 법\"이라는 책이 눈에 띄었다.",
+    "choices": [
+      { "label": "사서 읽는다", "requires": { "minMoney": 5 }, "effects": { "money": -5, "stats": { "mental": 40 } } },
+      { "label": "관련 영상을 찾아본다", "effects": { "stats": { "mental": 15 }, "condition": -2 } }
+    ]
+  },
+  {
+    "id": "coach_praise",
+    "when": { "team": true, "stages": ["amateur_team", "pro2", "pro1"] },
+    "weight": 2,
+    "text": "코치가 연습이 끝난 뒤 따로 불러 \"요즘 많이 늘었다\"고 말해 줬다.",
+    "choices": [
+      { "label": "고맙다고 하고 더 열심히 하겠다고 답한다", "effects": { "stats": { "mental": 30, "teamwork": 10 }, "condition": 3 } },
+      { "label": "아직 멀었다며 부족한 점을 묻는다", "effects": { "stats": { "judgment": 30 } } }
+    ]
+  },
+  {
+    "id": "big_match_pressure",
+    "when": { "stages": ["pro1"], "team": true },
+    "weight": 2,
+    "text": "중요한 경기를 앞두고 압박감이 밀려온다. 언론과 팬들의 기대가 부담스럽다.",
+    "choices": [
+      {
+        "label": "명상과 호흡으로 마음을 다잡는다 (멘탈이 높을수록 성공)",
+        "check": { "stat": "mental", "success": { "stats": { "mental": 40, "focus": 25 }, "condition": 8 }, "failure": { "stats": { "mental": -20 }, "condition": -8 } }
+      },
+      { "label": "팀원들과 웃고 떠들며 긴장을 푼다", "effects": { "stats": { "teamwork": 30, "mental": 15 }, "condition": 4 } }
+    ]
   }
 ]

@@ -82,7 +82,7 @@ describe('rollEvent', () => {
         if (e.id.startsWith('slump') || e.id === 'injury') bad++
       }
     }
-    expect(bad / total).toBeGreaterThan(0.5)
+    expect(bad / total).toBeGreaterThan(0.3) // 일반 이벤트가 늘어 비중이 줄었다 (컨디션 낮음 전용 이벤트 포함)
   })
 
   it('같은 게임·같은 턴이면 같은 결과', () => {
