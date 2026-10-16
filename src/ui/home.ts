@@ -26,6 +26,7 @@ import { conditionHelp, conditionText } from './conditionHelp.ts'
 import { conditionTier } from '../engine/growth.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
+import { openNegotiation } from './negotiationView.ts'
 import { openPlanSheet } from './planScreen.ts'
 import { statName } from './statHelp.ts'
 import { teamIcon } from './teamIcon.ts'
@@ -92,7 +93,9 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       ),
     )
     if (index !== null) await showContract(s, pending.offers[index], 'transfer')
-    return acceptOffer(s, index)
+    const moved = acceptOffer(s, index)
+    // 팀을 옮겼으면 새 계약의 월급을 협상할 수 있다
+    return index !== null ? await openNegotiation(moved) : moved
   }
 
   /** 다음 턴: 계획대로 자동으로 진행하고, 결과·대회·이벤트·제안만 플레이어에게 보여 준다. */

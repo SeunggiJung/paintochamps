@@ -1,4 +1,4 @@
-import type { GameState, Offer } from '../engine/state.ts'
+import type { GameState, Offer, StageId } from '../engine/state.ts'
 import { offerTerms } from '../engine/teams.ts'
 import { h } from './dom.ts'
 import { formatMoney } from './format.ts'
@@ -56,8 +56,8 @@ export function sceneSvg(teamId: string): string {
 }
 
 /** 입단·이적 계약 연출. 확인을 누르면 닫힌다. */
-export async function showContract(state: GameState, offer: Offer, kind: 'join' | 'transfer'): Promise<void> {
-  const terms = offerTerms(state, offer)
+export async function showContract(state: GameState, offer: Offer, kind: 'join' | 'transfer' | 'callup', stage: StageId = state.stage): Promise<void> {
+  const terms = offerTerms(state, offer, stage)
   await openSheet<void>((close) => {
     const root = h('div', { class: 'contract stack-tight' })
     root.innerHTML = sceneSvg(offer.team.id)
@@ -67,7 +67,7 @@ export async function showContract(state: GameState, offer: Offer, kind: 'join' 
       h(
         'div',
         { class: 'c-result' },
-        h('p', { class: 'eyebrow' }, kind === 'transfer' ? '이적 계약 체결' : '입단 계약 체결'),
+        h('p', { class: 'eyebrow' }, kind === 'transfer' ? '이적 계약 체결' : kind === 'callup' ? '1부 콜업 계약 체결' : '입단 계약 체결'),
         h('h2', {}, `${offer.team.name}`),
         terms && h('p', { class: 'muted' }, `월급 ${formatMoney(terms.profile.salary)} / 3개월 · ${perkLabel(offer, state.stage)}`),
       ),

@@ -12,6 +12,8 @@ import { formatMoney, formatMoneyDelta } from './format.ts'
 import { changeLine, statChangeBars } from './turnResult.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
+import { canNegotiate } from '../engine/negotiation.ts'
+import { openNegotiation } from './negotiationView.ts'
 import { openSheet } from './sheet.ts'
 
 const ENDING_NAME = Object.fromEntries(endings.order.map((e) => [e.id, e.name]))
@@ -95,10 +97,21 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     const offer = index === null ? null : state.pendingOffers?.offers[index]
     const pending = state
     state = acceptOffer(state, index)
-    if (offer && pending.pendingOffers) await showContract(pending, offer, pending.pendingOffers.kind === 'transfer' ? 'transfer' : 'join')
-    joined = offer ? `${offer.team.name}에 합류했다.` : '제안을 거절했다.'
+    if (offer && pending.pendingOffers) {
+      const kind = pending.pendingOffers.kind
+      await showContract(pending, offer, kind === 'scout' ? 'join' : kind, pending.pendingOffers.stage)
+      // 새 계약을 맺었으니 월급을 협상할 수 있다
+      state = await openNegotiation(state)
+    }
+    joined = offer ? `${offer.team.name}에 합류했다.` : pending.pendingOffers?.kind === 'callup' ? '콜업을 거절하고 프로 2부에 남기로 했다.' : '제안을 거절했다.'
     render()
   }
+
+  /** 계약 중에도 시즌 결산 때 한 번 월급 인상을 요구해 볼 수 있다 */
+  const negotiateCard = () =>
+    !state.finished && !state.pendingOffers && canNegotiate(state)
+      ? h('section', { class: 'card' }, h('h3', {}, '연봉 협상'), h('p', { class: 'muted small' }, '이번 시즌 성적을 근거로 월급 인상을 요구해 볼 수 있다. (시즌당 한 번)'), h('button', { class: 'btn small', onclick: async () => ((state = await openNegotiation(state)), render()) }, '연봉 협상하기'))
+      : null
 
   const offersCard = () => {
     const pending = state.pendingOffers
@@ -106,13 +119,13 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     return h(
       'section',
       { class: 'card' },
-      h('h3', {}, pending.kind === 'scout' ? '입단 제안 (하나를 골라야 한다)' : '이적 제안 (거절할 수 있다)'),
+      h('h3', {}, pending.kind === 'scout' ? '입단 제안 (하나를 골라야 한다)' : pending.kind === 'callup' ? '1부 콜업 제안 (거절하면 2부에 남는다)' : '이적 제안 (거절할 수 있다)'),
       h(
         'div',
         { class: 'choices vertical' },
         ...pending.offers.map((o, i) => offerButton(state, o, () => choose(i))),
       ),
-      pending.kind === 'transfer' && h('button', { class: 'btn ghost small', onclick: () => choose(null) }, '이적하지 않는다'),
+      pending.kind !== 'scout' && h('button', { class: 'btn ghost small', onclick: () => choose(null) }, pending.kind === 'callup' ? '콜업을 거절하고 2부에 남는다' : '이적하지 않는다'),
     )
   }
 
@@ -120,6 +133,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     const head = headline(before, report)
     const tags: string[] = []
     if (report.promoted) tags.push(`승급 ▲ ${stageName(report.stageBefore)} → ${stageName(report.stageAfter)}`)
+    if (report.pendingOffers?.kind === 'callup') tags.push('1부 콜업 제안 도착')
     if (report.relegated) tags.push(`강등 ▼ ${stageName(report.stageBefore)} → ${stageName(report.stageAfter)}`)
     if (state.finished) tags.push(`엔딩: ${ENDING_NAME[state.finished]}`)
 
@@ -187,6 +201,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         changeLine('돈', formatMoney(before.money), formatMoney(settled.money), moneyGain === 0 ? '±0' : formatMoneyDelta(moneyGain), moneyGain),
       ),
       offersCard(),
+      negotiateCard(),
       state.finished && h('section', { class: 'card' }, h('h3', {}, '기록'), h('p', { class: 'muted' }, state.rerolls > 0 ? `능력치 뽑기를 ${state.rerolls}번 다시 뽑았다.` : '능력치 뽑기를 한 번에 확정했다.')),
       h(
         'button',
@@ -199,5 +214,12 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
   }
 
   render()
+  // 콜업 제안이 오면 알림을 띄운다
+  if (report.pendingOffers?.kind === 'callup') {
+    const n = report.pendingOffers.offers.length
+    void openSheet<void>((close) =>
+      h('div', { class: 'stack-tight' }, h('p', { class: 'eyebrow' }, '콜업 알림'), h('p', { class: 'event-text' }, `프로 1부 팀 ${n}곳에서 콜업 제안이 도착했다! 결과 화면 아래에서 확인하자.`), h('button', { class: 'btn primary', onclick: () => close() }, '확인')),
+    )
+  }
   return root
 }

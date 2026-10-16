@@ -15,8 +15,8 @@ export function perkLabel(offer: Offer, stage: StageId): string {
 }
 
 /** 제안 한 건을 결정에 필요한 정보와 함께 보여 주는 선택 버튼 */
-export function offerButton(state: GameState, offer: Offer, onPick: () => void): HTMLElement {
-  const terms = offerTerms(state, offer)
+export function offerButton(state: GameState, offer: Offer, onPick: () => void, stage: StageId = state.pendingOffers?.stage ?? state.stage): HTMLElement {
+  const terms = offerTerms(state, offer, stage)
   const lines: HTMLElement[] = []
   if (terms) {
     const { profile, gap, salaryDelta, strength, boost } = terms
@@ -30,8 +30,8 @@ export function offerButton(state: GameState, offer: Offer, onPick: () => void):
         `월급 ${formatMoney(profile.salary)} / 3개월`,
         state.team ? h('em', { class: salaryDelta >= 0 ? 'up' : 'down' }, ` (지금보다 ${formatMoneyDelta(salaryDelta)})`) : null,
       ),
-      h('span', { class: 'offer-line muted' }, `대회 전력 ${signed(boost)} · ${perkLabel(offer, state.stage)}`),
+      h('span', { class: 'offer-line muted' }, `대회 전력 ${signed(boost)} · ${perkLabel(offer, stage)}`),
     )
-  } else lines.push(h('span', { class: 'offer-line muted' }, perkLabel(offer, state.stage)))
+  } else lines.push(h('span', { class: 'offer-line muted' }, perkLabel(offer, stage)))
   return h('button', { class: 'choice offer', onclick: onPick }, teamIcon(offer.team.id, 44), h('span', { class: 'offer-body' }, h('b', {}, offer.team.name), ...lines))
 }
