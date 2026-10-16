@@ -132,6 +132,8 @@ export interface SeasonRecord {
   age: number
   stage: StageId
   events: EventRecord[]
+  /** 시즌 활약 요약: 평점·리그 내 순위·수상 이름 (옛 세이브에는 없을 수 있다) */
+  highlights?: { rating: number; rank: number; players: number; awards: string[] }
 }
 
 export interface GameState {

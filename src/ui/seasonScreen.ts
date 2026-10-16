@@ -12,6 +12,7 @@ import { formatMoney, formatMoneyDelta } from './format.ts'
 import { changeLine, statChangeBars } from './turnResult.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
+import { LEVEL_TEXT } from '../engine/highlights.ts'
 import { canNegotiate } from '../engine/negotiation.ts'
 import { openNegotiation } from './negotiationView.ts'
 import { openSheet } from './sheet.ts'
@@ -113,6 +114,33 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
       ? h('section', { class: 'card' }, h('h3', {}, '연봉 협상'), h('p', { class: 'muted small' }, '이번 시즌 성적을 근거로 월급 인상을 요구해 볼 수 있다. (시즌당 한 번)'), h('button', { class: 'btn small', onclick: async () => ((state = await openNegotiation(state)), render()) }, '연봉 협상하기'))
       : null
 
+  /** 시즌 활약: 리그 성적, 평점·리그 내 수준, 평점 순위표, 수상 기록 */
+  const highlightsCard = () => {
+    const hl = report.highlights
+    if (!hl.league && hl.awards.length === 0) return null
+    return h(
+      'section',
+      { class: 'card' },
+      h('h3', {}, '시즌 활약'),
+      hl.league &&
+        h(
+          'div',
+          { class: 'stack-tight' },
+          h('p', { class: 'headline-title' }, `평점 ${hl.rating.toFixed(1)} · ${LEVEL_TEXT[hl.level]}`),
+          h(
+            'p',
+            { class: 'muted small' },
+            `${hl.league.name} ${hl.league.wins}승 ${hl.league.losses}패 · 팀 ${hl.league.placement}위 / ${hl.league.size}팀${hl.league.expected ? ` (기대 ${hl.league.expected}위)` : ''} · 선수 평점 ${hl.ratingRank}위 / ${hl.players}명`,
+          ),
+          ...hl.board.map((l) =>
+            h('div', { class: `event-row${l.isPlayer ? ' mine' : ''}` }, h('div', { class: 'row' }, h('span', {}, `${l.rank}위 ${l.name}`), h('b', {}, l.rating.toFixed(1))), h('span', { class: 'muted small' }, l.team)),
+          ),
+        ),
+      hl.awards.length > 0 ? h('div', { class: 'chips' }, ...hl.awards.map((a) => h('span', { class: 'chip award', title: a.desc }, `🏆 ${a.name}`))) : h('p', { class: 'muted small' }, '이번 시즌 수상 기록은 없다.'),
+      ...hl.awards.map((a) => h('p', { class: 'muted small' }, `${a.name}: ${a.desc}`)),
+    )
+  }
+
   const offersCard = () => {
     const pending = state.pendingOffers
     if (!pending) return joined ? h('section', { class: 'card' }, h('h3', {}, '입단·이적'), h('p', { class: 'muted' }, joined)) : null
@@ -193,6 +221,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
             h('span', { class: 'muted small' }, report.rival.won ? '명성 보너스를 얻었다.' : '아쉽게 졌다.'),
           ),
       ),
+      highlightsCard(),
       h(
         'section',
         { class: 'card' },

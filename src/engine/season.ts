@@ -6,6 +6,7 @@ import { moneyScale } from './economy.ts'
 import { eventsFor, playerPower, type EventDef } from './competitions.ts'
 import { pickTeams } from './field.ts'
 import { playSeries } from './match.ts'
+import { seasonHighlights, type Highlights } from './highlights.ts'
 import { genrePower } from './power.ts'
 import { createRng, gaussian, mixSeed, type Rng } from './rng.ts'
 import type { EndingId, EventRecord, GameState, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
@@ -48,6 +49,8 @@ export interface SeasonReport {
   tests: TestResult[]
   /** 루트가 어떻게 갈렸는지 알려 주는 문구 */
   routeNotes: string[]
+  /** 시즌 활약: 리그 성적·평점·리그 내 수준·수상 기록 */
+  highlights: Highlights
 }
 
 function makeScoutOffers(rng: Rng, kind: 'amateur' | 'pro', exclude: Set<string>, count: number = OFFERS.count): PendingOffers {
@@ -170,11 +173,13 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
   }
   next = { ...next, pendingOffers }
 
+  const highlights = seasonHighlights(state, run, eventsFor(state))
   const record: SeasonRecord = {
     season: state.season,
     age: state.age,
     stage: stageBefore,
     events: results.map(({ id, name, placement, fieldSize }) => ({ id, name, placement, fieldSize })),
+    highlights: { rating: highlights.rating, rank: highlights.ratingRank, players: highlights.players, awards: highlights.awards.map((a) => a.name) },
   }
   next = { ...next, history: [...state.history, record] }
 
@@ -186,7 +191,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
 
   return {
     state: next,
-    report: { stageBefore, stageAfter: next.stage, events: results, rival, relegated, promoted, qualified: run.qualified, worldChampion, finished, pendingOffers: next.pendingOffers, tests, routeNotes },
+    report: { stageBefore, stageAfter: next.stage, events: results, rival, relegated, promoted, qualified: run.qualified, worldChampion, finished, pendingOffers: next.pendingOffers, tests, routeNotes, highlights },
   }
 }
 

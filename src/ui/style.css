@@ -347,3 +347,7 @@ input[type='text'] {
 .mg-pad.lit { background: var(--pad); }
 .minigame-bonus { margin: 0; color: var(--grade-R); font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .mg-target { animation: none; } }
+
+/* 시즌 활약 */
+.chip.award { background: #3a3220; border-color: #6b5a1e; color: #ffd34d; }
+.event-row.mine { background: #232a47; border-radius: 10px; padding: 4px 8px; }

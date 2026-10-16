@@ -72,7 +72,7 @@ export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements }
         'section',
         { class: 'card' },
         h('h3', {}, '시즌별 기록'),
-        ...state.history.map((r) => h('div', { class: 'event-row' }, h('div', { class: 'row' }, h('b', {}, `${r.age}세 · ${stageName(r.stage)}`)), h('span', { class: 'muted small' }, bestOfSeason(r.events)))),
+        ...state.history.map((r) => h('div', { class: 'event-row' }, h('div', { class: 'row' }, h('b', {}, `${r.age}세 · ${stageName(r.stage)}`)), h('span', { class: 'muted small' }, bestOfSeason(r.events) + (r.highlights ? ` · 평점 ${r.highlights.rating.toFixed(1)}${r.highlights.awards.length ? ` · 🏆 ${r.highlights.awards.join(', ')}` : ''}` : '')))),
       ),
     h('div', { class: 'stack' }, h('button', { class: 'btn primary', onclick: () => ctx.toCodex() }, '엔딩 도감 보기'), h('button', { class: 'btn', onclick: () => ctx.toTitle() }, '타이틀로')),
   )

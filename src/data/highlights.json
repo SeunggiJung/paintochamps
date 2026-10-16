@@ -1,0 +1,8 @@
+{
+  "rating": { "base": 5.5, "winRateWeight": 5, "powerWeight": 0.45, "noise": 0.5, "playerNoise": 0.3, "zLimit": 2.5, "min": 2, "max": 10 },
+  "level": { "top": 0.1, "high": 0.3, "mid": 0.7 },
+  "boardSize": 5,
+  "bestCount": 3,
+  "rookieMaxAge": 21,
+  "rookieTop": 0.34
+}
