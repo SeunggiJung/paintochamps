@@ -6,7 +6,7 @@ import { rollEvent, turnRng } from '../engine/events.ts'
 import { autoTurn, planChoice, planOf, presetDef } from '../engine/plan.ts'
 import { genrePower } from '../engine/power.ts'
 import { choosePrep, expectedScore, PREP, testItems, testName, upcomingTest } from '../engine/routes.ts'
-import { acceptOffer, eventsFor, rollMidSeasonOffer, stageName } from '../engine/season.ts'
+import { acceptOffer, eventsFor, requestTransfer, rollMidSeasonOffer, stageName, transferBlocker } from '../engine/season.ts'
 import type { ActionId, GameState } from '../engine/state.ts'
 import { applyCoachSwap, coachSwapOffer, type CoachOffer } from '../engine/training.ts'
 import { ACTIONS, turnsPerSeason } from '../engine/turn.ts'
@@ -76,7 +76,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
   }
 
   /** 시즌 도중 다른 팀에서 온 이적 제안. 하나를 골라 옮기거나 남는다. */
-  const askMidSeasonOffer = async (s: GameState): Promise<GameState> => {
+  const askMidSeasonOffer = async (s: GameState, requested = false): Promise<GameState> => {
     const pending = s.pendingOffers
     if (!pending) return s
     const index = await openSheet<number | null>((close) =>
@@ -84,7 +84,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         'div',
         { class: 'stack-tight' },
         h('p', { class: 'eyebrow' }, '이적 제안'),
-        h('p', { class: 'event-text' }, `시즌 도중에 다른 팀에서 연락이 왔다. 지금 ${s.team?.name ?? '팀'}을(를) 떠날까?`),
+        h('p', { class: 'event-text' }, requested ? `이적을 요청하자 다른 팀들이 관심을 보인다. 지금 ${s.team?.name ?? '팀'}을(를) 떠날까?` : `시즌 도중에 다른 팀에서 연락이 왔다. 지금 ${s.team?.name ?? '팀'}을(를) 떠날까?`),
         h(
           'div',
           { class: 'choices vertical' },
@@ -97,6 +97,24 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     const moved = acceptOffer(s, index)
     // 팀을 옮겼으면 새 계약의 월급을 협상할 수 있다
     return index !== null ? await openNegotiation(moved) : moved
+  }
+
+  /** 시즌 중간에 플레이어가 이적을 요청한다. 다른 팀 제안을 받아 보고, 거절하면 남는다. */
+  const requestMidTransfer = async () => {
+    if (busy || transferBlocker(state, 'mid')) return
+    const ok = await confirmSheet({
+      title: '이적 요청',
+      message: `${state.team?.name ?? '지금 팀'}에 이적을 요청할까요? 다른 팀의 제안을 받아 보고, 마음에 안 들면 남을 수 있어요. (시즌 중간 요청은 시즌당 한 번)`,
+      ok: '이적 요청하기',
+    })
+    if (!ok) return
+    const r = requestTransfer(state, 'mid')
+    if (!r.ok) return render(r.error)
+    busy = true
+    state = await askMidSeasonOffer(r.state, true)
+    busy = false
+    saveGame(ctx.storage, state)
+    render()
   }
 
   /** 다음 턴: 계획대로 자동으로 진행하고, 결과·대회·이벤트·제안만 플레이어에게 보여 준다. */
@@ -222,6 +240,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         { class: 'turn-bar', 'data-guide': 'turnbar' },
         error && h('p', { class: 'error', role: 'alert' }, error),
         h('button', { class: 'btn primary', disabled: busy || !state.seasonTraining, onclick: playTurn }, state.seasonTraining ? '다음 턴 진행' : '먼저 시즌 계획을 세우세요'),
+        !busy && !transferBlocker(state, 'mid') && h('button', { class: 'btn small', onclick: () => void requestMidTransfer() }, '이적 요청'),
         h('button', { class: 'btn ghost small', onclick: () => ctx.toTitle() }, '타이틀로 (자동 저장됨)'),
       ),
     ]

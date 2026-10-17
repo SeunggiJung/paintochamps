@@ -2,7 +2,7 @@ import endings from '../data/endings.json'
 import genres from '../data/genres.json'
 import { genrePower } from '../engine/power.ts'
 import { earnedAchievements } from '../engine/achievements.ts'
-import { acceptOffer, eventsFor, retire, settleSeason, stageName, type EventResult, type SeasonReport } from '../engine/season.ts'
+import { acceptOffer, eventsFor, requestTransfer, retire, settleSeason, stageName, transferBlocker, type EventResult, type SeasonReport } from '../engine/season.ts'
 import type { GameState } from '../engine/state.ts'
 import { startNextSeason } from '../engine/turn.ts'
 import { recordFinish, saveGame } from '../save/storage.ts'
@@ -113,6 +113,18 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     !state.finished && !state.pendingOffers && canNegotiate(state)
       ? h('section', { class: 'card' }, h('h3', {}, '연봉 협상'), h('p', { class: 'muted small' }, '이번 시즌 성적을 근거로 월급 인상을 요구해 볼 수 있다. (시즌당 한 번)'), h('button', { class: 'btn small', onclick: async () => ((state = await openNegotiation(state)), render()) }, '연봉 협상하기'))
       : null
+
+  /** 결산 때 플레이어가 이적을 요청할 수 있다 (시즌당 한 번) */
+  const transferCard = () => {
+    if (transferBlocker(state, 'settle')) return null
+    return h(
+      'section',
+      { class: 'card' },
+      h('h3', {}, '이적 요청'),
+      h('p', { class: 'muted small' }, '다음 시즌을 앞두고 다른 팀의 제안을 받아 볼 수 있다. 마음에 안 들면 남아도 된다. (시즌당 한 번)'),
+      h('button', { class: 'btn small', onclick: () => { const r = requestTransfer(state, 'settle'); if (r.ok) { state = r.state; render() } } }, '이적 요청하기'),
+    )
+  }
 
   /** 시즌 활약: 리그 성적, 평점·리그 내 수준, 평점 순위표, 수상 기록 */
   const highlightsCard = () => {
@@ -231,6 +243,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
       ),
       offersCard(),
       negotiateCard(),
+      transferCard(),
       state.finished && h('section', { class: 'card' }, h('h3', {}, '기록'), h('p', { class: 'muted' }, state.rerolls > 0 ? `능력치 뽑기를 ${state.rerolls}번 다시 뽑았다.` : '능력치 뽑기를 한 번에 확정했다.')),
       h(
         'button',

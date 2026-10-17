@@ -199,6 +199,9 @@ export interface GameState {
   seasonRun: SeasonRun | null
   /** 시즌 중간 제안을 마지막으로 받은 시즌. 시즌당 한 번만 온다. */
   midOfferSeason: number
+  /** 플레이어가 이적을 요청한 마지막 시즌: 시즌 중간 / 시즌 결산 때 (각각 시즌당 한 번). 옛 세이브에는 없을 수 있다 */
+  transferMidSeason: number
+  transferSettleSeason: number
 
   stage: StageId
   /** 소속 팀. 아마추어 팀 단계부터 생긴다. */
@@ -263,6 +266,8 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     trainingRerollSeason: 0,
     plan: null,
     midOfferSeason: 0,
+    transferMidSeason: 0,
+    transferSettleSeason: 0,
     seasonRun: null,
     path: 'rookie',
     cafeAttempts: 0,

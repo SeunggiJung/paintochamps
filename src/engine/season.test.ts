@@ -3,7 +3,7 @@ import { evaluateEnding } from './endings.ts'
 import { makeOpponents } from './field.ts'
 import { createRng } from './rng.ts'
 import { createInitialState, type GameState, type StageId } from './state.ts'
-import { acceptOffer, eventsFor, retire, settleSeason } from './season.ts'
+import { acceptOffer, eventsFor, requestTransfer, retire, settleSeason, transferBlocker } from './season.ts'
 import { applyTurn, startNextSeason } from './turn.ts'
 import type { GenreId, Stats } from './types.ts'
 
@@ -265,5 +265,52 @@ describe('PC방 대회와 뽑기 기록', () => {
     const base = createInitialState({ name: 'a', genre: 'fps', mode: 'tutorial', seed: 1, rerolls: 5, gacha: { stats: stats(100), trait: { id: 'grit', name: '끈기', stat: 'focus' }, grade: 'N', power: 100 } })
     expect(base.rerolls).toBe(5)
     expect(base.cafeTeamName).toBeNull()
+  })
+})
+
+describe('이적 요청', () => {
+  const pro = (o: Partial<GameState> & { power?: number } = {}) => atSeasonEnd({ stage: 'pro2', team: TEAM, fame: 60, everPro: true, turnInSeason: 2, ...o })
+
+  it('시즌 중간에 요청하면 다른 팀 제안이 오고, 시즌당 한 번만 된다', () => {
+    const r = requestTransfer(pro(), 'mid')
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.state.pendingOffers?.kind).toBe('transfer')
+    expect(r.state.pendingOffers!.offers.length).toBeGreaterThan(0)
+    expect(r.state.pendingOffers!.offers.some((o) => o.team.id === TEAM.id)).toBe(false)
+    const declined = acceptOffer(r.state, null)
+    expect(declined.team).toEqual(TEAM)
+    expect(requestTransfer(declined, 'mid').ok).toBe(false)
+  })
+
+  it('시즌 중간 요청은 첫 턴 전과 마지막 턴 뒤에는 안 된다', () => {
+    expect(transferBlocker(pro({ turnInSeason: 0 }), 'mid')).not.toBeNull()
+    expect(transferBlocker(pro({ turnInSeason: 4 }), 'mid')).not.toBeNull()
+    expect(transferBlocker(pro({ turnInSeason: 1 }), 'mid')).toBeNull()
+  })
+
+  it('소속 팀·명성·연습생 조건', () => {
+    expect(transferBlocker(pro({ team: null }), 'mid')).not.toBeNull()
+    expect(transferBlocker(pro({ fame: 5 }), 'mid')).not.toBeNull()
+    expect(transferBlocker(pro({ stage: 'basement' }), 'mid')).not.toBeNull()
+    expect(transferBlocker(pro({ pendingOffers: { kind: 'transfer', offers: [] } }), 'mid')).not.toBeNull()
+  })
+
+  it('결산 때는 결산을 마친 뒤에 요청할 수 있고 시즌 중간 요청과 따로 센다', () => {
+    const settled = settleSeason(pro({ turnInSeason: 4, power: 100 })).state
+    expect(settled.finished).toBeNull()
+    expect(settled.pendingOffers).toBeNull()
+    expect(transferBlocker(pro({ turnInSeason: 4 }), 'settle')).not.toBeNull()
+    const mid = requestTransfer(pro(), 'mid')
+    expect(mid.ok && transferBlocker({ ...mid.state, pendingOffers: null, turnInSeason: 4 }, 'settle')).not.toBe('이번 시즌 결산 요청은 이미 했다')
+    const r = requestTransfer(settled, 'settle')
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(requestTransfer(acceptOffer(r.state, null), 'settle').ok).toBe(false)
+  })
+
+  it('같은 상태면 같은 제안이 온다', () => {
+    const a = requestTransfer(pro(), 'mid')
+    const b = requestTransfer(pro(), 'mid')
+    expect(a.ok && b.ok && a.state.pendingOffers!.offers.map((o) => o.team.id)).toEqual(b.ok && a.ok ? b.state.pendingOffers!.offers.map((o) => o.team.id) : null)
   })
 })

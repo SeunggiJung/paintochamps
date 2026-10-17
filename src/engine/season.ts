@@ -86,6 +86,39 @@ export function rollMidSeasonOffer(state: GameState): GameState {
   return { ...state, pendingOffers: { kind: 'transfer', offers }, midOfferSeason: state.season }
 }
 
+export type TransferWhen = 'mid' | 'settle'
+
+/** 이적을 요청할 수 없는 이유. 요청할 수 있으면 null. 시즌 중간(마지막 턴 전)과 시즌 결산 때 각각 시즌당 한 번 요청할 수 있다. */
+export function transferBlocker(state: GameState, when: TransferWhen): string | null {
+  if (state.finished || state.pendingOffers) return '지금은 이미 처리할 제안이 있다'
+  if (!state.team) return '소속 팀이 있어야 이적을 요청할 수 있다'
+  if (state.stage === 'amateur_team' && pathOf(state) === 'academy') return '연습생은 이적을 요청할 수 없다'
+  if (state.stage !== 'amateur_team' && state.stage !== 'pro2' && state.stage !== 'pro1') return '지금 단계에서는 이적을 요청할 수 없다'
+  if (state.fame < OFFERS.midMinFame) return `명성이 ${OFFERS.midMinFame} 이상이어야 다른 팀이 관심을 보인다`
+  if (when === 'mid') {
+    if (state.turnInSeason < 1 || state.turnInSeason >= turnsPerSeason(state.mode)) return '시즌 중간(첫 턴을 마친 뒤 마지막 턴 전)에만 요청할 수 있다'
+    if ((state.transferMidSeason ?? 0) === state.season) return '이번 시즌 중간 요청은 이미 했다'
+  } else {
+    if (!isSettled(state)) return '시즌 결산 뒤에 요청할 수 있다'
+    if ((state.transferSettleSeason ?? 0) === state.season) return '이번 시즌 결산 요청은 이미 했다'
+  }
+  return null
+}
+
+/**
+ * 플레이어의 이적 요청. 다른 팀 최대 3곳의 제안(거절 가능, kind: 'transfer')이 pendingOffers로 온다.
+ * 시즌 중간 요청은 그 시즌의 무작위 이적 제안(rollMidSeasonOffer)도 대신한다.
+ */
+export function requestTransfer(state: GameState, when: TransferWhen): { ok: true; state: GameState } | { ok: false; error: string } {
+  const error = transferBlocker(state, when)
+  if (error) return { ok: false, error }
+  const kind = state.stage === 'amateur_team' ? 'amateur' : 'pro'
+  const rng = createRng(mixSeed(state.seed, state.season, state.turnCount, when === 'mid' ? 0x7e51 : 0x7e52))
+  const offers = makeScoutOffers(rng, kind, new Set([state.team!.id]), OFFERS.count).offers
+  const marks = when === 'mid' ? { transferMidSeason: state.season, midOfferSeason: state.season } : { transferSettleSeason: state.season }
+  return { ok: true, state: { ...state, ...marks, pendingOffers: { kind: 'transfer', offers } } }
+}
+
 /** 하위 20%(최소 1팀)에 들면 강등 */
 function isRelegated(placement: number, size: number): boolean {
   return placement > size - Math.max(1, Math.round(size * rules.relegationRatio))
