@@ -1,5 +1,5 @@
 import achievementData from '../data/achievements.json'
-import { isUnofficial } from './competitions.ts'
+import { isUnofficial, isWorldEvent } from './competitions.ts'
 import type { GameState } from './state.ts'
 
 export type AchievementId = 'golden_road' | 'rookie_champion'
@@ -16,19 +16,23 @@ export const ACHIEVEMENTS = achievementData.order as AchievementDef[]
 const GOLDEN_MIN_EVENTS = 3
 
 /**
- * 끝난 판에서 달성한 업적. 월드 우승으로 끝난 판에서만 나오므로 마지막 시즌 기록(history 맨 끝)으로 판정한다.
+ * 끝난 판에서 달성한 업적. 월드 우승 뒤에도 커리어가 이어지므로, 월드를 우승한 시즌 기록을 모두 훑어 판정한다.
  * 비공식 초청 대회는 "시즌 모든 대회"에서 뺀다.
  */
 export function earnedAchievements(state: GameState): AchievementId[] {
   const out: AchievementId[] = []
   if (!state.finished || state.worldTitles < 1) return out
-  const last = state.history[state.history.length - 1]
-  if (!last) return out
 
-  const official = last.events.filter((e) => !isUnofficial(e.id))
-  if (official.length >= GOLDEN_MIN_EVENTS && official.every((e) => e.placement === 1)) out.push('golden_road')
-  // 프로 1부에서 보낸 시즌이 이번 한 시즌뿐이면 데뷔 시즌이다
-  if (last.stage === 'pro1' && state.history.filter((h) => h.stage === 'pro1').length === 1) out.push('rookie_champion')
+  const champSeasons = state.history.filter((r) => r.events.some((e) => isWorldEvent(e.id) && e.placement === 1))
+  const golden = champSeasons.some((r) => {
+    const official = r.events.filter((e) => !isUnofficial(e.id))
+    return official.length >= GOLDEN_MIN_EVENTS && official.every((e) => e.placement === 1)
+  })
+  if (golden) out.push('golden_road')
+
+  // 프로 1부에 데뷔한 첫 시즌에 우승했는가
+  const firstPro1 = state.history.find((r) => r.stage === 'pro1')
+  if (firstPro1 && champSeasons.includes(firstPro1)) out.push('rookie_champion')
   return out
 }
 

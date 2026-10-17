@@ -31,7 +31,7 @@ function bestEvent(events: EventResult[]): EventResult | null {
 
 function headline(before: GameState, report: SeasonReport): { title: string; sub: string; tone: string } {
   const best = bestEvent(report.events)
-  if (report.worldChampion) return { title: '🏆 월드 챔피언십 우승!', sub: '정점에 올랐다.', tone: 'gold' }
+  if (report.worldChampion) return { title: '🏆 월드 챔피언십 우승!', sub: `통산 ${before.worldTitles + 1}번째 우승. 커리어는 계속된다.`, tone: 'gold' }
   const test = report.tests[report.tests.length - 1]
   if (!best && test) return { title: test.passed ? `✅ ${test.name} 합격` : `${test.name} 불합격`, sub: test.passed ? '새로운 무대가 열린다.' : '아쉽지만 길은 아직 남아 있다.', tone: test.passed ? 'gold' : '' }
   if (!best) return { title: '대회 없는 시즌', sub: '아직 무대에 서기 전, 실력을 쌓는 시간이었다.', tone: '' }

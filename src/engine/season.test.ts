@@ -153,7 +153,7 @@ describe('프로 1부와 월드 챔피언십', () => {
     atSeasonEnd({ stage: 'pro1', team: TEAM, power, everPro: true, debutTeamId: 'org_0', fame: 60, seed }, genre)
 
   for (const genre of ['aos', 'fps'] as GenreId[]) {
-    it(`${genre}: 최고 수준의 실력이면 월드에 나가 우승하고 커리어가 끝난다`, () => {
+    it(`${genre}: 최고 수준의 실력이면 월드에 나가 우승하고, 커리어는 이어지다 은퇴할 때 엔딩이 정해진다`, () => {
       let champions = 0
       let reached = 0
       for (let seed = 0; seed < 30; seed++) {
@@ -162,7 +162,8 @@ describe('프로 1부와 월드 챔피언십', () => {
         if (report.worldChampion) {
           champions++
           expect(state.worldTitles).toBe(1)
-          expect(state.finished).toBe('hidden_loyal')
+          expect(state.finished).toBeNull()
+          expect(retire(state).finished).toBe('hidden_loyal')
         }
       }
       // 월드 상대(국제전 평균 990)도 실력치 상한(1000) 근처라, 능력치를 끝까지 올려도 우승이 보장되지는 않는다
@@ -190,7 +191,8 @@ describe('프로 1부와 월드 챔피언십', () => {
       const s = { ...pro1('aos', 1000, seed), team: { id: 'org_5', name: '실버폭스' } }
       const { state, report } = settleSeason(s)
       if (report.worldChampion) {
-        expect(state.finished).toBe('legend')
+        expect(state.finished).toBeNull()
+        expect(retire(state).finished).toBe('legend')
         seen = true
       }
     }

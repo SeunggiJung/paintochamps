@@ -184,7 +184,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
   next = { ...next, history: [...state.history, record] }
 
   let finished: EndingId | null = null
-  if (worldChampion || isCareerOver(next)) {
+  if (isCareerOver(next)) {
     finished = evaluateEnding(next)
     next = { ...next, finished, pendingOffers: null }
   }

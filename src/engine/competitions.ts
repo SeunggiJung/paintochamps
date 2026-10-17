@@ -61,6 +61,13 @@ export function isUnofficial(eventId: string): boolean {
   return all.some((e) => e.id === eventId && e.unofficial)
 }
 
+/** 월드 챔피언십(시즌 마지막 최고 대회)인지 (대회 id로 조회) */
+export function isWorldEvent(eventId: string): boolean {
+  const stages = competitions.stages as unknown as Record<string, EventDef[] | Record<string, EventDef[]>>
+  const all = Object.values(stages).flatMap((v) => (Array.isArray(v) ? v : Object.values(v).flat()))
+  return all.some((e) => e.id === eventId && e.world)
+}
+
 /** 초청 대회에 초청받았는지. 팀에 소속되어 있고, 명성과 직전 시즌 성적이 조건을 채워야 한다. */
 export function isInvited(state: Pick<GameState, 'season' | 'fame' | 'team' | 'history'>, ev: EventDef): boolean {
   if (!ev.invite) return true

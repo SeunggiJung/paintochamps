@@ -37,6 +37,13 @@
     ],
     "amountPerSeason": 10
   },
+  "ageGrowth": {
+    "fromAge": 25,
+    "lossPerYear": 0.06,
+    "min": 0.3,
+    "experienceStats": ["judgment", "mental", "teamwork"],
+    "experienceLossFactor": 0.4
+  },
   "match": {
     "eloScale": 250,
     "mentalBase": 500,

@@ -8,7 +8,7 @@ import rules from '../data/rules.json'
 import { advanceCalendar, type CalendarUpdate } from './calendar.ts'
 import { applyEffects, type Effects } from './effects.ts'
 import { coachEfficiency, housingRecovery, medicSpeed, prFame } from './facilities.ts'
-import { equipmentEfficiency, growthDelta } from './growth.ts'
+import { ageGrowthFactor, equipmentEfficiency, growthDelta } from './growth.ts'
 import { warmupBonus } from './minigame.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { ActionId, EquipmentId, GameState } from './state.ts'
@@ -171,7 +171,7 @@ function applySlot(state: GameState, slot: Slot, scale: number, rng: Rng, notes:
     const delta = growthDelta({
       base,
       scale: scale * slumpFactor * modeGrowth(state),
-      efficiency,
+      efficiency: efficiency * ageGrowthFactor(state.age, key),
       condition: state.condition,
       traitMultiplier: state.trait.stat === key ? gacha.traitMultiplier : 1,
       current: state.stats[key],

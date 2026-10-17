@@ -1,6 +1,7 @@
 import gacha from '../data/gacha.json'
 import rules from '../data/rules.json'
 import type { EquipmentId } from './state.ts'
+import type { StatKey } from './types.ts'
 
 export interface ConditionTier {
   /** 이 단계의 컨디션 하한·상한 (정수 기준) */
@@ -29,6 +30,18 @@ export function equipmentEfficiency(equipment: Record<EquipmentId, number>): num
   const levels = Object.values(equipment)
   const max = levels.length * rules.equipment.maxLevel
   return 1 + (rules.equipment.maxEfficiencyBonus * levels.reduce((a, b) => a + b, 0)) / max
+}
+
+/**
+ * 나이에 따른 훈련 효율 배율. 25세부터 해마다 lossPerYear씩 줄어 min까지 내려가고,
+ * 경험으로 쌓는 능력치(판단력·멘탈·팀워크)는 줄어드는 속도가 experienceLossFactor배로 느리다.
+ * 어린 선수는 빨리 크고, 베테랑은 경험으로 버티는 구도를 만든다.
+ */
+export function ageGrowthFactor(age: number, stat: StatKey): number {
+  const g = rules.ageGrowth
+  const years = Math.max(0, age - g.fromAge + 1)
+  const loss = g.lossPerYear * years * ((g.experienceStats as string[]).includes(stat) ? g.experienceLossFactor : 1)
+  return Math.max(g.min, 1 - loss)
 }
 
 export interface GrowthInput {
