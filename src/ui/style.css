@@ -381,3 +381,5 @@ input[type='text'] {
 .choice.with-art .choice-text { display: flex; flex-direction: column; gap: 2px; }
 .help-pop.list { max-height: 55vh; overflow-y: auto; }
 .train-list { gap: 3px; margin: 6px 0 0; }
+.btn.reroll { background: #232a47; border: 2px solid var(--accent); color: var(--text); font-weight: 700; white-space: nowrap; }
+.btn.reroll:not(:disabled):hover { background: var(--accent); color: var(--accent-text); }

@@ -82,7 +82,7 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
           h(
             'button',
             {
-              class: 'btn ghost small',
+              class: 'btn reroll small',
               disabled: !canRerollTraining(state),
               onclick: () => {
                 state = rerollTrainingMenu(state)
