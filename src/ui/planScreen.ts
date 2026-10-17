@@ -4,16 +4,43 @@ import { equipmentCost } from '../engine/economy.ts'
 import { buyFacility, checkFacility, FACILITIES, FACILITY_IDS, facilityCost, facilityLevel } from '../engine/facilities.ts'
 import { planOf, PRESETS, setSeasonPlan, type PresetId } from '../engine/plan.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
-import { chooseSeasonTraining, trainingMenuOf } from '../engine/training.ts'
+import { canRerollTraining, chooseSeasonTraining, rerollTrainingMenu, TRAINING_POOL, trainingMenuOf } from '../engine/training.ts'
 import { ACTIONS, buyEquipment, checkEquipment } from '../engine/turn.ts'
 import { openUpgrade } from './upgradeSheet.ts'
 import { upgradeArt } from './upgradeArt.ts'
+import { helpIcon } from './conditionHelp.ts'
 import { h } from './dom.ts'
+import { STAT_LABEL } from './labels.ts'
 import { formatMoney } from './format.ts'
 import { actionCost, actionTags } from './preview.ts'
 import { openSheet } from './sheet.ts'
 
 const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; base: number }>
+
+/** 훈련 하나가 올려 주는 능력치를 주력 순으로 (예: '판단력·정확도·멘탈') */
+function statOrder(id: ActionId): string {
+  const a = ACTIONS[id]
+  const keys = Object.entries(a.stats ?? {}).sort((x, y) => (y[1] ?? 0) - (x[1] ?? 0)).map(([k]) => STAT_LABEL[k as keyof typeof STAT_LABEL])
+  return keys.length > 0 ? keys.join('·') : '장르 핵심 능력치'
+}
+
+/** '이번 시즌 훈련' 옆 도움말: 나올 수 있는 훈련 전체와 올려 주는 능력치 */
+function trainingListHelp(): HTMLElement {
+  const icon = helpIcon(
+    '훈련 목록',
+    h('b', {}, '나올 수 있는 훈련'),
+    h('p', { class: 'small muted' }, '앞에 있는 능력치일수록 많이 오릅니다.'),
+    h(
+      'ul',
+      { class: 'plain train-list' },
+      ...TRAINING_POOL.map((id) =>
+        h('li', {}, h('b', {}, ACTIONS[id].name), h('span', { class: 'muted' }, ` ${statOrder(id)}${ACTIONS[id].requires?.inTeam ? ' (팀 소속일 때만)' : ''}`)),
+      ),
+    ),
+  )
+  icon.querySelector('.help-pop')?.classList.add('list')
+  return icon
+}
 
 /**
  * 시즌 시작 계획 시트: 방침(프리셋)·이번 시즌 훈련·개인 레슨을 정하고 장비를 산다.
@@ -22,16 +49,16 @@ const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; base: num
  */
 export function openPlanSheet(initial: GameState): Promise<GameState> {
   let state = initial
-  const menu = trainingMenuOf(state)
   const prev = planOf(state)
   let preset: PresetId = prev.preset
   let lesson = prev.lesson
-  let training: ActionId | null = state.seasonTraining && menu.includes(state.seasonTraining) ? state.seasonTraining : null
+  let training: ActionId | null = state.seasonTraining && trainingMenuOf(state).includes(state.seasonTraining) ? state.seasonTraining : null
 
   return openSheet<GameState>((close) => {
     const root = h('div', { class: 'stack-tight plan-sheet' })
 
     const draw = () => {
+      const menu = trainingMenuOf(state)
       const lessonCost = Math.ceil(actionCost({ id: 'private_lesson' }, state))
       root.replaceChildren(
         h('p', { class: 'eyebrow' }, `${state.season}시즌 계획`),
@@ -51,7 +78,21 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
           ),
         ),
 
-        h('h3', {}, '이번 시즌 훈련'),
+        h('div', { class: 'row' }, h('h3', {}, '이번 시즌 훈련', trainingListHelp()),
+          h(
+            'button',
+            {
+              class: 'btn ghost small',
+              disabled: !canRerollTraining(state),
+              onclick: () => {
+                state = rerollTrainingMenu(state)
+                training = null
+                draw()
+              },
+            },
+            canRerollTraining(state) ? '후보 다시 뽑기 (시즌 1회)' : '이번 시즌 다시 뽑기 사용함',
+          ),
+        ),
         h('p', { class: 'muted small' }, '시즌 동안 이 훈련을 합니다. 훈련은 시즌마다 무작위 후보가 나옵니다.'),
         h(
           'div',
@@ -61,7 +102,7 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
               'button',
               { class: `choice${training === id ? ' selected' : ''}`, 'aria-pressed': String(training === id), onclick: () => ((training = id), draw()) },
               h('strong', {}, ACTIONS[id].name),
-              h('span', { class: 'muted small' }, actionTags({ id }, state).join(' · ')),
+              h('span', { class: 'muted small' }, `${statOrder(id)} · ${actionTags({ id }, state).filter((t) => t.includes('컨디션') || !t.endsWith('↑')).join(' · ')}`.replace(/ · $/, '')),
             ),
           ),
         ),

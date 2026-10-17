@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import rules from '../data/rules.json'
 import { advanceCalendar, type CalendarBeat } from './calendar.ts'
 import { createInitialState, type GameState } from './state.ts'
-import { applyCoachSwap, chooseSeasonTraining, coachSwapOffer, slumpGap, TRAINING_POOL } from './training.ts'
-import { applyTurn } from './turn.ts'
+import { applyCoachSwap, canRerollTraining, chooseSeasonTraining, coachSwapOffer, rerollTrainingMenu, slumpGap, TRAINING_POOL } from './training.ts'
+import { ACTIONS, applyTurn } from './turn.ts'
 import type { Stats } from './types.ts'
 
 const stats = (v: number): Stats => ({ reaction: v, accuracy: v, focus: v, judgment: v, mental: v, teamwork: v })
@@ -97,5 +97,29 @@ describe('코치의 훈련 교체 제안', () => {
     const s = make({ seasonTraining: null, trainingMenu: ['basics', 'aim_lab'] })
     expect(chooseSeasonTraining(s, 'aim_lab').seasonTraining).toBe('aim_lab')
     expect(() => chooseSeasonTraining(s, 'sparring')).toThrow()
+  })
+})
+
+describe('훈련 후보 다시 뽑기', () => {
+  it('시즌당 한 번만 되고, 지금 후보와 겹치지 않으며, 고른 훈련은 비워진다', () => {
+    const base = make({ trainingMenu: TRAINING_POOL.slice(0, 4), seasonTraining: 'basics' })
+    expect(canRerollTraining(base)).toBe(true)
+    const r = rerollTrainingMenu(base)
+    expect(r.trainingMenu).toHaveLength(4)
+    expect(r.trainingMenu.some((id) => base.trainingMenu.includes(id))).toBe(false)
+    expect(r.seasonTraining).toBeNull()
+    expect(canRerollTraining(r)).toBe(false)
+    expect(() => rerollTrainingMenu(r)).toThrow()
+    expect(rerollTrainingMenu(base).trainingMenu).toEqual(r.trainingMenu)
+  })
+  it('다음 시즌에는 다시 뽑을 수 있다', () => {
+    const r = rerollTrainingMenu(make({}))
+    expect(canRerollTraining({ ...r, season: r.season + 1 })).toBe(true)
+  })
+  it('훈련 풀에는 능력치 3개 조합 20가지가 하나씩 다 있다', () => {
+    const combos = new Set(
+      TRAINING_POOL.map((id) => Object.keys(ACTIONS[id].stats ?? {}).sort().join(',')).filter((c) => c.split(',').length === 3),
+    )
+    expect(combos.size).toBe(20)
   })
 })

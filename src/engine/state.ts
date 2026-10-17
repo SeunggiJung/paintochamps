@@ -175,6 +175,8 @@ export interface GameState {
   seasonTraining: ActionId | null
   /** 코치가 훈련 교체를 제안한 마지막 시즌 (시즌당 한 번만 제안한다) */
   trainingSwapSeason: number
+  /** 훈련 후보를 다시 뽑은 마지막 시즌 (시즌당 한 번만 다시 뽑을 수 있다). (옛 세이브에는 없을 수 있다) */
+  trainingRerollSeason: number
   /** 시즌 계획(방침·개인 레슨). 시즌마다 다시 정하고, 정하기 전에는 지난 계획(또는 기본 계획)이 쓰인다. (옛 세이브에는 없을 수 있다 — planOf) */
   plan: SeasonPlan | null
   /** 초반 루트. 옛 세이브에는 없을 수 있다 (routes.ts가 기본값을 채운다) */
@@ -252,6 +254,7 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     trainingMenu: drawTrainingMenu(seed, 0, false),
     seasonTraining: null,
     trainingSwapSeason: 0,
+    trainingRerollSeason: 0,
     plan: null,
     midOfferSeason: 0,
     seasonRun: null,

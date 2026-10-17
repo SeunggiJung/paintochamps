@@ -379,3 +379,5 @@ input[type='text'] {
 .spin { transform-box: fill-box; transform-origin: center; }
 .choice.with-art { display: flex; align-items: center; gap: 10px; text-align: left; }
 .choice.with-art .choice-text { display: flex; flex-direction: column; gap: 2px; }
+.help-pop.list { max-height: 55vh; overflow-y: auto; }
+.train-list { gap: 3px; margin: 6px 0 0; }

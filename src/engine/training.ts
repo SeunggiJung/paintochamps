@@ -35,6 +35,23 @@ export function chooseSeasonTraining(state: GameState, id: ActionId): GameState 
   return { ...state, seasonTraining: id }
 }
 
+/** 이번 시즌에 훈련 후보를 아직 다시 뽑지 않았는가 (시즌당 한 번) */
+export function canRerollTraining(state: Pick<GameState, 'season' | 'trainingRerollSeason'>): boolean {
+  return (state.trainingRerollSeason ?? 0) !== state.season
+}
+
+/**
+ * 이번 시즌 훈련 후보를 다시 뽑는다. 지금 후보는 빼고 뽑으며, 시즌당 한 번만 된다.
+ * 이미 고른 훈련이 새 후보에 없으면 선택은 비워진다.
+ */
+export function rerollTrainingMenu(state: GameState): GameState {
+  if (!canRerollTraining(state)) throw new Error('이번 시즌에는 이미 훈련 후보를 다시 뽑았다')
+  const current = trainingMenuOf(state)
+  const fresh = candidates(state.team !== null).filter((id) => !current.includes(id))
+  const menu = shuffled(createRng(mixSeed(state.seed, state.season, 0x2e11)), fresh).slice(0, rules.trainingMenuSize)
+  return { ...state, trainingMenu: menu, seasonTraining: null, trainingRerollSeason: state.season }
+}
+
 /** 리그 중간 순위가 기대 순위보다 이만큼 이상 낮으면 부진으로 본다 (리그 크기에 비례, 최소 minGap) */
 export function slumpGap(size: number): number {
   return Math.max(rules.coachSwap.minGap, Math.round(size * rules.coachSwap.gapRatio))
