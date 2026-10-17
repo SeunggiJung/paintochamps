@@ -134,6 +134,12 @@ export interface SeasonRecord {
   events: EventRecord[]
   /** 시즌 활약 요약: 평점·리그 내 순위·수상 이름 (옛 세이브에는 없을 수 있다) */
   highlights?: { rating: number; rank: number; players: number; awards: string[] }
+  /** 이 시즌의 소속 팀 id (없으면 null). 업적 판정용, 옛 세이브에는 없을 수 있다 */
+  teamId?: string | null
+  /** 시즌을 마칠 때 부상 중이거나 슬럼프였는가 (업적 판정용) */
+  setback?: boolean
+  /** 시즌 초 기대 순위가 리그 하위 절반이었는가 (업적 판정용) */
+  underdog?: boolean
 }
 
 export interface GameState {

@@ -180,6 +180,9 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
     stage: stageBefore,
     events: results.map(({ id, name, placement, fieldSize }) => ({ id, name, placement, fieldSize })),
     highlights: { rating: highlights.rating, rank: highlights.ratingRank, players: highlights.players, awards: highlights.awards.map((a) => a.name) },
+    teamId: state.team?.id ?? null,
+    setback: state.injuredMonths > 0 || state.slumpMonths > 0,
+    underdog: leagueUnderdog(run.runs),
   }
   next = { ...next, history: [...state.history, record] }
 
@@ -193,6 +196,12 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
     state: next,
     report: { stageBefore, stageAfter: next.stage, events: results, rival, relegated, promoted, qualified: run.qualified, worldChampion, finished, pendingOffers: next.pendingOffers, tests, routeNotes, highlights },
   }
+}
+
+/** 이번 시즌 마지막 리그의 기대 순위가 하위 절반이었는가 (기대 순위가 없으면 false) */
+function leagueUnderdog(runs: readonly { expected?: number; fieldSize: number }[]): boolean {
+  const league = [...runs].reverse().find((r) => r.expected !== undefined)
+  return !!league && league.expected! > league.fieldSize / 2
 }
 
 /** 스카우트·이적 제안 하나를 고른다. index가 null이면 거절(이적 제안만 거절할 수 있다). */
