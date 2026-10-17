@@ -15,6 +15,9 @@ import { MODE_INFO } from './labels.ts'
  * data-art 값(ending_<id>)이 이미지 파일 이름이다. 필요한 장면 목록은 docs/ending-images.md.
  * hero는 엔딩 화면의 큰 그림, thumb는 도감의 작은 그림. 못 본 엔딩(locked)은 ?로 가린다.
  */
+/** 월드 우승 엔딩들 (폭죽·금색 카드) */
+const CHAMPION_ENDINGS: EndingId[] = ['hidden_loyal', 'goat', 'emperor', 'two_time', 'legend']
+
 export function endingArt(id: EndingId, locked = false, size: 'hero' | 'thumb' = 'thumb'): HTMLElement {
   const el = h('div', { class: `ending-art ${size}${locked ? ' locked' : ' scene'}`, 'data-art': `ending_${id}`, role: 'img', 'aria-label': locked ? '아직 보지 못한 엔딩' : endingDef(id).name })
   if (locked) el.textContent = '?'
@@ -36,7 +39,7 @@ export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements }
   const def = endingDef(id)
   const best = bestStageOf(state)
 
-  if (id === 'legend' || id === 'hidden_loyal' || achievements.length > 0) requestAnimationFrame(() => celebrate('UR'))
+  if (CHAMPION_ENDINGS.includes(id) || achievements.length > 0) requestAnimationFrame(() => celebrate('UR'))
   else if (id === 'world_finalist') requestAnimationFrame(() => celebrate('SR'))
 
   const row = (label: string, value: string) => h('div', { class: 'kv-row' }, h('span', { class: 'muted' }, label), h('b', {}, value))
@@ -47,7 +50,7 @@ export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements }
     h('p', { class: 'eyebrow' }, '커리어 종료'),
     h(
       'section',
-      { class: `card headline ${id === 'legend' || id === 'hidden_loyal' ? 'gold' : ''}` },
+      { class: `card headline ${CHAMPION_ENDINGS.includes(id) ? 'gold' : ''}` },
       endingArt(id, false, 'hero'),
       isNew && h('span', { class: 'chip new-chip' }, '도감에 새로 기록!'),
       h('p', { class: 'headline-title' }, def.name),

@@ -207,6 +207,11 @@ describe('엔딩', () => {
   it('표의 위쪽 조건이 우선한다', () => {
     expect(evaluateEnding(make({ worldTitles: 1, team: TEAM, debutTeamId: 'org_0', everPro: true, stage: 'pro1' }))).toBe('hidden_loyal')
     expect(evaluateEnding(make({ worldTitles: 1, team: TEAM, debutTeamId: 'org_9', everPro: true, stage: 'pro1' }))).toBe('legend')
+    const champ = { team: TEAM, debutTeamId: 'org_9', everPro: true, stage: 'pro1' as const }
+    expect(evaluateEnding(make({ ...champ, worldTitles: 2 }))).toBe('two_time')
+    expect(evaluateEnding(make({ ...champ, worldTitles: 3 }))).toBe('emperor')
+    expect(evaluateEnding(make({ ...champ, worldTitles: 5 }))).toBe('goat')
+    expect(evaluateEnding(make({ ...champ, worldTitles: 5, debutTeamId: 'org_0' }))).toBe('hidden_loyal')
     expect(evaluateEnding(make({ worldAppearances: 2, everPro: true, stage: 'pro1' }))).toBe('world_finalist')
     expect(evaluateEnding(make({ seasonsInPro1: 5, everPro: true, stage: 'pro1' }))).toBe('pro1_regular')
     expect(evaluateEnding(make({ stage: 'pro2', everPro: true }))).toBe('pro2_veteran')

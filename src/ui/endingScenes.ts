@@ -67,6 +67,25 @@ function beams(color: string, opacity: number): string {
 
 const SKIN_HAIR = { hair: '#7a4426' }
 
+/** 월드 우승 무대 (레전드 계열 엔딩이 함께 쓴다) */
+const legendScene = (): string =>
+  // 월드 결승 무대: 금빛 폭죽과 우승 트로피, 환호하는 팀원들
+    r(0, 0, 160, 100, '#101a3a') +
+    beams('#fff3b0', 0.14) +
+    box(24, 6, 112, 28, '#0b1230') +
+    r(28, 10, 104, 20, '#1b2e6b') +
+    `<polygon points="80,12 83,20 91,20 85,25 87,33 80,28 73,33 75,25 69,20 77,20" fill="#ffd34d"/>` +
+    crowd(52, 4, ['#ffd34d', '#ffffff', '#5fd1ff', '#ff8fb3'], 0.5) +
+    r(0, 78, 160, 22, '#2a2f5a') +
+    box(58, 74, 44, 20, '#ffd34d') +
+    box(14, 80, 36, 14, '#c9d3ff') +
+    box(110, 80, 36, 14, '#e0a96d') +
+    person(32, 80, 36, { shirt: '#ff7ab6', hair: '#3a2a20' }, 'cheer') +
+    person(128, 80, 36, { shirt: '#7ad1ff', hair: '#5a3a2a' }, 'cheer') +
+    person(80, 74, 42, { shirt: '#ffcf4d', ...SKIN_HAIR }, 'cheer') +
+    trophy(80, 8) +
+    confetti(90, ['#ffd34d', '#ffffff', '#ff8fb3', '#5fd1ff', '#9dff9d'], 90, 5)
+
 /** 엔딩 id → 장면 안쪽 SVG */
 const SCENES: Record<EndingId, () => string> = {
   // 홈 경기장: 영구결번 유니폼, "영원한 에이스" 플래카드, 데뷔 때 유니폼 그대로 트로피를 든 선수
@@ -90,22 +109,16 @@ const SCENES: Record<EndingId, () => string> = {
     person(80, 96, 44, { shirt: '#4f8dff', ...SKIN_HAIR }, 'cheer'),
 
   // 월드 결승 무대: 금빛 폭죽과 우승 트로피, 환호하는 팀원들
-  legend: () =>
-    r(0, 0, 160, 100, '#101a3a') +
-    beams('#fff3b0', 0.14) +
-    box(24, 6, 112, 28, '#0b1230') +
-    r(28, 10, 104, 20, '#1b2e6b') +
-    `<polygon points="80,12 83,20 91,20 85,25 87,33 80,28 73,33 75,25 69,20 77,20" fill="#ffd34d"/>` +
-    crowd(52, 4, ['#ffd34d', '#ffffff', '#5fd1ff', '#ff8fb3'], 0.5) +
-    r(0, 78, 160, 22, '#2a2f5a') +
-    box(58, 74, 44, 20, '#ffd34d') +
-    box(14, 80, 36, 14, '#c9d3ff') +
-    box(110, 80, 36, 14, '#e0a96d') +
-    person(32, 80, 36, { shirt: '#ff7ab6', hair: '#3a2a20' }, 'cheer') +
-    person(128, 80, 36, { shirt: '#7ad1ff', hair: '#5a3a2a' }, 'cheer') +
-    person(80, 74, 42, { shirt: '#ffcf4d', ...SKIN_HAIR }, 'cheer') +
-    trophy(80, 8) +
-    confetti(90, ['#ffd34d', '#ffffff', '#ff8fb3', '#5fd1ff', '#9dff9d'], 90, 5),
+  legend: legendScene,
+
+  // 두 번째 우승: 레전드 무대 양옆에 지난 우승 트로피가 하나 더
+  two_time: () => legendScene() + trophy(36, 36) + trophy(124, 36),
+
+  // 3번 우승: 트로피가 줄지어 서고 별이 반짝이는 왕조의 무대
+  emperor: () => legendScene() + trophy(30, 38) + trophy(52, 40) + trophy(108, 40) + trophy(130, 38) + text(80, 66, 9, '#ffd34d', '★ ★ ★'),
+
+  // 4번 이상 우승: 트로피 넷에 별 다섯, 역대 최고의 무대
+  goat: () => legendScene() + trophy(26, 36) + trophy(48, 42) + trophy(112, 42) + trophy(134, 36) + text(80, 66, 9, '#ffd34d', '★ ★ ★ ★ ★'),
 
   // 결승 뒤의 무대: 은메달을 건 선수, 환호하는 우승팀, 박수 치는 관중
   world_finalist: () =>
