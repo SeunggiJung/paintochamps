@@ -11,6 +11,7 @@ describe('업데이트 로그', () => {
     }
     const dates = UPDATES.map((u) => u.date)
     expect(dates).toEqual([...dates].sort().reverse())
+    expect(new Set(dates).size).toBe(dates.length) // 날짜별로 항목 하나
   })
 
   it('최초 배포일(2026-10-15) 이후 변경만 담고, 저장소를 못 써도 오늘 안 보기 확인이 죽지 않는다', () => {

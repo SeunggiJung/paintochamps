@@ -3,7 +3,7 @@ import { evaluateEnding } from './endings.ts'
 import { makeOpponents } from './field.ts'
 import { createRng } from './rng.ts'
 import { createInitialState, type GameState, type StageId } from './state.ts'
-import { acceptOffer, eventsFor, requestTransfer, retire, settleSeason, transferBlocker } from './season.ts'
+import { acceptOffer, eventsFor, requestTransfer, retire, settleSeason, transferBlocker, transferSuccessChance } from './season.ts'
 import { applyTurn, startNextSeason } from './turn.ts'
 import type { GenreId, Stats } from './types.ts'
 
@@ -317,5 +317,28 @@ describe('이적 요청', () => {
     const a = requestTransfer(pro(), 'mid')
     const b = requestTransfer(pro(), 'mid')
     expect(a.ok && b.ok && a.state.pendingOffers!.offers.map((o) => o.team.id)).toEqual(b.ok && a.ok ? b.state.pendingOffers!.offers.map((o) => o.team.id) : null)
+  })
+
+  it('이적 요청은 늘 성공하지는 않는다: 실패하면 제안 없이 요청 기회만 쓴다', () => {
+    expect(transferSuccessChance(30)).toBeLessThan(transferSuccessChance(100))
+    expect(transferSuccessChance(0)).toBeGreaterThan(0)
+    expect(transferSuccessChance(10_000)).toBeLessThan(1)
+    let fails = 0
+    let wins = 0
+    for (let seed = 1; seed <= 80; seed++) {
+      const r = requestTransfer(pro({ seed, fame: 40 }), 'mid')
+      if (!r.ok) continue
+      if (r.success) {
+        wins++
+        expect(r.state.pendingOffers?.offers.length).toBeGreaterThan(0)
+      } else {
+        fails++
+        expect(r.state.pendingOffers).toBeNull()
+        expect(r.state.transferMidSeason).toBe(r.state.season)
+        expect(requestTransfer(r.state, 'mid').ok).toBe(false)
+      }
+    }
+    expect(fails).toBeGreaterThan(10)
+    expect(wins).toBeGreaterThan(10)
   })
 })

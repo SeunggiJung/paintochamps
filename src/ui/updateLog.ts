@@ -38,26 +38,28 @@ function hideToday(): void {
 
 let shownThisLoad = false
 
-/** 업데이트 로그 팝업: 최신 항목만 펼쳐져 있고 나머지는 접혀 있다. 닫기와 '오늘 하루 안 보기'가 있다. */
+/** 업데이트 로그 팝업: 날짜별로 한 항목씩이고, 최신 날짜만 펼쳐져 있다. 하나를 열면 나머지는 접히고 내용은 스크롤로 본다. 닫기와 '오늘 하루 안 보기'가 있다. */
 export async function openUpdateLog(): Promise<void> {
-  const hide = await openSheet<boolean>((close) =>
-    h(
+  const hide = await openSheet<boolean>((close) => {
+    const entries = UPDATES.map((u, i) =>
+      h(
+        'details',
+        { class: 'update-entry', open: i === 0 },
+        h('summary', {}, h('b', {}, u.date), h('span', { class: 'muted small' }, ` ${u.title}`)),
+        h('ul', { class: 'update-items' }, ...u.items.map((t) => h('li', {}, t))),
+      ),
+    )
+    // 하나를 열면 나머지는 접는다 (브라우저의 name 속성 아코디언에 기대지 않고 직접 처리)
+    for (const d of entries) d.addEventListener('toggle', () => d.open && entries.forEach((o) => o !== d && (o.open = false)))
+    return h(
       'div',
       { class: 'stack-tight update-log' },
       h('p', { class: 'eyebrow' }, '업데이트 로그'),
-      ...UPDATES.map((u, i) =>
-        h(
-          'details',
-          { class: 'update-entry', open: i === 0 },
-          h('summary', {}, h('b', {}, u.title), h('span', { class: 'muted small' }, ` ${u.date}`)),
-          h('ul', { class: 'update-items' }, ...u.items.map((t) => h('li', {}, t))),
-        ),
-      ),
+      ...entries,
       h('button', { class: 'btn primary', onclick: () => close(false) }, '닫기'),
       h('button', { class: 'btn ghost small', onclick: () => close(true) }, '오늘 하루 안 보기'),
-    ),
-    { autofocus: false },
-  )
+    )
+  }, { autofocus: false })
   if (hide) hideToday()
 }
 

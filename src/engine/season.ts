@@ -105,18 +105,26 @@ export function transferBlocker(state: GameState, when: TransferWhen): string | 
   return null
 }
 
+/** 이적 요청이 받아들여질 확률: 명성이 높을수록 다른 팀이 관심을 보인다 */
+export function transferSuccessChance(fame: number): number {
+  const q = OFFERS.request
+  return Math.min(q.max, Math.max(q.min, q.base + q.perFame * fame))
+}
+
 /**
- * 플레이어의 이적 요청. 다른 팀 최대 3곳의 제안(거절 가능, kind: 'transfer')이 pendingOffers로 온다.
- * 시즌 중간 요청은 그 시즌의 무작위 이적 제안(rollMidSeasonOffer)도 대신한다.
+ * 플레이어의 이적 요청. 늘 받아들여지는 것은 아니고(transferSuccessChance), 관심을 보인 팀이 없으면 success가 false이며 요청 기회만 쓴다.
+ * 성공하면 다른 팀 최대 3곳의 제안(거절 가능, kind: 'transfer')이 pendingOffers로 온다.
+ * 시즌 중간 요청은 성공 여부와 상관없이 그 시즌의 무작위 이적 제안(rollMidSeasonOffer)도 대신한다.
  */
-export function requestTransfer(state: GameState, when: TransferWhen): { ok: true; state: GameState } | { ok: false; error: string } {
+export function requestTransfer(state: GameState, when: TransferWhen): { ok: true; state: GameState; success: boolean } | { ok: false; error: string } {
   const error = transferBlocker(state, when)
   if (error) return { ok: false, error }
   const kind = state.stage === 'amateur_team' ? 'amateur' : 'pro'
   const rng = createRng(mixSeed(state.seed, state.season, state.turnCount, when === 'mid' ? 0x7e51 : 0x7e52))
-  const offers = makeScoutOffers(rng, kind, new Set([state.team!.id]), OFFERS.count).offers
   const marks = when === 'mid' ? { transferMidSeason: state.season, midOfferSeason: state.season } : { transferSettleSeason: state.season }
-  return { ok: true, state: { ...state, ...marks, pendingOffers: { kind: 'transfer', offers } } }
+  if (rng() >= transferSuccessChance(state.fame)) return { ok: true, state: { ...state, ...marks }, success: false }
+  const offers = makeScoutOffers(rng, kind, new Set([state.team!.id]), OFFERS.count).offers
+  return { ok: true, state: { ...state, ...marks, pendingOffers: { kind: 'transfer', offers } }, success: true }
 }
 
 /** 하위 20%(최소 1팀)에 들면 강등 */

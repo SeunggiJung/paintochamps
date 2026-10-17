@@ -111,7 +111,11 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     const r = requestTransfer(state, 'mid')
     if (!r.ok) return render(r.error)
     busy = true
-    state = await askMidSeasonOffer(r.state, true)
+    if (r.success) state = await askMidSeasonOffer(r.state, true)
+    else {
+      state = r.state
+      await confirmSheet({ title: '이적 요청', message: '아직 관심을 보이는 팀이 없다. 이번 시즌 중간 요청은 여기까지다. 성적과 명성을 더 쌓으면 기회가 온다.', ok: '확인', cancel: '닫기' })
+    }
     busy = false
     saveGame(ctx.storage, state)
     render()

@@ -7,5 +7,5 @@
     "pro2":         { "name": "프로 2부 리그",       "next": { "minPower": 250 } },
     "pro1":         { "name": "프로 1부 리그" }
   },
-  "offers": { "count": 3, "callupCount": 3, "salaryMoney": 40, "playtimeFame": 8, "transferMinFame": 50, "transferChance": 0.35, "midMinFame": 30, "midChance": 0.2 }
+  "offers": { "count": 3, "callupCount": 3, "salaryMoney": 40, "playtimeFame": 8, "transferMinFame": 50, "transferChance": 0.35, "midMinFame": 30, "midChance": 0.2, "request": { "base": 0.35, "perFame": 0.004, "min": 0.2, "max": 0.9 } }
 }

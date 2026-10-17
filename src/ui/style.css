@@ -357,7 +357,7 @@ input[type='text'] {
 /* 업데이트 로그 */
 .update-entry { border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; background: var(--panel); }
 .update-entry summary { cursor: pointer; }
-.update-items { margin: 8px 0 4px; padding-left: 18px; display: grid; gap: 6px; font-size: 0.9rem; }
+.update-items { margin: 8px 0 4px; padding-left: 18px; display: grid; gap: 6px; font-size: 0.9rem; max-height: 50vh; overflow-y: auto; }
 
 /* 장비·시설 업그레이드 그림과 연출 */
 .upg-art { width: 72px; height: 72px; background: #121827; border: 2px solid #2a3350; border-radius: 10px; display: grid; place-items: center; }

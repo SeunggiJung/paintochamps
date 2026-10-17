@@ -1,3 +1,4 @@
+import modes from '../data/modes.json'
 import routes from '../data/routes.json'
 import { eventsFor, isInvited, midPhase, playerPower, type EventDef } from './competitions.ts'
 import { moneyScale } from './economy.ts'
@@ -59,13 +60,18 @@ function playerTeam(state: GameState, ev: EventDef, power: number): Team {
   return { id: base.id, name, power, isPlayer: true }
 }
 
+/** 튜토리얼은 처음 하는 사람을 위해 월드 챔피언십에서만 전력을 조금 더해 준다 (modes.json worldBonus) */
+function worldBonus(mode: GameState['mode']): number {
+  return (modes[mode] as { worldBonus?: number }).worldBonus ?? 0
+}
+
 /** 대회 하나를 치러 결과를 정한다. 진출권이 없거나 상위 팀에 못 들었으면 null(열리지 않음). */
 function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun, events: EventDef[]): { record: RunRecord; qualified: string[]; points: number } | null {
   if (ev.needs && !run.qualified.includes(ev.needs)) return null
   if (!isInvited(state, ev)) return null
   const rng = createRng(mixSeed(state.seed, state.season, 0x5ea5, index))
   // 소속 팀이 리그 평균보다 강하면 전력이 오르고 약하면 내려간다 (PC방 대회처럼 팀 없이 나가는 대회는 제외)
-  const power = playerPower(state, ev.big ?? false) + (ev.field?.names === 'cafe' ? 0 : teamBoost(state))
+  const power = playerPower(state, ev.big ?? false) + (ev.field?.names === 'cafe' ? 0 : teamBoost(state)) + (ev.world ? worldBonus(state.mode) : 0)
 
   let teams: Team[]
   if (ev.from) {

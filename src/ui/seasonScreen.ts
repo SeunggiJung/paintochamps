@@ -122,7 +122,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
       { class: 'card' },
       h('h3', {}, '이적 요청'),
       h('p', { class: 'muted small' }, '다음 시즌을 앞두고 다른 팀의 제안을 받아 볼 수 있다. 마음에 안 들면 남아도 된다. (시즌당 한 번)'),
-      h('button', { class: 'btn small', onclick: () => { const r = requestTransfer(state, 'settle'); if (r.ok) { state = r.state; render() } } }, '이적 요청하기'),
+      h('button', { class: 'btn small', onclick: () => { const r = requestTransfer(state, 'settle'); if (r.ok) { state = r.state; joined = r.success ? '' : '이적을 요청했지만 관심을 보이는 팀이 없었다.'; render() } } }, '이적 요청하기'),
     )
   }
 
