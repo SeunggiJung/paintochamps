@@ -1,8 +1,10 @@
 import actionData from '../data/actions.json'
+import genres from '../data/genres.json'
 import rules from '../data/rules.json'
 import type { CalendarBeat } from './calendar.ts'
 import { createRng, mixSeed, shuffled } from './rng.ts'
 import type { ActionId, GameState } from './state.ts'
+import { STAT_KEYS, type StatKey } from './types.ts'
 
 type PoolDef = { pool?: boolean; requires?: { inTeam?: boolean } }
 
@@ -57,13 +59,29 @@ export function slumpGap(size: number): number {
   return Math.max(rules.coachSwap.minGap, Math.round(size * rules.coachSwap.gapRatio))
 }
 
+/**
+ * 이 훈련이 선수의 부족한 능력치를 얼마나 채워 주는가.
+ * 능력치별 (가장 높은 능력치와의 차이 × 장르 비중) × 훈련이 올리는 양을 더한다.
+ */
+function fillScore(state: GameState, id: ActionId): number {
+  const def = (actionData as Record<string, { stats?: Partial<Record<StatKey, number>>; topGenreStats?: { count: number; amount: number } }>)[id]
+  const weights = genres[state.genre].weights
+  const gains: Partial<Record<StatKey, number>> = { ...def.stats }
+  if (def.topGenreStats) {
+    const top = [...STAT_KEYS].sort((a, b) => weights[b] - weights[a]).slice(0, def.topGenreStats.count)
+    for (const key of top) gains[key] = def.topGenreStats.amount
+  }
+  const best = Math.max(...STAT_KEYS.map((k) => state.stats[k]))
+  return STAT_KEYS.reduce((sum, k) => sum + (gains[k] ?? 0) * weights[k] * (best - state.stats[k]), 0)
+}
+
 export interface CoachOffer {
   eventName: string
   /** 지금 순위와 코치가 잡은 목표 순위 */
   rank: number
   expected: number
   size: number
-  /** 교체 후보 (지금 훈련 제외, 무작위) */
+  /** 교체 후보 (지금 훈련 제외, 부족한 능력치를 잘 채우는 순) */
   options: ActionId[]
 }
 
@@ -79,7 +97,10 @@ export function coachSwapOffer(state: GameState, beats: readonly CalendarBeat[])
   if (!bad || bad.kind !== 'mid' || bad.expected === null) return null
 
   const pool = candidates(true).filter((id) => id !== state.seasonTraining)
-  const options = shuffled(createRng(mixSeed(state.seed, state.season, 0xc0ac)), pool).slice(0, rules.coachSwap.options)
+  // 같은 점수끼리는 시드로 섞은 순서를 따른다
+  const shuffledPool = shuffled(createRng(mixSeed(state.seed, state.season, 0xc0ac)), pool)
+  const score = new Map(shuffledPool.map((id) => [id, fillScore(state, id)]))
+  const options = [...shuffledPool].sort((a, b) => score.get(b)! - score.get(a)!).slice(0, rules.coachSwap.options)
   if (options.length === 0) return null
   return { eventName: bad.name, rank: bad.rank, expected: bad.expected, size: bad.size, options }
 }

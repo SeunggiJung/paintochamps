@@ -55,6 +55,17 @@ describe('코치의 훈련 교체 제안', () => {
     expect(coachSwapOffer(s, [mid(2 + gap, 2)])!.options).toEqual(offer!.options)
   })
 
+  it('후보는 부족한 능력치를 채워 주는 훈련 순으로 나온다', () => {
+    // AOS는 판단력 비중이 가장 크다. 판단력만 낮은 선수에게는 판단력을 올리는 훈련이 첫 후보다.
+    const weak = { ...stats(600), judgment: 100 }
+    const s = make({ stats: weak })
+    const offer = coachSwapOffer(s, [mid(9, 1)])!
+    const gain = (id: string) => (ACTIONS[id as keyof typeof ACTIONS].stats?.judgment ?? 0)
+    expect(gain(offer.options[0])).toBeGreaterThan(0)
+    const rest = TRAINING_POOL.filter((id) => id !== 'basics' && !offer.options.includes(id))
+    expect(Math.max(...rest.map(gain))).toBeLessThanOrEqual(gain(offer.options[0]))
+  })
+
   it('기대 순위와 차이가 작으면 제안하지 않는다', () => {
     expect(coachSwapOffer(make(), [mid(2 + slumpGap(10) - 1, 2)])).toBeNull()
     expect(coachSwapOffer(make(), [mid(1, 5)])).toBeNull()

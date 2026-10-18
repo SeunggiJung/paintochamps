@@ -60,7 +60,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     render()
   }
 
-  /** 코치의 훈련 교체 제안: 무작위 후보 중 하나로 바꾸거나 지금 훈련을 유지한다. 어느 쪽이든 이번 시즌 제안은 끝난다. */
+  /** 코치의 훈련 교체 제안: 부족한 능력치를 채워 주는 후보 중 하나로 바꾸거나 지금 훈련을 유지한다. 어느 쪽이든 이번 시즌 제안은 끝난다. */
   const askCoachSwap = async (s: GameState, offer: CoachOffer): Promise<GameState> => {
     const picked = await openSheet<ActionId | null>((close) =>
       h(
