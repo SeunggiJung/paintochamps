@@ -19,7 +19,7 @@ const RUNS = Number(process.env.BALANCE_RUNS ?? 100)
 const genres: GenreId[] = ['fps', 'aos']
 const modes: ModeId[] = ['tutorial', 'standard', 'precise']
 
-describe('난이도: 월드는 쉽게 갈 수 없고, 우승은 더 어렵다', () => {
+describe('난이도: 숙련 플레이는 20대 중반에 월드를 제패할 수 있고, 단순 플레이는 훨씬 어렵다', () => {
   const reports = genres.flatMap((g) =>
     modes.map((m) => ({
       random: runBatch(g, m, RUNS, { policy: 'random' }),
@@ -41,22 +41,33 @@ describe('난이도: 월드는 쉽게 갈 수 없고, 우승은 더 어렵다', 
     }
   })
 
-  it('월드 우승은 숙련 플레이로도 어렵다 (한 판에 20% 이하), 단순 플레이로는 거의 불가능하다 (2% 이하)', () => {
+  // 2026-10-19 사용자 결정: 핵심 능력치를 끝까지 키운 선수가 국제전에서 꼴찌를 하는 건 현실과 안 맞는다.
+  // 숙련 플레이는 20대 중반에 첫 월드 우승을 하는 게 흔해야 하므로 1부 강호(915→760)와 국제전 상대(990→770)를 낮췄다.
+  // 대신 단순·무작위 플레이도 예전보다 월드 우승 가능성이 열린다(자동 진행 때문에 둘의 실력 격차가 크지 않다).
+  it('숙련 플레이는 커리어 안에 월드 우승을 하고, 첫 우승이 20대 중반~후반에 온다 (평균 28세 이하, 26세 이하 첫 우승 15% 이상)', () => {
     for (const r of reports) {
-      expect(r.skilled.worldTitle).toBeLessThanOrEqual(0.2)
-      expect(r.casual.worldTitle).toBeLessThanOrEqual(0.02)
+      expect(r.skilled.worldTitle).toBeGreaterThanOrEqual(0.6)
+      expect(r.skilled.firstTitle.avgAge!).toBeLessThanOrEqual(28)
+      expect(r.skilled.firstTitle.by26).toBeGreaterThanOrEqual(0.15)
     }
   })
 
-  it('월드 진출은 시즌마다 되는 일이 아니다 (1부 시즌당 숙련 45% 이하, 단순 플레이 5% 이하)', () => {
+  it('단순 플레이는 숙련보다 월드 우승이 훨씬 드물다 (25% 이하, 숙련과 55%p 이상 차이)', () => {
     for (const r of reports) {
-      expect(r.skilled.perSeason.world).toBeLessThanOrEqual(0.45)
-      expect(r.casual.perSeason.world).toBeLessThanOrEqual(0.05)
+      expect(r.casual.worldTitle).toBeLessThanOrEqual(0.25)
+      expect(r.skilled.worldTitle - r.casual.worldTitle).toBeGreaterThanOrEqual(0.55)
     }
   })
 
-  it('단순 플레이는 커리어 내내 거의 월드에 못 간다 (표본 잡음을 감안해 12% 이하, 150판 측정은 1~10%)', () => {
-    for (const r of reports) expect(r.casual.reachedWorld).toBeLessThanOrEqual(0.12)
+  it('월드 진출은 시즌마다 되는 일이 아니다 (1부 시즌당 숙련 60% 이하, 단순 플레이 20% 이하)', () => {
+    for (const r of reports) {
+      expect(r.skilled.perSeason.world).toBeLessThanOrEqual(0.6)
+      expect(r.casual.perSeason.world).toBeLessThanOrEqual(0.2)
+    }
+  })
+
+  it('단순 플레이가 커리어 내내 월드에 못 가는 경우도 많다 (진출 65% 이하)', () => {
+    for (const r of reports) expect(r.casual.reachedWorld).toBeLessThanOrEqual(0.65)
   })
 
   it('그래도 숙련된 플레이어에게는 길이 열려 있다 (1부 도달 40% 이상, 월드 진출 30% 이상)', () => {
@@ -72,11 +83,11 @@ describe('난이도: 월드는 쉽게 갈 수 없고, 우승은 더 어렵다', 
     for (const r of reports) expect(r.skilled.avgFinal.power - r.casual.avgFinal.power).toBeGreaterThanOrEqual(120)
   })
 
-  it('계획을 아무렇게나 정하면 숙련보다 뒤처지고(최종 실력치 80 이상 낮다) 월드에는 거의 못 간다 (30% 이하)', () => {
+  it('계획을 아무렇게나 정하면 숙련보다 뒤처지고(최종 실력치 80 이상 낮다) 월드 우승도 숙련보다 훨씬 드물다 (진출 85% 이하, 우승 45% 이하)', () => {
     for (const r of reports) {
       expect(r.skilled.avgFinal.power - r.random.avgFinal.power).toBeGreaterThanOrEqual(80)
-      expect(r.random.reachedWorld).toBeLessThanOrEqual(0.3)
-      expect(r.random.worldTitle).toBeLessThanOrEqual(0.02)
+      expect(r.random.reachedWorld).toBeLessThanOrEqual(0.85)
+      expect(r.random.worldTitle).toBeLessThanOrEqual(0.45)
     }
   })
 

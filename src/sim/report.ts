@@ -21,6 +21,8 @@ export interface BatchReport {
   avgFinal: { power: number; money: number; fame: number }
   /** 1부 시즌 하나당: 플레이오프에 든 비율, 월드에 나간 비율, 월드를 우승한 비율 */
   perSeason: { playoffs: number; world: number; title: number }
+  /** 첫 월드 우승 나이: 우승한 판의 평균과, 26세 이하에 첫 우승한 판의 비율(전체 판 대비) */
+  firstTitle: { avgAge?: number; by26: number }
 }
 
 const STAGES: StageId[] = ['local_cup', 'amateur_team', 'pro2', 'pro1']
@@ -52,11 +54,16 @@ function summarize(genre: GenreId, mode: ModeId, finals: GameState[]): BatchRepo
       if (world?.placement === 1) titleSeasons++
     }
   }
+  const titleAges = finals.flatMap((s) => {
+    const first = s.history.find((h) => h.events.some((e) => e.id === 'world' && e.placement === 1))
+    return first ? [first.age] : []
+  })
   const per = (v: number) => (pro1Seasons ? v / pro1Seasons : 0)
   const mean = (f: (s: GameState) => number) => finals.reduce((sum, s) => sum + f(s), 0) / n
   return {
     avgFinal: { power: mean((s) => genrePower(s.stats, genre)), money: mean((s) => s.money), fame: mean((s) => s.fame) },
     perSeason: { playoffs: per(playoffSeasons), world: per(worldSeasons), title: per(titleSeasons) },
+    firstTitle: { avgAge: avg(titleAges), by26: titleAges.filter((a) => a <= 26).length / n },
     genre,
     mode,
     runs: n,
@@ -86,5 +93,5 @@ export function formatReport(r: BatchReport, label: string): string {
   const ages = Object.entries(r.firstAge)
     .map(([k, v]) => `${k} ${v!.toFixed(1)}`)
     .join(', ')
-  return `${label} ${r.genre}/${r.mode} (${r.runs}판): 1부 도달 ${pct(r.reachedPro1)} | 월드 진출 ${pct(r.reachedWorld)} | 월드 우승 ${pct(r.worldTitle)} | 히든 ${pct(r.hidden)} | 1부 ${r.avgPro1Seasons.toFixed(1)}시즌 | 최종 R ${r.avgFinal.power.toFixed(0)} 돈 ${r.avgFinal.money.toFixed(0)} 명성 ${r.avgFinal.fame.toFixed(0)} | 시즌당 플레이오프 ${pct(r.perSeason.playoffs)} 월드 ${pct(r.perSeason.world)} 우승 ${pct(r.perSeason.title)} | 첫 도달 나이 ${ages}\n   엔딩: ${endings}`
+  return `${label} ${r.genre}/${r.mode} (${r.runs}판): 1부 도달 ${pct(r.reachedPro1)} | 월드 진출 ${pct(r.reachedWorld)} | 월드 우승 ${pct(r.worldTitle)} | 히든 ${pct(r.hidden)} | 1부 ${r.avgPro1Seasons.toFixed(1)}시즌 | 최종 R ${r.avgFinal.power.toFixed(0)} 돈 ${r.avgFinal.money.toFixed(0)} 명성 ${r.avgFinal.fame.toFixed(0)} | 시즌당 플레이오프 ${pct(r.perSeason.playoffs)} 월드 ${pct(r.perSeason.world)} 우승 ${pct(r.perSeason.title)} | 첫 도달 나이 ${ages} | 첫 우승 ${r.firstTitle.avgAge?.toFixed(1) ?? '-'}세 (26세 이하 ${pct(r.firstTitle.by26)})\n   엔딩: ${endings}`
 }

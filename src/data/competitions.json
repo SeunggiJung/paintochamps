@@ -4,8 +4,8 @@
     "local":   { "mean": 210, "sd": 40 },
     "amateur": { "mean": 230, "sd": 40 },
     "pro2":    { "mean": 320, "sd": 45 },
-    "pro1":    { "mean": 673, "sd": 235, "grades": [ { "count": 5, "mean": 915, "sd": 40 }, { "count": 4, "mean": 620, "sd": 55 }, { "count": 3, "mean": 340, "sd": 50 } ] },
-    "intl":    { "mean": 990, "sd": 35 }
+    "pro1":    { "mean": 610, "sd": 195, "grades": [ { "count": 5, "mean": 760, "sd": 40 }, { "count": 4, "mean": 620, "sd": 55 }, { "count": 3, "mean": 340, "sd": 50 } ] },
+    "intl":    { "mean": 770, "sd": 35 }
   },
   "stages": {
     "basement": [
