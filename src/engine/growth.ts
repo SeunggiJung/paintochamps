@@ -39,6 +39,8 @@ export function equipmentEfficiency(equipment: Record<EquipmentId, number>): num
  */
 export function ageGrowthFactor(age: number, stat: StatKey): number {
   const g = rules.ageGrowth
+  // 전성기 직전의 성장기: 이 나이 구간에는 훈련 효율이 더 높다
+  if (age >= g.youth.fromAge && age <= g.youth.toAge) return 1 + g.youth.bonus
   const years = Math.max(0, age - g.fromAge + 1)
   const loss = g.lossPerYear * years * ((g.experienceStats as string[]).includes(stat) ? g.experienceLossFactor : 1)
   return Math.max(g.min, 1 - loss)

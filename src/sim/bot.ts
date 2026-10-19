@@ -6,7 +6,7 @@ import { autoTurn, PRESETS, setSeasonPlan, type SeasonPlan } from '../engine/pla
 import { genrePower } from '../engine/power.ts'
 import { createRng, mixSeed, type Rng } from '../engine/rng.ts'
 import { choosePrep, PREP, upcomingTest } from '../engine/routes.ts'
-import { acceptOffer, rollMidSeasonOffer, settleSeason } from '../engine/season.ts'
+import { acceptOffer, rollMidSeasonOffer, rollMidSeasonPromotion, settleSeason } from '../engine/season.ts'
 import { createInitialState, type ActionId, type EquipmentId, type GameState, type ModeId } from '../engine/state.ts'
 import { chooseSeasonTraining, trainingMenuOf } from '../engine/training.ts'
 import { buyEquipment, startNextSeason, turnsPerSeason } from '../engine/turn.ts'
@@ -149,6 +149,9 @@ export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: Bot
 
     const event = rollEvent(s, turnRng(s))
     if (event) s = applyEventChoice(s, event, pickEventChoice(s, event, opts.policy, botRng))
+    // 시즌 도중 승급 제안은 모두 받아들인다
+    s = rollMidSeasonPromotion(s)
+    if (s.pendingOffers) s = acceptOffer(s, 0)
     s = rollMidSeasonOffer(s)
     if (s.pendingOffers) s = acceptOffer(s, opts.acceptTransfers ? 0 : null)
     opts.onTurn?.(s)

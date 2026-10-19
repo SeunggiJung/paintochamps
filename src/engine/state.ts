@@ -115,6 +115,8 @@ export interface SeasonRun {
   skipped: string[]
   qualified: string[]
   points: number
+  /** 이번 시즌 도중 승급했다면 승급 전 단계 (그 단계에서 끝낸 대회는 결산에 함께 들어간다) */
+  promotedFrom?: StageId
 }
 
 export interface EventRecord {
@@ -197,6 +199,8 @@ export interface GameState {
   seasonRun: SeasonRun | null
   /** 시즌 중간 제안을 마지막으로 받은 시즌. 시즌당 한 번만 온다. */
   midOfferSeason: number
+  /** 시즌 도중 승급 제안을 이미 받은 시즌 (시즌당 한 번) */
+  promoOfferSeason?: number
   /** 플레이어가 이적을 요청한 마지막 시즌: 시즌 중간 / 시즌 결산 때 (각각 시즌당 한 번). 옛 세이브에는 없을 수 있다 */
   transferMidSeason: number
   transferSettleSeason: number
@@ -264,6 +268,7 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     trainingRerollSeason: 0,
     plan: null,
     midOfferSeason: 0,
+    promoOfferSeason: 0,
     transferMidSeason: 0,
     transferSettleSeason: 0,
     seasonRun: null,

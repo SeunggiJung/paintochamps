@@ -62,10 +62,12 @@ function makeScoutOffers(rng: Rng, kind: 'amateur' | 'pro', exclude: Set<string>
 }
 
 /** 프로 2부 → 1부 콜업 제안: 지금 소속 팀의 1군 콜업이 첫 번째, 나머지는 다른 구단에서 온다. 모두 1부 팀이다. */
-function makeCallupOffers(rng: Rng, own: GameState['team']): PendingOffers {
-  const others = pickTeams(rng, 'pro', own ? OFFERS.callupCount - 1 : OFFERS.callupCount, new Set(own ? [own.id] : []))
-  const teams = own ? [own, ...others] : others
-  return { kind: 'callup', stage: 'pro1', offers: teams.map((team) => ({ team, perk: rng() < 0.5 ? 'salary' : 'playtime' })) }
+function makeCallupOffers(rng: Rng, own: GameState['team'], stage: StageId = 'pro1'): PendingOffers {
+  // 1부 콜업은 지금 팀의 1군이 첫째다. 아마추어에서 2부로 오를 때는 다른 팀들이 제안한다.
+  const mine = own && stage === 'pro1' ? own : null
+  const others = pickTeams(rng, 'pro', mine ? OFFERS.callupCount - 1 : OFFERS.callupCount, new Set(own ? [own.id] : []))
+  const teams = mine ? [mine, ...others] : others
+  return { kind: 'callup', stage, offers: teams.map((team) => ({ team, perk: rng() < 0.5 ? 'salary' : 'playtime' })) }
 }
 
 /**
@@ -84,6 +86,59 @@ export function rollMidSeasonOffer(state: GameState): GameState {
   if (rng() >= 1 - (1 - OFFERS.midChance) ** turnScale(state.mode)) return state
   const offers = makeScoutOffers(rng, kind, new Set([state.team.id])).offers.slice(0, 2)
   return { ...state, pendingOffers: { kind: 'transfer', offers }, midOfferSeason: state.season }
+}
+
+interface MidPromotionDef {
+  to: StageId
+  events: string[]
+  topRatio: number
+  minPower: number
+  minFame: number
+}
+
+const MID_PROMOTION = stageData.midPromotion as Partial<Record<StageId, MidPromotionDef>>
+
+/** 이번 시즌 공개된 리그 순위 (최종이 나왔으면 최종, 아니면 중간). 아직 공개된 리그가 없으면 null. */
+function revealedStanding(state: GameState, eventIds: string[]): { rank: number; size: number } | null {
+  const run = state.seasonRun
+  if (!run || run.season !== state.season) return null
+  for (const id of [...eventIds].reverse()) {
+    const rec = run.runs.find((r) => r.id === id)
+    if (!rec || rec.revealed === 'none') continue
+    const rows = rec.revealed === 'end' ? rec.table : rec.mid
+    if (!rows) continue
+    return { rank: rows.findIndex((r) => r.isPlayer) + 1, size: rows.length }
+  }
+  return null
+}
+
+/**
+ * 시즌 도중 승급 제안. 지금 단계의 리그 순위가 공개됐고 상위권이며 실력·명성이 충분하면, 시즌이 끝나길 기다리지 않고
+ * 위 단계 팀(아마추어 → 프로 2부, 프로 2부 → 1부)에서 제안이 온다. 시즌당 한 번, 마지막 턴 뒤에는 오지 않는다(결산이 따로 있다).
+ * 받으면 그 자리에서 단계가 바뀌고(acceptOffer), 거절하면 그 시즌은 끝난다. 연습생은 트라이아웃으로만 오른다.
+ */
+export function rollMidSeasonPromotion(state: GameState): GameState {
+  if (state.finished || state.pendingOffers || !state.team) return state
+  const def = MID_PROMOTION[state.stage]
+  if (!def) return state
+  if ((state.promoOfferSeason ?? 0) === state.season) return state
+  if (state.turnInSeason < 1 || state.turnInSeason >= turnsPerSeason(state.mode)) return state
+  if (state.stage === 'amateur_team' && pathOf(state) === 'academy') return state
+  if (state.fame < def.minFame || genrePower(state.stats, state.genre) < def.minPower) return state
+  const standing = revealedStanding(state, def.events)
+  if (!standing || standing.rank > Math.max(1, Math.ceil(standing.size * def.topRatio))) return state
+  const rng = createRng(mixSeed(state.seed, state.turnCount, 0x9a0b))
+  return { ...state, promoOfferSeason: state.season, pendingOffers: makeCallupOffers(rng, state.team, def.to) }
+}
+
+/** 시즌 도중에 단계가 바뀐다: 끝나지 않은 대회는 접고, 이미 시작한 새 단계 대회는 건너뛰며, 승급 전 단계를 기록해 둔다. */
+function enterStageMidSeason(state: GameState, stage: StageId): GameState {
+  const run = state.seasonRun
+  if (!run || run.season !== state.season) return { ...state, stage }
+  const phase = state.turnInSeason / turnsPerSeason(state.mode)
+  const finished = run.runs.filter((r) => r.revealed === 'end')
+  const skipped = eventsFor({ ...state, stage }).filter((e) => e.span[0] < phase && !finished.some((r) => r.id === e.id)).map((e) => e.id)
+  return { ...state, stage, seasonRun: { ...run, runs: finished, skipped: [...new Set([...run.skipped, ...skipped])], promotedFrom: run.promotedFrom ?? state.stage } }
 }
 
 export type TransferWhen = 'mid' | 'settle'
@@ -142,7 +197,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
   if (isSettled(state)) throw new Error('이미 결산한 시즌이다')
 
   const rng = createRng(mixSeed(state.seed, state.season, 0x5ea5, 0xfe))
-  const stageBefore = state.stage
+  const stageBefore = state.seasonRun?.season === state.season && state.seasonRun.promotedFrom ? state.seasonRun.promotedFrom : state.stage
 
   // 시즌 중에 이미 치른 대회는 그대로 두고, 아직 열리지 않은 대회가 있으면(옛 세이브·바로 결산하는 경우) 지금 치른다
   const advanced = advanceCalendar(state, 1).state
@@ -152,7 +207,10 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
   let rank: { placement: number; size: number } | null = null
   let worldChampion = false
 
-  for (const ev of eventsFor(state)) {
+  // 시즌 도중 승급했다면 승급 전 단계에서 끝낸 대회도 이번 시즌 결과에 들어간다
+  const midPromoted = !!run.promotedFrom
+  const seasonEvents = [...(run.promotedFrom ? eventsFor({ ...state, stage: run.promotedFrom }) : []), ...eventsFor(state)]
+  for (const ev of seasonEvents) {
     const rec = run.runs.find((r) => r.id === ev.id)
     if (!rec) continue
     results.push({ id: ev.id, name: ev.name, placement: rec.placement, fieldSize: rec.fieldSize, fame: rec.fame, money: rec.money })
@@ -177,14 +235,14 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
 
   // 승급·강등. 방구석·지역 대회·아마추어 팀 단계는 시험과 성적으로 루트가 갈리고(routes.ts), 프로 2부부터는 실력치 조건이다.
   let relegated = false
-  let promoted = false
+  let promoted = midPromoted
   let pendingOffers: PendingOffers | null = null
   let tests: TestResult[] = []
   let routeNotes: string[] = []
   const idx = STAGE_ORDER.indexOf(state.stage)
   // 정석 루트의 연습생은 아마추어 리그 성적이 나빠도 방출되지 않는다 (배우는 단계)
   const trainee = state.stage === 'amateur_team' && pathOf(state) === 'academy'
-  if (!worldChampion && !trainee && rank && idx >= 2 && isRelegated(rank.placement, rank.size)) {
+  if (!worldChampion && !trainee && !midPromoted && rank && idx >= 2 && isRelegated(rank.placement, rank.size)) {
     relegated = true
     const lower = STAGE_ORDER[idx - 1]
     let team = next.team
@@ -214,11 +272,11 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
   }
   next = { ...next, pendingOffers }
 
-  const highlights = seasonHighlights(state, run, eventsFor(state))
+  const highlights = seasonHighlights(state, run, seasonEvents)
   const record: SeasonRecord = {
     season: state.season,
     age: state.age,
-    stage: stageBefore,
+    stage: state.stage,
     events: results.map(({ id, name, placement, fieldSize }) => ({ id, name, placement, fieldSize })),
     highlights: { rating: highlights.rating, rank: highlights.ratingRank, players: highlights.players, awards: highlights.awards.map((a) => a.name) },
     teamId: state.team?.id ?? null,
@@ -256,10 +314,11 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
   const offer = pending.offers[index]
   if (!offer) throw new Error('없는 제안이다')
   // 콜업이면 1부로 올라가고, 처음 올라가는 팀이 데뷔 팀이 된다. 팀을 옮기면 월급 협상은 새로 시작한다.
-  const stage = pending.kind === 'callup' ? 'pro1' : state.stage
+  const stage = pending.kind === 'callup' ? (pending.stage ?? 'pro1') : state.stage
+  const moved = stage !== state.stage && !isSettled(state) ? enterStageMidSeason(state, stage) : { ...state, stage }
   return {
-    ...state,
-    stage,
+    ...moved,
+    everPro: moved.everPro || stage === 'pro2' || stage === 'pro1',
     debutTeamId: stage === 'pro1' && state.debutTeamId === null ? offer.team.id : state.debutTeamId,
     team: offer.team,
     money: state.money + (offer.perk === 'salary' ? OFFERS.salaryMoney * moneyScale(stage) : 0),

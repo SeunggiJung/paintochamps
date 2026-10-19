@@ -6,7 +6,7 @@ import { rollEvent, turnRng } from '../engine/events.ts'
 import { autoTurn, planChoice, planOf, presetDef } from '../engine/plan.ts'
 import { genrePower } from '../engine/power.ts'
 import { choosePrep, expectedScore, PREP, testItems, testName, upcomingTest } from '../engine/routes.ts'
-import { acceptOffer, eventsFor, requestTransfer, rollMidSeasonOffer, stageName, transferBlocker } from '../engine/season.ts'
+import { acceptOffer, eventsFor, requestTransfer, rollMidSeasonOffer, rollMidSeasonPromotion, stageName, transferBlocker } from '../engine/season.ts'
 import type { ActionId, GameState } from '../engine/state.ts'
 import { applyCoachSwap, coachSwapOffer, trainingValue, type CoachOffer } from '../engine/training.ts'
 import { ACTIONS, ageShiftPerTurn, turnsPerSeason } from '../engine/turn.ts'
@@ -88,6 +88,26 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     return applyCoachSwap(s, picked)
   }
 
+  /** 시즌 도중 승급 제안: 실력과 성적이 되면 시즌이 끝나길 기다리지 않고 위 단계 팀에서 연락이 온다. 받으면 바로 올라간다. */
+  const askPromotion = async (s: GameState): Promise<GameState> => {
+    const pending = s.pendingOffers
+    if (!pending || pending.kind !== 'callup') return s
+    const stage = pending.stage ?? 'pro1'
+    const index = await openSheet<number | null>((close) =>
+      h(
+        'div',
+        { class: 'stack-tight' },
+        h('p', { class: 'eyebrow' }, `${stageName(stage)} 승급 제안`),
+        h('p', { class: 'event-text' }, `이번 시즌 활약을 본 ${stageName(stage)} 팀들에서 연락이 왔다. 시즌이 끝나길 기다리지 않고 지금 올라갈까?`),
+        h('div', { class: 'choices vertical' }, ...pending.offers.map((o, i) => offerButton(s, o, () => close(i), stage, true))),
+        h('button', { class: 'btn ghost small', onclick: () => close(null) }, `지금 팀에 남는다`),
+      ),
+    )
+    if (index !== null) await showContract(s, pending.offers[index], 'callup', stage)
+    const moved = acceptOffer(s, index)
+    return index !== null ? await openNegotiation(moved) : moved
+  }
+
   /** 시즌 도중 다른 팀에서 온 이적 제안. 하나를 골라 옮기거나 남는다. */
   const askMidSeasonOffer = async (s: GameState, requested = false): Promise<GameState> => {
     const pending = s.pendingOffers
@@ -165,6 +185,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     if (coach) next = await askCoachSwap(next, coach)
     const event = rollEvent(next, turnRng(next))
     if (event) next = await runEvent(next, event)
+    next = await askPromotion(rollMidSeasonPromotion(next))
     next = await askMidSeasonOffer(rollMidSeasonOffer(next))
     // 시즌이 이어질 때 가끔(약 30%): 쉬는 시간 미니게임(건너뛰어도 되고, 잘하면 다음 턴 훈련 효율이 조금 오른다)
     const mini = !next.finished && !next.pendingOffers && next.turnInSeason < turnsPerSeason(next.mode) ? rollMiniGame(next) : null

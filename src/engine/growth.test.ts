@@ -5,6 +5,7 @@ import { ageGrowthFactor } from './growth.ts'
 describe('나이에 따른 훈련 효율', () => {
   it('24세까지는 그대로, 25세부터 해마다 줄고 최저값에서 멈춘다', () => {
     expect(ageGrowthFactor(24, 'accuracy')).toBe(1)
+    expect(ageGrowthFactor(20, 'accuracy')).toBeCloseTo(1 + rules.ageGrowth.youth.bonus)
     expect(ageGrowthFactor(25, 'accuracy')).toBeCloseTo(0.94)
     expect(ageGrowthFactor(28, 'accuracy')).toBeCloseTo(0.76)
     expect(ageGrowthFactor(30, 'accuracy')).toBeCloseTo(0.64)

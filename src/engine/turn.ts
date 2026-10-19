@@ -247,12 +247,13 @@ export function actionRng(state: GameState): Rng {
  * 나이로 한 턴 동안 달라지는 능력치. 25세부터 피지컬(반응속도·정확도·집중)은 한 해에 `base + step × (나이 − 25)`만큼
  * 떨어지고 경험(판단력·멘탈·팀워크)은 `perSeason`만큼 오르는데, 그 한 해치를 시즌의 턴 수로 나눠 턴마다 반영한다.
  */
-export function ageShiftPerTurn(state: Pick<GameState, 'age' | 'mode'>): Partial<Stats> {
+export function ageShiftPerTurn(state: Pick<GameState, 'age' | 'mode' | 'genre'>): Partial<Stats> {
   const { fromAge, physical, experience } = rules.ageDecline
   if (state.age < fromAge) return {}
   const turns = turnsPerSeason(state.mode)
   const shift: Partial<Stats> = {}
-  const drop = physical.base + physical.step * (state.age - fromAge)
+  // 장르별 보정: 피지컬 비중이 작은 장르는 하락을 키워 후반 우승 확률을 맞춘다 (genres.json agingScale)
+  const drop = (physical.base + physical.step * (state.age - fromAge)) * ((genres[state.genre] as { agingScale?: number }).agingScale ?? 1)
   for (const key of physical.stats as StatKey[]) shift[key] = -drop / turns
   for (const key of experience.stats as StatKey[]) shift[key] = experience.perSeason / turns
   return shift

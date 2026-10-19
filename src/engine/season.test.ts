@@ -3,7 +3,7 @@ import { evaluateEnding } from './endings.ts'
 import { makeOpponents } from './field.ts'
 import { createRng } from './rng.ts'
 import { createInitialState, type GameState, type StageId } from './state.ts'
-import { acceptOffer, eventsFor, requestTransfer, retire, settleSeason, transferBlocker, transferSuccessChance } from './season.ts'
+import { acceptOffer, eventsFor, requestTransfer, rollMidSeasonPromotion, retire, settleSeason, transferBlocker, transferSuccessChance } from './season.ts'
 import { applyTurn, startNextSeason } from './turn.ts'
 import type { GenreId, Stats } from './types.ts'
 
@@ -339,5 +339,67 @@ describe('이적 요청', () => {
     }
     expect(fails).toBeGreaterThan(10)
     expect(wins).toBeGreaterThan(10)
+  })
+})
+
+describe('시즌 도중 승급', () => {
+  const row = (isPlayer: boolean) => ({ name: isPlayer ? '나' : '상대', wins: 0, losses: 0, isPlayer })
+  const rec = (id: string, rank: number, revealed: 'mid' | 'end' = 'mid') => ({
+    id, name: id, placement: rank, fieldSize: 6, fame: 0, money: 0, order: [], expected: undefined, mid: Array.from({ length: 6 }, (_, i) => row(i === rank - 1)), table: Array.from({ length: 6 }, (_, i) => row(i === rank - 1)), advanced: [], revealed,
+  })
+  const run = (runs: ReturnType<typeof rec>[]) => ({ season: 1, phase: 0.5, runs, skipped: [], qualified: [], points: 0 })
+  const amateur = (o: Partial<GameState> & { power?: number } = {}) =>
+    atSeasonEnd({ stage: 'amateur_team', path: 'open', team: TEAM, fame: 10, power: 400, turnInSeason: 2, seasonRun: run([rec('amateur_league', 1)]), ...o })
+
+  it('상위권 + 실력이 되면 아마추어에서 프로 2부 제안이 온다', () => {
+    const s = rollMidSeasonPromotion(amateur())
+    expect(s.pendingOffers?.kind).toBe('callup')
+    expect(s.pendingOffers?.stage).toBe('pro2')
+    expect(s.promoOfferSeason).toBe(s.season)
+  })
+
+  it('순위가 낮거나 실력이 모자라거나 연습생이면 제안이 없다', () => {
+    expect(rollMidSeasonPromotion(amateur({ seasonRun: run([rec('amateur_league', 5)]) })).pendingOffers).toBeNull()
+    expect(rollMidSeasonPromotion(amateur({ power: 100 })).pendingOffers).toBeNull()
+    expect(rollMidSeasonPromotion(amateur({ path: 'academy' })).pendingOffers).toBeNull()
+    expect(rollMidSeasonPromotion(amateur({ turnInSeason: 4 })).pendingOffers).toBeNull()
+  })
+
+  it('시즌당 한 번만 제안한다', () => {
+    const offered = rollMidSeasonPromotion(amateur())
+    expect(rollMidSeasonPromotion({ ...offered, pendingOffers: null }).pendingOffers).toBeNull()
+  })
+
+  it('받으면 그 자리에서 단계가 바뀌고, 끝나지 않은 대회는 접고 이미 시작한 새 단계 대회는 건너뛴다', () => {
+    const offered = rollMidSeasonPromotion(amateur())
+    const s = acceptOffer(offered, 0)
+    expect(s.stage).toBe('pro2')
+    expect(s.everPro).toBe(true)
+    expect(s.seasonRun?.promotedFrom).toBe('amateur_team')
+    expect(s.seasonRun?.runs).toEqual([])
+    expect(s.seasonRun?.skipped).toContain('pro2_spring')
+    expect(s.seasonRun?.skipped).not.toContain('pro2_autumn')
+  })
+
+  it('거절하면 단계가 그대로다', () => {
+    const s = acceptOffer(rollMidSeasonPromotion(amateur()), null)
+    expect(s.stage).toBe('amateur_team')
+    expect(s.pendingOffers).toBeNull()
+  })
+
+  it('프로 2부에서도 1부 콜업이 시즌 도중 온다', () => {
+    const s = rollMidSeasonPromotion(atSeasonEnd({ stage: 'pro2', team: TEAM, fame: 20, power: 500, turnInSeason: 2, seasonRun: run([rec('pro2_spring', 1, 'end')]) }))
+    expect(s.pendingOffers?.stage).toBe('pro1')
+    expect(s.pendingOffers?.offers[0].team.id).toBe(TEAM.id)
+  })
+
+  it('시즌 도중 승급한 시즌의 결산에는 이전 단계에서 끝낸 대회도 들어가고 강등되지 않는다', () => {
+    const promoted = acceptOffer(rollMidSeasonPromotion(atSeasonEnd({ stage: 'pro2', team: TEAM, fame: 20, power: 500, turnInSeason: 2, seasonRun: run([rec('pro2_spring', 1, 'end')]) })), 0)
+    const { state, report } = settleSeason({ ...promoted, turnInSeason: 4 })
+    expect(report.stageBefore).toBe('pro2')
+    expect(report.promoted).toBe(true)
+    expect(report.relegated).toBe(false)
+    expect(report.events.some((e) => e.id === 'pro2_spring')).toBe(true)
+    expect(state.stage).toBe('pro1')
   })
 })

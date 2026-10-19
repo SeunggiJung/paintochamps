@@ -46,11 +46,13 @@ describe('난이도: 숙련 플레이는 20대 중반에 월드를 제패할 수
   // 2026-10-19 에이징 커브 강화: 피지컬(반응속도·정확도·집중)은 25세부터 해마다 더 크게 내려가고 경험 능력치는 오른다.
   // 후반 우승이 너무 쉬워지지 않도록 29세 이후 시즌당 우승률은 FPS 약 27%, AOS 약 50%(경험 장르)가 목표다.
   // 대신 단순·무작위 플레이도 예전보다 월드 우승 가능성이 열린다(자동 진행 때문에 둘의 실력 격차가 크지 않다).
-  it('숙련 플레이는 커리어 안에 월드 우승을 하고, 첫 우승이 20대 중반~후반에 온다 (평균 28세 이하, 26세 이하 첫 우승 15% 이상)', () => {
+  // 2026-10-20 사용자 결정: 프로게이머의 피지컬은 20대 초반에 완성되고 이후엔 경험으로 보완한다. 성장기(19~23세) 훈련 효율 +30%,
+  // 시즌 도중 승급, 가파른 피지컬 하락으로 첫 우승 평균 25세 안팎·26세 이하 첫 우승 과반이 목표다(후반 우승률은 FPS 약 20%, AOS 약 45%).
+  it('숙련 플레이는 커리어 안에 월드 우승을 하고, 첫 우승이 20대 중반에 온다 (평균 26.5세 이하, 26세 이하 첫 우승 40% 이상)', () => {
     for (const r of reports) {
-      expect(r.skilled.worldTitle).toBeGreaterThanOrEqual(0.45)
-      expect(r.skilled.firstTitle.avgAge!).toBeLessThanOrEqual(28)
-      expect(r.skilled.firstTitle.by26).toBeGreaterThanOrEqual(0.05) // AOS는 2026-10-20 비중 조정(반·정·집 15, 판단·팀워크 20)으로 첫 우승이 늦다(FPS는 약 20%)
+      expect(r.skilled.worldTitle).toBeGreaterThanOrEqual(0.55)
+      expect(r.skilled.firstTitle.avgAge!).toBeLessThanOrEqual(26.5)
+      expect(r.skilled.firstTitle.by26).toBeGreaterThanOrEqual(0.4)
     }
   })
 
