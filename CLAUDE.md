@@ -60,7 +60,7 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 
 `src/sim/` — 난이도 측정: `bot.ts`(봇 3종) `report.ts`(집계) `balance.test.ts`(회귀 테스트)
 
-`docs/` — `design.md` 기획서 전문, `ending-images.md` 엔딩·도감 이미지 장면 목록, `feedback.md` 테스트 플레이 피드백·우선순위, `early-career-plan.md`·`career-pacing-plan.md`·`season-calendar-plan.md` 개편안, `images/` 게임 루프·로드맵 SVG
+`docs/` — `polish-plan.md` 플레이 감성 마무리 계획과 AI 이미지 도구 요청서, `design.md` 기획서 전문, `ending-images.md` 엔딩·도감 이미지 장면 목록, `feedback.md` 테스트 플레이 피드백·우선순위, `early-career-plan.md`·`career-pacing-plan.md`·`season-calendar-plan.md` 개편안, `images/` 게임 루프·로드맵 SVG
 
 ## 5. 게임 진행 API (2단계 UI가 부를 순서)
 
@@ -136,7 +136,7 @@ saveGame(storage, s)                           // 매 턴 자동 저장
 
 ## 8. 남은 일과 우선순위
 
-피드백 11건의 상태와 근거는 `docs/feedback.md`. 우선순위 제안(2026-10-16):
+**2026-10-20 이후의 남은 일은 `docs/polish-plan.md`(소리·이미지 교체·경기 중계·결과 카드·손맛·글·출시 점검)가 최신이다.** 아래는 2026-10-16 시점의 목록이라 대부분 완료됐다. 피드백의 상태와 근거는 `docs/feedback.md`. 우선순위 제안(2026-10-16):
 
 1. ~~④ 엔딩 화면·도감~~ 구현 완료(업적·도트 일러스트 포함). 이제 **관문 2(한 판 15~25분 완주를 직접 플레이로 확인)** 가능. 남은 것은 엔딩 이미지 퀄리티 개선(`docs/ending-images.md`).
 2. ~~훈련 시스템 개편(피드백 3)~~ 구현 완료 → 2026-10-16 **시즌 계획(자동 진행)** 으로 확장(방침 4종·다음 턴 자동 진행·코치 교체 제안). 직접 플레이로 느낌 확인 필요.
