@@ -284,17 +284,22 @@ export function isSettled(state: GameState): boolean {
   return state.history.length > 0 && state.history[state.history.length - 1].season === state.season
 }
 
-/** 시즌 결산과 제안 선택을 마친 뒤 다음 시즌으로 넘어간다. 25세부터 반응속도·정확도가 내려간다. */
+/**
+ * 시즌 결산과 제안 선택을 마친 뒤 다음 시즌으로 넘어간다.
+ * 25세부터 피지컬(반응속도·정확도)은 해마다 더 크게 내려가고(base + step × 지난 해 수),
+ * 경험(판단력·멘탈·팀워크)은 시즌마다 조금씩 오른다. 후반에는 경험으로 승부를 보는 구도다.
+ */
 export function startNextSeason(state: GameState): GameState {
   if (state.finished) throw new Error('이미 끝난 커리어다')
   if (state.turnInSeason < turnsPerSeason(state.mode)) throw new Error('시즌이 아직 끝나지 않았다')
   if (!isSettled(state)) throw new Error('시즌 결산이 필요하다')
   if (state.pendingOffers) throw new Error('받은 제안을 먼저 정해야 한다')
   const stats = { ...state.stats }
-  if (state.age >= rules.ageDecline.fromAge) {
-    for (const key of rules.ageDecline.stats as StatKey[]) {
-      stats[key] = Math.max(0, stats[key] - rules.ageDecline.amountPerSeason)
-    }
+  const { fromAge, physical, experience } = rules.ageDecline
+  if (state.age >= fromAge) {
+    const drop = physical.base + physical.step * (state.age - fromAge)
+    for (const key of physical.stats as StatKey[]) stats[key] = Math.max(0, stats[key] - drop)
+    for (const key of experience.stats as StatKey[]) stats[key] = Math.min(gacha.statMax, stats[key] + experience.perSeason)
   }
   return {
     ...state,

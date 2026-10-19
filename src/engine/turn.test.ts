@@ -261,17 +261,23 @@ describe('시즌 진행', () => {
     expect(() => startNextSeason(make())).toThrow()
   })
 
-  it('나이 곡선: 25세부터 반응속도·정확도만 시즌마다 10 내려간다', () => {
+  it('나이 곡선: 25세부터 피지컬(반응속도·정확도·집중)은 해마다 더 크게 내려가고 경험(판단력·멘탈·팀워크)은 오른다', () => {
     // 표준 모드 시즌 끝, 결산을 마친 상태
     const end = (age: number) => make({ age, turnInSeason: 4, history: [{ season: 1, age, stage: 'basement', events: [] }] })
+    const { physical, experience } = rules.ageDecline
     const young = startNextSeason(end(24))
     expect(young.stats.reaction).toBe(100)
+    expect(young.stats.judgment).toBe(100)
     const old = startNextSeason(end(25))
-    expect(old.stats.reaction).toBe(90)
-    expect(old.stats.accuracy).toBe(90)
-    expect(old.stats.judgment).toBe(100)
-    expect(old.stats.mental).toBe(100)
-    expect(old.stats.teamwork).toBe(100)
+    expect(old.stats.reaction).toBe(100 - physical.base)
+    expect(old.stats.accuracy).toBe(100 - physical.base)
+    expect(old.stats.focus).toBe(100 - physical.base)
+    expect(old.stats.judgment).toBe(100 + experience.perSeason)
+    expect(old.stats.mental).toBe(100 + experience.perSeason)
+    expect(old.stats.teamwork).toBe(100 + experience.perSeason)
+    // 나이가 들수록 하락폭이 커진다
+    const older = startNextSeason(end(28))
+    expect(older.stats.reaction).toBe(100 - (physical.base + physical.step * 3))
   })
 
   it('30세 시즌이 끝나면 커리어가 끝난다', () => {

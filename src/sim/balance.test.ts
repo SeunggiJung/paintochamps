@@ -43,19 +43,21 @@ describe('난이도: 숙련 플레이는 20대 중반에 월드를 제패할 수
 
   // 2026-10-19 사용자 결정: 핵심 능력치를 끝까지 키운 선수가 국제전에서 꼴찌를 하는 건 현실과 안 맞는다.
   // 숙련 플레이는 20대 중반에 첫 월드 우승을 하는 게 흔해야 하므로 1부 강호(915→760)와 국제전 상대(990→770)를 낮췄다.
+  // 2026-10-19 에이징 커브 강화: 피지컬(반응속도·정확도·집중)은 25세부터 해마다 더 크게 내려가고 경험 능력치는 오른다.
+  // 후반 우승이 너무 쉬워지지 않도록 29세 이후 시즌당 우승률은 FPS 약 27%, AOS 약 50%(경험 장르)가 목표다.
   // 대신 단순·무작위 플레이도 예전보다 월드 우승 가능성이 열린다(자동 진행 때문에 둘의 실력 격차가 크지 않다).
   it('숙련 플레이는 커리어 안에 월드 우승을 하고, 첫 우승이 20대 중반~후반에 온다 (평균 28세 이하, 26세 이하 첫 우승 15% 이상)', () => {
     for (const r of reports) {
-      expect(r.skilled.worldTitle).toBeGreaterThanOrEqual(0.6)
+      expect(r.skilled.worldTitle).toBeGreaterThanOrEqual(0.45)
       expect(r.skilled.firstTitle.avgAge!).toBeLessThanOrEqual(28)
       expect(r.skilled.firstTitle.by26).toBeGreaterThanOrEqual(0.15)
     }
   })
 
-  it('단순 플레이는 숙련보다 월드 우승이 훨씬 드물다 (25% 이하, 숙련과 55%p 이상 차이)', () => {
+  it('단순 플레이는 숙련보다 월드 우승이 훨씬 드물다 (25% 이하, 숙련과 40%p 이상 차이)', () => {
     for (const r of reports) {
       expect(r.casual.worldTitle).toBeLessThanOrEqual(0.25)
-      expect(r.skilled.worldTitle - r.casual.worldTitle).toBeGreaterThanOrEqual(0.55)
+      expect(r.skilled.worldTitle - r.casual.worldTitle).toBeGreaterThanOrEqual(0.4)
     }
   })
 

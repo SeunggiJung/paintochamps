@@ -15,19 +15,20 @@ interface StatInfo {
   note?: string
 }
 
-const AGE_NOTE = '25세부터 시즌마다 조금씩 떨어진다.'
+const AGE_NOTE = '25세부터 시즌마다 점점 더 크게 떨어진다.'
+const EXPERIENCE_NOTE = '25세부터 경험으로 시즌마다 조금씩 오른다.'
 
 const STAT_INFO: Record<StatKey, StatInfo> = {
   reaction: { desc: '자극에 바로 반응하는 속도.', effect: '교전 시작이나 빠른 대응이 필요한 장면에서 도움이 된다. 반응형 장르(FPS·격투)에서 비중이 크다.', note: AGE_NOTE },
   accuracy: { desc: '조준·컨트롤·입력의 정밀함.', effect: '교전 승률과 마무리 능력에 바로 이어진다. FPS·격투에서 특히 중요하다.', note: AGE_NOTE },
-  focus: { desc: '긴 경기에서 실수를 줄이는 힘.', effect: '경기 후반이나 긴 시리즈에서 안정감을 준다. 동시에 여러 가지를 다뤄야 하는 RTS에서 비중이 크다.' },
-  judgment: { desc: '상황을 읽고 운영을 선택하는 능력.', effect: 'AOS·RTS처럼 판단이 승부를 가르는 장르에서 가장 중요하다.', note: '나이가 들어도 떨어지지 않는다.' },
+  focus: { desc: '긴 경기에서 실수를 줄이는 힘.', effect: '경기 후반이나 긴 시리즈에서 안정감을 준다. 동시에 여러 가지를 다뤄야 하는 RTS에서 비중이 크다.', note: AGE_NOTE },
+  judgment: { desc: '상황을 읽고 운영을 선택하는 능력.', effect: 'AOS·RTS처럼 판단이 승부를 가르는 장르에서 가장 중요하다.', note: EXPERIENCE_NOTE },
   mental: {
     desc: '큰 경기와 슬럼프에 버티는 힘.',
     effect: '결승·플레이오프 같은 큰 경기의 전력 보정(멘탈 500 기준 위·아래), 슬럼프 기간, 이벤트의 능력치 판정에 쓰인다.',
-    note: '입단 시험의 면접 평가에도 쓰인다.',
+    note: `입단 시험의 면접 평가에도 쓰인다. ${EXPERIENCE_NOTE}`,
   },
-  teamwork: { desc: '소통과 역할 수행.', effect: '팀 경기에서의 호흡에 쓰인다. AOS에서 비중이 크다.', note: '입단 시험의 팀플 평가에도 쓰인다. 나이가 들어도 떨어지지 않는다.' },
+  teamwork: { desc: '소통과 역할 수행.', effect: '팀 경기에서의 호흡에 쓰인다. AOS에서 비중이 크다.', note: `입단 시험의 팀플 평가에도 쓰인다. ${EXPERIENCE_NOTE}` },
 }
 
 /** 이 능력치가 주로(70 이상) 오르는 훈련 이름들 */
