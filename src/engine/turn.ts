@@ -30,6 +30,8 @@ interface ActionDef {
   /** 성장 공식(컨디션·장비·특성 반영)을 거쳐 오르는 능력치 */
   stats?: Partial<Record<StatKey, number>>
   topGenreStats?: { count: number; amount: number }
+  /** 지금 상태에서 장르 실력치(R)를 가장 많이 올려 주는 능력치 count개를 amount만큼 올린다 (능력치가 높을수록 덜 오르고 나이에 따라 달라지는 것을 반영) */
+  bestGainStats?: { count: number; amount: number }
   condition?: number
   money?: number
   fame?: number
@@ -152,6 +154,22 @@ export function buyEquipment(state: GameState, item: EquipmentId): { ok: true; s
   }
 }
 
+/** 개인 레슨처럼 실력치를 가장 많이 올려 주는 능력치 고르기: 장르 비중 × 지금 상태에서 오르는 양이 큰 순 */
+export function bestGainKeys(state: GameState, count: number, amount: number): StatKey[] {
+  const weights = genres[state.genre].weights
+  const gain = (key: StatKey) =>
+    weights[key] *
+    growthDelta({
+      base: amount,
+      scale: 1,
+      efficiency: ageGrowthFactor(state.age, key),
+      condition: state.condition,
+      traitMultiplier: state.trait.stat === key ? gacha.traitMultiplier : 1,
+      current: state.stats[key],
+    })
+  return [...STAT_KEYS].sort((a, b) => gain(b) - gain(a)).slice(0, count)
+}
+
 /** 선택 하나를 적용한 새 상태. 컨디션 계수는 이 행동을 하기 직전의 컨디션으로 계산한다. */
 function applySlot(state: GameState, slot: Slot, scale: number, rng: Rng, notes: string[]): GameState {
   const action = ACTIONS[slot.id]
@@ -161,6 +179,9 @@ function applySlot(state: GameState, slot: Slot, scale: number, rng: Rng, notes:
     const weights = genres[state.genre].weights
     const top = [...STAT_KEYS].sort((a, b) => weights[b] - weights[a]).slice(0, action.topGenreStats.count)
     for (const key of top) gains[key] = action.topGenreStats.amount
+  }
+  if (action.bestGainStats) {
+    for (const key of bestGainKeys(state, action.bestGainStats.count, action.bestGainStats.amount)) gains[key] = action.bestGainStats.amount
   }
 
   const efficiency = equipmentEfficiency(state.equipment) * coachEfficiency(state) * (1 + warmupBonus(state))

@@ -1,6 +1,6 @@
 import genres from '../data/genres.json'
 import modes from '../data/modes.json'
-import { ACTIONS, moneyCostOf, type Slot } from '../engine/turn.ts'
+import { ACTIONS, bestGainKeys, moneyCostOf, type Slot } from '../engine/turn.ts'
 import { formatMoneyDelta } from './format.ts'
 import type { GameState } from '../engine/state.ts'
 import { STAT_KEYS } from '../engine/types.ts'
@@ -54,6 +54,7 @@ export function actionTags(slot: Slot, state: GameState): string[] {
     const w = Object.entries(genres[state.genre].weights).sort((x, y) => y[1] - x[1])
     for (const [k] of w.slice(0, a.topGenreStats.count)) statKeys.add(k)
   }
+  if (a.bestGainStats) for (const k of bestGainKeys(state, a.bestGainStats.count, a.bestGainStats.amount)) statKeys.add(k)
   for (const k of STAT_KEYS) {
     if (!statKeys.has(k)) continue
     const v = a.stats?.[k] ?? 1

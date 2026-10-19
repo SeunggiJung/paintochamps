@@ -44,7 +44,7 @@
   },
   "donate":    { "name": "기부·봉사", "money": -60, "fame": 8, "condition": -3, "stats": { "mental": 10 } },
 
-  "private_lesson": { "name": "개인 레슨", "noRepeat": true, "topGenreStats": { "count": 3, "amount": 70 }, "money": -40, "condition": -5 },
+  "private_lesson": { "name": "개인 레슨", "noRepeat": true, "bestGainStats": { "count": 3, "amount": 70 }, "money": -40, "condition": -5 },
   "overtrain": {
     "name": "강행군 훈련", "noRepeat": true, "topGenreStats": { "count": 3, "amount": 60 }, "condition": -35, "modes": ["precise"],
     "outcomes": [{ "chance": 0.35, "label": "무리한 훈련으로 부상을 입었다", "effects": { "injuredMonths": 3, "condition": -10 } }]

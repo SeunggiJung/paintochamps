@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { autoTurn, DEFAULT_PLAN, planChoice, planOf, PRESETS, presetDef, setSeasonPlan, type PresetId } from './plan.ts'
+import { bestGainKeys } from './turn.ts'
 import { createInitialState, type GameState } from './state.ts'
 import type { Stats } from './types.ts'
 
@@ -19,6 +20,16 @@ function make(o: Partial<GameState> = {}): GameState {
 
 const ids = (s: GameState) => planChoice(s).map((x) => x.id)
 const withPreset = (preset: PresetId, o: Partial<GameState> = {}, lesson = false) => make({ plan: { preset, lesson }, ...o })
+
+describe('개인 레슨', () => {
+  it('핵심 능력치가 이미 높으면 낮은 능력치를 올린다', () => {
+    const s = make()
+    const low = bestGainKeys(s, 3, 70)
+    const high = bestGainKeys({ ...s, stats: { ...s.stats, reaction: 990, accuracy: 990, focus: 990 } }, 3, 70)
+    expect(low).toContain('accuracy')
+    expect(high).not.toContain('accuracy')
+  })
+})
 
 describe('시즌 계획 (자동 진행)', () => {
   it('방침이 4가지 있고 모든 방침의 마지막 단계는 컨디션 0 이상이라 어떤 컨디션에서도 행동이 정해진다', () => {

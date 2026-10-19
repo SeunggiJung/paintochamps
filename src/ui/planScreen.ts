@@ -112,7 +112,7 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
           'button',
           { class: `choice${lesson ? ' selected' : ''}`, 'aria-pressed': String(lesson), onclick: () => ((lesson = !lesson), draw()) },
           h('strong', {}, lesson ? '개인 레슨 받는다' : '개인 레슨 받지 않는다'),
-          h('span', { class: 'muted small' }, `컨디션이 좋을 때 훈련 한 번을 레슨으로 바꿔 장르 핵심 능력치를 더 올립니다. 턴마다 ${formatMoney(lessonCost)}`),
+          h('span', { class: 'muted small' }, `컨디션이 좋을 때 훈련 한 번을 레슨으로 바꿔 지금 실력치를 가장 많이 올려 주는 능력치 3개(${actionTags({ id: 'private_lesson' }, state).filter((t) => t.endsWith('↑') && !t.startsWith('컨디션')).join('·')})를 올립니다. 턴마다 ${formatMoney(lessonCost)}`),
         ),
 
         h('div', { class: 'row' }, h('h3', {}, '장비'), h('span', { class: 'muted small' }, `보유 돈 ${formatMoney(state.money)}`)),
