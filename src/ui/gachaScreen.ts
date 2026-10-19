@@ -1,6 +1,6 @@
 import gacha from '../data/gacha.json'
 import genres from '../data/genres.json'
-import { gradeOdds } from '../engine/gacha.ts'
+import { gradeBounds, gradeOdds } from '../engine/gacha.ts'
 import { createInitialState } from '../engine/state.ts'
 import { STAT_KEYS, type GachaResult, type Grade } from '../engine/types.ts'
 import { saveGame } from '../save/storage.ts'
@@ -37,9 +37,11 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   /** 등급별 설명과 확률. 누르면 펼쳐지고, 지금 뽑은 등급에 표시가 붙는다. */
   const oddsList = (current: Grade) => {
     const odds = gradeOdds(draft.genre)
-    const rows = gacha.grades.map((g, i) => {
-      const above = gacha.grades[i - 1]
-      const range = above ? (g.minPower > 0 ? `${g.minPower} 이상 ${above.minPower} 미만` : `${above.minPower} 미만`) : `${g.minPower} 이상`
+    const bounds = gradeBounds(draft.genre)
+    const rows = bounds.map((g, i) => {
+      const above = bounds[i - 1]
+      const fmt = (v: number) => String(Math.round(v))
+      const range = above ? (g.minPower > 0 ? `${fmt(g.minPower)} 이상 ${fmt(above.minPower)} 미만` : `${fmt(above.minPower)} 미만`) : `${fmt(g.minPower)} 이상`
       const id = g.grade as Grade
       const p = odds[id] * 100
       return h(

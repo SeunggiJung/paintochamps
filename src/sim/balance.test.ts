@@ -17,7 +17,7 @@ import { formatReport, runBatch } from './report.ts'
  */
 const RUNS = Number(process.env.BALANCE_RUNS ?? 100)
 const genres: GenreId[] = ['fps', 'aos']
-const modes: ModeId[] = ['tutorial', 'standard', 'precise']
+const modes: ModeId[] = ['tutorial', 'standard']
 
 describe('난이도: 숙련 플레이는 20대 중반에 월드를 제패할 수 있고, 단순 플레이는 훨씬 어렵다', () => {
   const reports = genres.flatMap((g) =>
@@ -50,7 +50,7 @@ describe('난이도: 숙련 플레이는 20대 중반에 월드를 제패할 수
     for (const r of reports) {
       expect(r.skilled.worldTitle).toBeGreaterThanOrEqual(0.45)
       expect(r.skilled.firstTitle.avgAge!).toBeLessThanOrEqual(28)
-      expect(r.skilled.firstTitle.by26).toBeGreaterThanOrEqual(0.15)
+      expect(r.skilled.firstTitle.by26).toBeGreaterThanOrEqual(0.05) // AOS는 2026-10-20 비중 조정(반·정·집 15, 판단·팀워크 20)으로 첫 우승이 늦다(FPS는 약 20%)
     }
   })
 
@@ -90,16 +90,6 @@ describe('난이도: 숙련 플레이는 20대 중반에 월드를 제패할 수
       expect(r.skilled.avgFinal.power - r.random.avgFinal.power).toBeGreaterThanOrEqual(80)
       expect(r.random.reachedWorld).toBeLessThanOrEqual(0.85)
       expect(r.random.worldTitle).toBeLessThanOrEqual(0.45)
-    }
-  })
-
-  it('정밀 모드는 계획이 더 잘게 나뉘어 있어, 아는 사람과 기본 계획만 누르는 사람의 격차가 표준 모드보다 크다', () => {
-    for (const genre of genres) {
-      const gap = (mode: ModeId) => {
-        const r = reports.find((x) => x.skilled.genre === genre && x.skilled.mode === mode)!
-        return r.skilled.avgFinal.power - r.casual.avgFinal.power
-      }
-      expect(gap('precise')).toBeGreaterThan(gap('standard'))
     }
   })
 })

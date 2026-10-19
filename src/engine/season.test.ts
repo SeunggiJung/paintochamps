@@ -28,7 +28,7 @@ function atSeasonEnd(overrides: Partial<GameState> & { power?: number } = {}, ge
 
 describe('이벤트 목록', () => {
   it('방구석 단계의 PC방 대회는 모든 모드에 열리고, 1부는 장르별 일정이 다르다', () => {
-    for (const mode of ['tutorial', 'standard', 'precise'] as const) expect(eventsFor({ stage: 'basement', genre: 'fps', mode }).map((e) => e.id)).toEqual(['cafe_cup'])
+    for (const mode of ['tutorial', 'standard'] as const) expect(eventsFor({ stage: 'basement', genre: 'fps', mode }).map((e) => e.id)).toEqual(['cafe_cup'])
     expect(eventsFor({ stage: 'pro1', genre: 'aos', mode: 'standard' }).map((e) => e.id)).toEqual(['split1', 'mid_qualifier', 'midseason', 'split2', 'playoffs', 'world'])
     expect(eventsFor({ stage: 'pro1', genre: 'fps', mode: 'standard' }).map((e) => e.id)).toEqual([
       'kickoff', 'masters1', 'stage1', 'stage1_playoffs', 'masters2', 'stage2', 'stage2_playoffs', 'world',
@@ -220,7 +220,6 @@ describe('엔딩', () => {
   it('튜토리얼에서는 데뷔 팀에서 우승해도 히든이 아니라 레전드다', () => {
     const champion = { worldTitles: 1, team: TEAM, debutTeamId: 'org_0', everPro: true, stage: 'pro1' as const }
     expect(evaluateEnding(make({ ...champion, mode: 'standard' }))).toBe('hidden_loyal')
-    expect(evaluateEnding(make({ ...champion, mode: 'precise' }))).toBe('hidden_loyal')
     expect(evaluateEnding(make({ ...champion, mode: 'tutorial' }))).toBe('legend')
   })
 

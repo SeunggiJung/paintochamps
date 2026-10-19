@@ -4,14 +4,13 @@ import { createInitialState } from '../engine/state.ts'
 import { rollAt } from './newGame.ts'
 import { actionCost, actionTags, describeChange, previewDetail } from './preview.ts'
 
-const make = (mode: 'tutorial' | 'standard' | 'precise') =>
+const make = (mode: 'tutorial' | 'standard') =>
   ({ ...createInitialState({ name: 't', genre: 'fps', mode, gacha: rollAt(1, 'fps', 0), seed: 1 }), trainingMenu: TRAINING_POOL, seasonTraining: 'basics' as const })
 
 describe('행동 요약·변화 문구', () => {
-  it('정밀 모드만 방향 표시(hint)를 쓴다 (이벤트 선택지 힌트용)', () => {
+  it('튜토리얼·표준은 숫자(exact)로 보여 준다', () => {
     expect(previewDetail('tutorial')).toBe('exact')
     expect(previewDetail('standard')).toBe('exact')
-    expect(previewDetail('precise')).toBe('hint')
   })
 
   it('행동 요약과 비용', () => {

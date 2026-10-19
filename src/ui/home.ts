@@ -150,7 +150,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     render()
     let next = r.state
     // 시간이 흘러가는 연출 (대회가 끝나는 시점마다 결과 카드)
-    await playTimeline({ before, calendar: r.calendar, actions: choice.map((c) => ACTIONS[c.id].name), brief: before.mode === 'precise' })
+    await playTimeline({ before, calendar: r.calendar, actions: choice.map((c) => ACTIONS[c.id].name) })
     await openSheet<void>((close) =>
       h(
         'div',

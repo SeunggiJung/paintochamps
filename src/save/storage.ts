@@ -32,6 +32,7 @@ function migrate(raw: Record<string, unknown>): Record<string, unknown> | null {
 function looksLikeState(raw: Record<string, unknown>): boolean {
   const stats = raw.stats as Record<string, unknown> | undefined
   return (
+    (raw.mode === 'tutorial' || raw.mode === 'standard') && // 폐지된 정밀 모드 세이브는 이어할 수 없다
     typeof raw.seed === 'number' &&
     typeof raw.age === 'number' &&
     typeof raw.stage === 'string' &&

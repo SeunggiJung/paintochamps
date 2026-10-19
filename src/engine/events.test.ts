@@ -68,7 +68,6 @@ describe('rollEvent', () => {
     }
     expect(Math.abs(rate('tutorial') - 0.5775)).toBeLessThan(0.02)
     expect(Math.abs(rate('standard') - 0.35)).toBeLessThan(0.02)
-    expect(Math.abs(rate('precise') - 0.1338)).toBeLessThan(0.02)
   })
 
   it('컨디션이 낮으면 슬럼프·부상이 자주 나온다', () => {

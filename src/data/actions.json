@@ -28,15 +28,15 @@
 
   "hangout":   { "name": "친목 모임", "money": -10, "condition": 22, "fame": 1, "stats": { "mental": 25, "teamwork": 20 } },
   "drink":     {
-    "name": "술자리", "money": -8, "condition": 35, "stats": { "mental": 20 }, "vice": 1, "modes": ["standard", "precise"],
+    "name": "술자리", "money": -8, "condition": 35, "stats": { "mental": 20 }, "vice": 1, "modes": ["standard"],
     "outcomes": [{ "chance": 0.25, "viceRisk": true, "label": "과음으로 숙취에 시달렸다", "effects": { "condition": -30, "fame": -2 } }]
   },
   "nightlife": {
-    "name": "유흥", "money": -30, "condition": 20, "stats": { "mental": 35 }, "vice": 1.5, "modes": ["standard", "precise"],
+    "name": "유흥", "money": -30, "condition": 20, "stats": { "mental": 35 }, "vice": 1.5, "modes": ["standard"],
     "outcomes": [{ "chance": 0.2, "viceRisk": true, "label": "유흥가에서 찍힌 사진이 퍼졌다", "effects": { "fame": -8, "money": -10, "stats": { "mental": -15 } } }]
   },
   "gamble": {
-    "name": "도박", "money": -20, "vice": 1.5, "modes": ["standard", "precise"],
+    "name": "도박", "money": -20, "vice": 1.5, "modes": ["standard"],
     "outcomes": [
       { "chance": 0.3, "label": "운 좋게 크게 땄다", "effects": { "money": 55, "stats": { "mental": 10 } } },
       { "chance": 0.7, "label": "전부 잃고 말았다", "effects": { "condition": -5, "stats": { "mental": -15 } } }
@@ -45,17 +45,6 @@
   "donate":    { "name": "기부·봉사", "money": -60, "fame": 8, "condition": -3, "stats": { "mental": 10 } },
 
   "private_lesson": { "name": "개인 레슨", "noRepeat": true, "bestGainStats": { "count": 3, "amount": 70 }, "money": -40, "condition": -5 },
-  "overtrain": {
-    "name": "강행군 훈련", "noRepeat": true, "topGenreStats": { "count": 3, "amount": 60 }, "condition": -35, "modes": ["precise"],
-    "outcomes": [{ "chance": 0.35, "label": "무리한 훈련으로 부상을 입었다", "effects": { "injuredMonths": 3, "condition": -10 } }]
-  },
-  "meditation":     { "name": "명상·요가", "condition": 8, "stats": { "mental": 25 }, "slumpMonths": -1, "modes": ["precise"] },
-  "impulse_shopping": { "name": "충동 쇼핑", "money": -50, "condition": 5, "stats": { "mental": 8 }, "modes": ["precise"] },
-  "community_flame": {
-    "name": "커뮤니티 키배", "condition": -15, "stats": { "mental": -20 }, "modes": ["precise"],
-    "outcomes": [{ "chance": 0.3, "label": "댓글 싸움이 번져 구설수에 올랐다", "effects": { "fame": -6 } }]
-  },
-  "all_night_gaming": { "name": "밤샘 게임", "noRepeat": true, "condition": -35, "stats": { "accuracy": 30 }, "modes": ["precise"] },
 
   "rehab":      { "name": "재활 치료", "money": -5, "condition": 10, "injuredMonths": -3, "requires": { "injured": true }, "allowWhenInjured": true },
   "counseling": { "name": "멘탈 상담", "money": -10, "stats": { "mental": 30 }, "slumpMonths": -3, "requires": { "slump": true } }

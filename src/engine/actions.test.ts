@@ -76,9 +76,8 @@ describe('스트레스 해소: 돈을 쓰고 회복한다', () => {
     expect(checkSlot(make({ money: 500 }), { id: 'hangout' })).toBeNull()
   })
 
-  it('6개월 턴은 비용도 2배, 1개월 턴은 1/3배다', () => {
+  it('6개월 턴은 비용도 2배다', () => {
     expect(run(make({}, 'tutorial'), { id: 'hangout' }, REST, always(0)).delta.money).toBeCloseTo(-20)
-    expect(run(make({}, 'precise'), { id: 'hangout' }, REST, always(0)).delta.money).toBeCloseTo(-10 / 3)
   })
 })
 
@@ -87,7 +86,6 @@ describe('위험 행동은 2회차부터 (튜토리얼은 1회차 전용)', () =
     for (const id of ['drink', 'nightlife', 'gamble'] as const) {
       expect(checkSlot(make({}, 'tutorial'), { id })).toContain('2회차부터')
       expect(checkSlot(make({}, 'standard'), { id })).toBeNull()
-      expect(checkSlot(make({}, 'precise'), { id })).toBeNull()
     }
   })
 
@@ -174,36 +172,6 @@ describe('부상·슬럼프 대처 행동', () => {
     const restOnly = run(slump, REST, REST)
     expect(withCounsel.state.slumpMonths).toBeLessThan(restOnly.state.slumpMonths)
     expect(withCounsel.state.stats.mental).toBeGreaterThan(restOnly.state.stats.mental)
-  })
-})
-
-describe('정밀 모드 전용 행동 (선택지가 더 많고 함정도 많다)', () => {
-  const only = ['overtrain', 'meditation', 'impulse_shopping', 'community_flame', 'all_night_gaming'] as const
-
-  it('정밀 모드에서만 할 수 있다', () => {
-    for (const id of only) {
-      expect(checkSlot(make({}, 'precise'), { id })).toBeNull()
-      expect(checkSlot(make({}, 'standard'), { id })).toContain('정밀 모드')
-      expect(checkSlot(make({}, 'tutorial'), { id })).toContain('정밀 모드')
-    }
-  })
-
-  it('강행군 훈련은 일반 훈련보다 많이 오르지만 부상 위험이 있다', () => {
-    const s = make({ condition: 100, seasonTraining: 'rank_practice' }, 'precise')
-    const hard = run(s, { id: 'overtrain' }, REST, always(0.99))
-    const normal = run(s, { id: 'rank_practice' }, REST, always(0.99))
-    expect(hard.delta.stats.accuracy).toBeGreaterThan(normal.delta.stats.accuracy)
-    const hurt = run(s, { id: 'overtrain' }, REST, always(0))
-    expect(hurt.state.injuredMonths).toBeGreaterThan(0)
-  })
-
-  it('함정 행동은 얻는 것이 거의 없다 (같은 칸에 훈련을 하는 쪽이 낫다)', () => {
-    const s = make({ condition: 100, seasonTraining: 'basics' }, 'precise')
-    const train = run(s, { id: 'basics' }, REST, always(0.99))
-    for (const id of ['impulse_shopping', 'community_flame', 'all_night_gaming'] as const) {
-      const trap = run(s, { id }, REST, always(0.99))
-      expect(trap.state.stats.reaction + trap.state.stats.accuracy).toBeLessThan(train.state.stats.reaction + train.state.stats.accuracy)
-    }
   })
 })
 

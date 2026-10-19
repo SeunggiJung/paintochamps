@@ -5,11 +5,11 @@ import type { ModeId } from './state.ts'
 import { turnsPerSeason } from './turn.ts'
 import { STAT_KEYS, type GenreId } from './types.ts'
 
-const MAX_TURNS: Record<ModeId, number> = { tutorial: 30, standard: 60, precise: 180 }
+const MAX_TURNS: Record<ModeId, number> = { tutorial: 30, standard: 60 }
 
 describe('처음부터 엔딩까지 완주', () => {
   const genres: GenreId[] = ['fps', 'aos', 'rts', 'fighting']
-  const modes: ModeId[] = ['tutorial', 'standard', 'precise']
+  const modes: ModeId[] = ['tutorial', 'standard']
 
   for (const genre of genres) {
     for (const mode of modes) {

@@ -23,5 +23,4 @@ export const GRADE_COMMENT: Record<Grade, string> = {
 export const MODE_INFO: Record<ModeId, { name: string; desc: string }> = {
   tutorial: { name: '튜토리얼', desc: '6개월씩 진행. 처음 하는 사람용. 위험한 행동은 막혀 있다.' },
   standard: { name: '표준', desc: '3개월씩 진행. 본 게임.' },
-  precise: { name: '정밀', desc: '1개월씩 진행. 선택지가 많고 함정도 많다.' },
 }

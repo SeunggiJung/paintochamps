@@ -201,7 +201,7 @@
   },
   {
     "id": "party_invite",
-    "when": { "ageMin": 18, "modes": ["standard", "precise"] },
+    "when": { "ageMin": 18, "modes": ["standard"] },
     "weight": 2,
     "text": "동료들이 연습이 끝나고 술자리를 가자고 한다. 분위기가 좋아 보인다.",
     "choices": [
@@ -220,7 +220,7 @@
   },
   {
     "id": "gambling_tip",
-    "when": { "money": { "min": 20 }, "ageMin": 18, "modes": ["standard", "precise"] },
+    "when": { "money": { "min": 20 }, "ageMin": 18, "modes": ["standard"] },
     "weight": 1,
     "text": "친구가 \"이번엔 확실한 판이 있다\"며 같이 걸어 보자고 속삭인다.",
     "choices": [
@@ -237,7 +237,7 @@
   },
   {
     "id": "addiction_warning",
-    "when": { "vice": { "min": 3 }, "modes": ["standard", "precise"] },
+    "when": { "vice": { "min": 3 }, "modes": ["standard"] },
     "weight": 8,
     "text": "요즘 술과 유흥 없이는 하루가 안 간다. 동료가 걱정스러운 눈으로 쳐다본다.",
     "choices": [
@@ -613,7 +613,7 @@
   },
   {
     "id": "side_investment",
-    "when": { "money": { "min": 50 }, "ageMin": 20, "modes": ["standard", "precise"] },
+    "when": { "money": { "min": 50 }, "ageMin": 20, "modes": ["standard"] },
     "weight": 1,
     "text": "아는 사람이 \"곧 뜰 게임 관련 사업이 있다\"며 투자를 권한다. 솔깃하지만 확실한 건 없다.",
     "choices": [

@@ -48,7 +48,7 @@ interface ActionDef {
   pool?: boolean
   /** true면 한 턴에 같은 행동을 두 번 고를 수 없다 (특별 훈련류) */
   noRepeat?: boolean
-  /** 이 모드에서만 할 수 있다. 없으면 모든 모드. (정밀 모드는 선택지가 더 많다) */
+  /** 이 모드에서만 할 수 있다. 없으면 모든 모드. (튜토리얼에서 막는 행동용) */
   modes?: GameState['mode'][]
 }
 
@@ -112,8 +112,8 @@ export function checkSlot(state: GameState, slot: Slot): string | null {
     if (state.seasonTraining !== slot.id) return '이번 시즌에 정한 훈련이 아니다'
   }
   if (action.modes && !action.modes.includes(state.mode)) {
-    // 튜토리얼은 1회차 전용이라, 튜토리얼만 빠진 행동은 "2회차부터"라고 알려 준다
-    return action.modes.includes('standard') ? `${action.name}은(는) 2회차부터 할 수 있다` : `${action.name}은(는) 정밀 모드에서만 할 수 있다`
+    // 튜토리얼은 1회차 전용이라, 튜토리얼에서 막힌 행동은 "2회차부터"라고 알려 준다
+    return `${action.name}은(는) 2회차부터 할 수 있다`
   }
   if (state.injuredMonths > 0 && !action.allowWhenInjured) return '부상 중이라 휴식·재활만 할 수 있다'
   const { inTeam, minFame, injured, slump } = action.requires ?? {}

@@ -5,9 +5,42 @@ import { STAT_KEYS, type GachaResult, type GenreId, type Grade, type Stats, type
 
 const TRAITS = gacha.traits as Trait[]
 
+const ODDS_SAMPLES = 200_000
+const ODDS_SEED = 0x0dd5
+const REFERENCE_GENRE: GenreId = 'fps'
+const boundsCache = new Map<GenreId, { grade: Grade; minPower: number }[]>()
+
+/** 뽑기와 같은 방식으로 고정 시드 표본을 뽑아 정렬한 장르 실력치 R (오름차순) */
+function sampledPowers(genre: GenreId): number[] {
+  const rng = createRng(ODDS_SEED)
+  return Array.from({ length: ODDS_SAMPLES }, () => genrePower(rollStats(rng), genre)).sort((a, b) => a - b)
+}
+
+/**
+ * 장르의 등급 경계. 기준 장르(FPS)는 gacha.json의 값을 그대로 쓴다.
+ * 다른 장르는 능력치 비중이 달라 R의 퍼짐(특히 높은 쪽 끝)이 다르므로(비중이 고르면 높은 등급이 아예 안 나온다),
+ * 기준 장르와 같은 등급 확률이 되도록 표본의 분위수로 경계를 옮긴다. 장르를 안 주면 gacha.json 그대로다.
+ */
+export function gradeBounds(genre?: GenreId): { grade: Grade; minPower: number }[] {
+  const base = gacha.grades.map((g) => ({ grade: g.grade as Grade, minPower: g.minPower }))
+  if (!genre || genre === REFERENCE_GENRE) return base
+  const cached = boundsCache.get(genre)
+  if (cached) return cached
+  const ref = sampledPowers(REFERENCE_GENRE)
+  const mine = sampledPowers(genre)
+  const bounds = base.map((g) => {
+    if (g.minPower <= 0) return g
+    const share = ref.filter((p) => p >= g.minPower).length / ref.length // 이 경계 이상이 되는 비율
+    return { grade: g.grade, minPower: mine[Math.min(mine.length - 1, Math.floor((1 - share) * mine.length))] }
+  })
+  boundsCache.set(genre, bounds)
+  return bounds
+}
+
 /** 시작 실력치 R로 등급을 정한다. grades는 minPower 내림차순. */
-export function gradeOf(power: number): Grade {
-  return (gacha.grades.find((g) => power >= g.minPower) ?? gacha.grades[gacha.grades.length - 1]).grade as Grade
+export function gradeOf(power: number, genre?: GenreId): Grade {
+  const bounds = gradeBounds(genre)
+  return (bounds.find((g) => power >= g.minPower) ?? bounds[bounds.length - 1]).grade
 }
 
 /**
@@ -30,11 +63,9 @@ export function rollGacha(rng: Rng, genre: GenreId): GachaResult {
   const stats = rollStats(rng)
   const trait = TRAITS[randInt(rng, 0, TRAITS.length - 1)]
   const power = genrePower(stats, genre)
-  return { stats, trait, grade: gradeOf(power), power }
+  return { stats, trait, grade: gradeOf(power, genre), power }
 }
 
-const ODDS_SAMPLES = 200_000
-const ODDS_SEED = 0x0dd5
 const oddsCache = new Map<GenreId, Record<Grade, number>>()
 
 /**
@@ -46,7 +77,7 @@ export function gradeOdds(genre: GenreId): Record<Grade, number> {
   if (cached) return cached
   const rng = createRng(ODDS_SEED)
   const odds = Object.fromEntries(gacha.grades.map((g) => [g.grade, 0])) as Record<Grade, number>
-  for (let i = 0; i < ODDS_SAMPLES; i++) odds[gradeOf(genrePower(rollStats(rng), genre))] += 1 / ODDS_SAMPLES
+  for (let i = 0; i < ODDS_SAMPLES; i++) odds[gradeOf(genrePower(rollStats(rng), genre), genre)] += 1 / ODDS_SAMPLES
   oddsCache.set(genre, odds)
   return odds
 }

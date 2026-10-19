@@ -27,7 +27,7 @@ export function codexScreen(ctx: Ctx): HTMLElement {
         { class: 'codex-body' },
         h('div', { class: 'row' }, h('b', {}, e.name), h('span', { class: 'chip' }, `${rec.count}회`)),
         h('span', { class: 'muted small' }, e.desc),
-        last && h('span', { class: 'muted small' }, `최근: ${last.name} · ${genres[last.genre].name} · ${MODE_INFO[last.mode].name} · ${last.age}세 · 최고 ${stageName(last.bestStage)}${last.rerolls > 0 ? ` · 뽑기 ${last.rerolls}번 다시` : ''}`),
+        last && h('span', { class: 'muted small' }, `최근: ${last.name} · ${genres[last.genre].name} · ${MODE_INFO[last.mode]?.name ?? '정밀'} · ${last.age}세 · 최고 ${stageName(last.bestStage)}${last.rerolls > 0 ? ` · 뽑기 ${last.rerolls}번 다시` : ''}`),
       ),
     )
   }

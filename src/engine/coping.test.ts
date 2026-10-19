@@ -201,7 +201,6 @@ describe('유혹 이벤트는 2회차부터', () => {
     for (const id of ['party_invite', 'gambling_tip', 'addiction_warning']) {
       expect(isEligible({ ...make(500, base), mode: 'tutorial' }, byId(id))).toBe(false)
       expect(isEligible({ ...make(500, base), mode: 'standard' }, byId(id))).toBe(true)
-      expect(isEligible({ ...make(500, base), mode: 'precise' }, byId(id))).toBe(true)
     }
   })
 })

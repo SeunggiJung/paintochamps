@@ -72,16 +72,14 @@ describe('성장 공식', () => {
 })
 
 describe('턴 길이', () => {
-  it('배율은 6개월 2, 3개월 1, 1개월 1/3', () => {
+  it('배율은 6개월 2, 3개월 1', () => {
     expect(turnScale('tutorial')).toBe(2)
     expect(turnScale('standard')).toBe(1)
-    expect(turnScale('precise')).toBeCloseTo(1 / 3)
   })
 
-  it('이벤트 확률은 6개월 약 58%, 3개월 35%, 1개월 약 13%', () => {
+  it('이벤트 확률은 6개월 약 58%, 3개월 35%', () => {
     expect(eventChance('tutorial')).toBeCloseTo(0.5775, 3)
     expect(eventChance('standard')).toBeCloseTo(0.35, 3)
-    expect(eventChance('precise')).toBeCloseTo(0.1338, 3)
   })
 
   it('같은 행동의 6개월 턴 효과는 3개월 턴의 2배다 (같은 능력치에서 시작할 때)', () => {
@@ -297,8 +295,8 @@ describe('시즌 진행', () => {
     expect(isCareerOver(make({ age: 29, turnInSeason: 4 }))).toBe(false)
   })
 
-  it('모드별 최대 턴 수는 30·60·180이다 (15시즌)', () => {
-    for (const [mode, expected] of [['tutorial', 30], ['standard', 60], ['precise', 180]] as const) {
+  it('모드별 최대 턴 수는 30·60이다 (15시즌)', () => {
+    for (const [mode, expected] of [['tutorial', 30], ['standard', 60]] as const) {
       let s = make({}, 'fps', mode)
       let turns = 0
       while (!isCareerOver(s)) {
