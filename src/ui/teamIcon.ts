@@ -1,6 +1,7 @@
 import { createRng } from '../engine/rng.ts'
 import { hashId } from '../engine/field.ts'
 import { h } from './dom.ts'
+import { teamLogoUrl } from './teamLogo.ts'
 
 /** 팀 이름에서 정해지는 고유 색상(0~359) */
 export function teamHue(teamId: string): number {
@@ -33,6 +34,8 @@ export function teamIconCells(teamId: string): { x: number; y: number; accent: b
 
 /** svg 안에 넣을 사각형들 (cell: 한 칸 크기, ox·oy: 왼쪽 위 좌표) */
 export function teamIconMarkup(teamId: string, cell: number, ox = 0, oy = 0): string {
+  const logo = teamLogoUrl(teamId)
+  if (logo) return `<image href="${logo}" x="${ox}" y="${oy}" width="${GRID * cell}" height="${GRID * cell}" preserveAspectRatio="xMidYMid meet"/>`
   const hue = teamHue(teamId)
   const main = `hsl(${hue} 72% 60%)`
   const accent = `hsl(${(hue + 55) % 360} 85% 72%)`
@@ -43,6 +46,12 @@ export function teamIconMarkup(teamId: string, cell: number, ox = 0, oy = 0): st
 
 /** 팀 아이콘 요소 (정사각형 도트, 크기 px) */
 export function teamIcon(teamId: string, size = 36): HTMLElement {
+  const logo = teamLogoUrl(teamId)
+  if (logo) {
+    const el = h('span', { class: 'team-icon', 'aria-hidden': 'true', style: `width:${size}px;height:${size}px` })
+    el.innerHTML = `<img src="${logo}" alt="" width="${size}" height="${size}" style="object-fit:contain"/>`
+    return el
+  }
   const hue = teamHue(teamId)
   const el = h('span', { class: 'team-icon', 'aria-hidden': 'true', style: `width:${size}px;height:${size}px` })
   el.innerHTML =

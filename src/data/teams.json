@@ -9,13 +9,20 @@
     "빡겜러들", "형들만믿어", "오늘만산다", "손풀러왔음", "아무튼이김", "치킨내기", "동네백수들", "탈주금지", "졌잘싸"
   ],
   "orgs": [
-    "나이트호크", "솔라플레어", "미스트워커", "아이언웨일", "크림슨테일", "오로라시티",
-    "썬더앤빌", "실버폭스", "블루오션즈", "그린드래곤즈", "팬텀로드", "코어레전드"
+    "T1", "Gen.G", "Hanwha Life Esports", "KT Rolster", "Dplus KIA", "DRX",
+    "Nongshim RedForce", "BNK FearX", "OK BRION", "DN Freecs", "Liiv SANDBOX", "Griffin"
+  ],
+  "orgSlugs": [
+    "t1", "geng", "hle", "kt", "dk", "drx", "ns", "bnk", "brion", "freecs", "sandbox", "griffin"
   ],
   "intl": [
-    "북미 스톰", "북미 이글스", "북미 사이클론", "유럽 발키리", "유럽 타이탄", "유럽 오딘",
-    "중국 드래곤", "중국 판다", "중국 피닉스", "일본 사무라이", "일본 닌자", "동남아 코브라",
-    "동남아 타이거", "브라질 재규어", "브라질 삼바", "터키 팔콘", "터키 오토만", "러시아 베어",
-    "러시아 울프", "베트남 라이언", "호주 쿼카", "캐나다 무스", "멕시코 아즈텍", "인도 코브라"
+    "Cloud9", "Team Liquid", "FlyQuest", "100 Thieves", "G2 Esports", "Fnatic",
+    "Karmine Corp", "Movistar KOI", "JD Gaming", "Bilibili Gaming", "Top Esports", "Anyone's Legend",
+    "LNG Esports", "Weibo Gaming", "Invictus Gaming", "CTBC Flying Oyster", "PSG Talon", "GAM Esports",
+    "DetonatioN FocusMe", "LOUD", "paiN Gaming", "Team Vitality", "Team Heretics", "Paper Rex"
+  ],
+  "intlSlugs": [
+    "c9", "tl", "fly", "100t", "g2", "fnc", "kc", "koi", "jdg", "blg", "tes", "al",
+    "lng", "wbg", "ig", "cfo", "psgtalon", "gam", "dfm", "loud", "pain", "vit", "th", "prx"
   ]
 }
