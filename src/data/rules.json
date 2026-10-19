@@ -31,7 +31,7 @@
   },
   "ageDecline": {
     "fromAge": 25,
-    "physical": { "stats": ["reaction", "accuracy", "focus"], "base": 30, "step": 12 },
+    "physical": { "stats": ["reaction", "accuracy", "focus"], "base": 24, "step": 12 },
     "experience": { "stats": ["judgment", "mental", "teamwork"], "perSeason": 6 }
   },
   "ageGrowth": {

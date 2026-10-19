@@ -58,11 +58,22 @@ export function hasChange(before: GameState, after: GameState): boolean {
   )
 }
 
+/** 나이로 이번 턴에 달라진 능력치 안내 (위 막대에는 훈련과 합친 값이 보인다) */
+function ageLine(shift: Partial<Stats> | undefined): HTMLElement | false {
+  if (!shift) return false
+  const parts = STAT_KEYS.flatMap((k) => {
+    const d = Math.round(shift[k] ?? 0)
+    return d === 0 ? [] : [h('span', { class: d > 0 ? 'up' : 'down' }, `${STAT_LABEL[k]} ${signed(d)}`)]
+  })
+  if (parts.length === 0) return false
+  return h('p', { class: 'muted small', style: 'margin:0' }, '나이로 인한 변화(막대에 포함): ', ...parts.flatMap((p, i) => (i ? [' · ', p] : [p])))
+}
+
 /**
  * 한 턴(또는 이벤트)의 변화 그래프. 능력치·컨디션은 막대, 돈·명성·부상은 줄로 보여 준다.
  * onlyChanged면 달라진 막대만 그린다 (이벤트처럼 한두 개만 바뀌는 경우).
  */
-export function turnChangeGraph(before: GameState, after: GameState, options: { onlyChanged?: boolean } = {}): HTMLElement {
+export function turnChangeGraph(before: GameState, after: GameState, options: { onlyChanged?: boolean; ageShift?: Partial<Stats> } = {}): HTMLElement {
   const lines: HTMLElement[] = []
   const shown = (a: number, b: number) => !options.onlyChanged || Math.round(a) !== Math.round(b)
 
@@ -82,6 +93,7 @@ export function turnChangeGraph(before: GameState, after: GameState, options: { 
     ...STAT_KEYS.filter((k) => shown(before.stats[k], after.stats[k])).map((k) => changeRow(STAT_LABEL[k], before.stats[k], after.stats[k], STAT_MAX)),
     shown(before.condition, after.condition) && changeRow('컨디션', before.condition, after.condition, 100),
     ...lines,
+    ageLine(options.ageShift),
     status.length > 0 && h('p', { class: 'risk', style: 'margin:0' }, `⚠ ${status.join(' · ')}`),
   )
 }

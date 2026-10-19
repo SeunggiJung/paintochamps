@@ -243,6 +243,30 @@ export function actionRng(state: GameState): Rng {
  * 시즌의 마지막 턴이면 seasonEnded가 true이고, 결산을 마친 뒤 startNextSeason을 부른다.
  * rng를 넘기지 않으면 상태에서 정해진 난수를 쓴다. (플레이어가 미리 결과를 알 수 없도록 AI가 점수를 매길 때는 다른 난수를 넘긴다.)
  */
+/**
+ * 나이로 한 턴 동안 달라지는 능력치. 25세부터 피지컬(반응속도·정확도·집중)은 한 해에 `base + step × (나이 − 25)`만큼
+ * 떨어지고 경험(판단력·멘탈·팀워크)은 `perSeason`만큼 오르는데, 그 한 해치를 시즌의 턴 수로 나눠 턴마다 반영한다.
+ */
+export function ageShiftPerTurn(state: Pick<GameState, 'age' | 'mode'>): Partial<Stats> {
+  const { fromAge, physical, experience } = rules.ageDecline
+  if (state.age < fromAge) return {}
+  const turns = turnsPerSeason(state.mode)
+  const shift: Partial<Stats> = {}
+  const drop = physical.base + physical.step * (state.age - fromAge)
+  for (const key of physical.stats as StatKey[]) shift[key] = -drop / turns
+  for (const key of experience.stats as StatKey[]) shift[key] = experience.perSeason / turns
+  return shift
+}
+
+function applyAgeShift(stats: Stats, shift: Partial<Stats>): Stats {
+  const out = { ...stats }
+  for (const key of STAT_KEYS) {
+    const d = shift[key]
+    if (d !== undefined) out[key] = clamp(stats[key] + d, 0, gacha.statMax)
+  }
+  return out
+}
+
 export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actionRng(state), calendar = true): TurnResult {
   if (state.finished) return { ok: false, error: '이미 끝난 커리어다' }
   if (state.pendingOffers) return { ok: false, error: '받은 제안을 먼저 정해야 한다' }
@@ -274,6 +298,9 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
       money: next.money + rules.school.allowancePerBase * scale,
     }
   }
+
+  // 나이: 25세부터 시즌 한 해치 하락·성장을 턴마다 나눠서 반영한다
+  next = { ...next, stats: applyAgeShift(next.stats, ageShiftPerTurn(next)) }
 
   // 팀에 소속되어 있으면 월급이 꾸준히 들어온다 (3개월 기준 금액에 턴 길이 배율)
   if (next.team) next = { ...next, money: next.money + salaryOf(next) * scale }
@@ -307,25 +334,16 @@ export function isSettled(state: GameState): boolean {
 
 /**
  * 시즌 결산과 제안 선택을 마친 뒤 다음 시즌으로 넘어간다.
- * 25세부터 피지컬(반응속도·정확도)은 해마다 더 크게 내려가고(base + step × 지난 해 수),
- * 경험(판단력·멘탈·팀워크)은 시즌마다 조금씩 오른다. 후반에는 경험으로 승부를 보는 구도다.
+ * 나이로 인한 능력치 변화(피지컬 하락·경험 상승)는 시즌 중 매 턴 반영되므로(`ageShiftPerTurn`) 여기서는 하지 않는다.
  */
 export function startNextSeason(state: GameState): GameState {
   if (state.finished) throw new Error('이미 끝난 커리어다')
   if (state.turnInSeason < turnsPerSeason(state.mode)) throw new Error('시즌이 아직 끝나지 않았다')
   if (!isSettled(state)) throw new Error('시즌 결산이 필요하다')
   if (state.pendingOffers) throw new Error('받은 제안을 먼저 정해야 한다')
-  const stats = { ...state.stats }
-  const { fromAge, physical, experience } = rules.ageDecline
-  if (state.age >= fromAge) {
-    const drop = physical.base + physical.step * (state.age - fromAge)
-    for (const key of physical.stats as StatKey[]) stats[key] = Math.max(0, stats[key] - drop)
-    for (const key of experience.stats as StatKey[]) stats[key] = Math.min(gacha.statMax, stats[key] + experience.perSeason)
-  }
   return {
     ...state,
-    stats,
-    seasonStartStats: { ...stats },
+    seasonStartStats: { ...state.stats },
     age: state.age + 1,
     season: state.season + 1,
     turnInSeason: 0,

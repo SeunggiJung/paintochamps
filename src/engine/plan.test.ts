@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { autoTurn, DEFAULT_PLAN, planChoice, planOf, PRESETS, presetDef, setSeasonPlan, type PresetId } from './plan.ts'
 import { bestGainKeys } from './turn.ts'
+import { bestTraining, trainingValue } from './training.ts'
 import { createInitialState, type GameState } from './state.ts'
 import type { Stats } from './types.ts'
 
@@ -28,6 +29,16 @@ describe('개인 레슨', () => {
     const high = bestGainKeys({ ...s, stats: { ...s.stats, reaction: 990, accuracy: 990, focus: 990 } }, 3, 70)
     expect(low).toContain('accuracy')
     expect(high).not.toContain('accuracy')
+  })
+})
+
+describe('시즌 훈련 추천', () => {
+  it('핵심 능력치를 올리는 훈련이 앞서다가, 핵심이 높아지면 부족한 능력치를 채우는 훈련이 앞선다', () => {
+    const s = make()
+    expect(trainingValue(s, 'aim_lab')).toBeGreaterThan(trainingValue(s, 'video_review'))
+    expect(bestTraining(s, ['video_review', 'aim_lab'])).toBe('aim_lab')
+    const maxed = make({ stats: { ...stats(300), reaction: 990, accuracy: 990, focus: 990 } })
+    expect(bestTraining(maxed, ['video_review', 'aim_lab'])).toBe('video_review')
   })
 })
 

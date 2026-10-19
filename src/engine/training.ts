@@ -1,7 +1,9 @@
 import actionData from '../data/actions.json'
 import genres from '../data/genres.json'
+import gacha from '../data/gacha.json'
 import rules from '../data/rules.json'
 import type { CalendarBeat } from './calendar.ts'
+import { ageGrowthFactor, growthDelta } from './growth.ts'
 import { createRng, mixSeed, shuffled } from './rng.ts'
 import type { ActionId, GameState } from './state.ts'
 import { STAT_KEYS, type StatKey } from './types.ts'
@@ -73,6 +75,45 @@ function fillScore(state: GameState, id: ActionId): number {
   }
   const best = Math.max(...STAT_KEYS.map((k) => state.stats[k]))
   return STAT_KEYS.reduce((sum, k) => sum + (gains[k] ?? 0) * weights[k] * (best - state.stats[k]), 0)
+}
+
+/**
+ * 이 훈련을 한 번 했을 때 지금 상태에서 장르 실력치(R)가 얼마나 오르는지.
+ * 능력치별 (장르 비중 × 지금 오르는 양: 현재 능력치가 높을수록, 25세 이후 경험 능력치일수록 덜 오른다)의 합이다.
+ * 시즌 동안 같은 훈련을 하므로 이 값이 큰 훈련이 이번 시즌 실력치를 가장 많이 올려 준다.
+ */
+export function trainingValue(state: GameState, id: ActionId): number {
+  const def = (actionData as Record<string, { stats?: Partial<Record<StatKey, number>>; topGenreStats?: { count: number; amount: number } }>)[id]
+  const weights = genres[state.genre].weights
+  const gains: Partial<Record<StatKey, number>> = { ...def.stats }
+  if (def.topGenreStats) {
+    const top = [...STAT_KEYS].sort((a, b) => weights[b] - weights[a]).slice(0, def.topGenreStats.count)
+    for (const key of top) gains[key] = def.topGenreStats.amount
+  }
+  return STAT_KEYS.reduce((sum, k) => {
+    const base = gains[k]
+    if (base === undefined) return sum
+    const delta = growthDelta({
+      base,
+      scale: 1,
+      efficiency: ageGrowthFactor(state.age, k),
+      condition: 70,
+      traitMultiplier: state.trait.stat === k ? gacha.traitMultiplier : 1,
+      current: state.stats[k],
+    })
+    return sum + weights[k] * delta
+  }, 0)
+}
+
+/** 후보 중 실력치를 가장 많이 올려 주는 훈련 (같으면 앞쪽) */
+export function bestTraining(state: GameState, ids: readonly ActionId[]): ActionId | null {
+  let best: ActionId | null = null
+  let bestValue = -Infinity
+  for (const id of ids) {
+    const v = trainingValue(state, id)
+    if (v > bestValue + 1e-9) ((best = id), (bestValue = v))
+  }
+  return best
 }
 
 export interface CoachOffer {

@@ -4,7 +4,7 @@ import { equipmentCost } from '../engine/economy.ts'
 import { buyFacility, checkFacility, FACILITIES, FACILITY_IDS, facilityCost, facilityLevel } from '../engine/facilities.ts'
 import { planOf, PRESETS, setSeasonPlan, type PresetId } from '../engine/plan.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
-import { canRerollTraining, chooseSeasonTraining, rerollTrainingMenu, TRAINING_POOL, trainingMenuOf } from '../engine/training.ts'
+import { canRerollTraining, chooseSeasonTraining, bestTraining, rerollTrainingMenu, TRAINING_POOL, trainingMenuOf } from '../engine/training.ts'
 import { ACTIONS, buyEquipment, checkEquipment } from '../engine/turn.ts'
 import { openUpgrade } from './upgradeSheet.ts'
 import { upgradeArt } from './upgradeArt.ts'
@@ -59,6 +59,7 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
 
     const draw = () => {
       const menu = trainingMenuOf(state)
+      const best = bestTraining(state, menu)
       const lessonCost = Math.ceil(actionCost({ id: 'private_lesson' }, state))
       root.replaceChildren(
         h('p', { class: 'eyebrow' }, `${state.season}시즌 계획`),
@@ -93,15 +94,15 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
             canRerollTraining(state) ? '후보 다시 뽑기 (시즌 1회)' : '이번 시즌 다시 뽑기 사용함',
           ),
         ),
-        h('p', { class: 'muted small' }, '시즌 동안 이 훈련을 합니다. 훈련은 시즌마다 무작위 후보가 나옵니다.'),
+        h('p', { class: 'muted small' }, '시즌 동안 이 훈련을 합니다. 훈련은 시즌마다 무작위 후보가 나옵니다. ★ 표시는 지금 실력치를 가장 많이 올려 주는 훈련이에요.'),
         h(
           'div',
           { class: 'choices vertical' },
           ...menu.map((id) =>
             h(
               'button',
-              { class: `choice${training === id ? ' selected' : ''}`, 'aria-pressed': String(training === id), onclick: () => ((training = id), draw()) },
-              h('strong', {}, ACTIONS[id].name),
+              { class: `choice${training === id ? ' selected' : ''}${id === best ? ' best' : ''}`, 'aria-pressed': String(training === id), onclick: () => ((training = id), draw()) },
+              h('strong', {}, id === best && h('span', { class: 'best-star', title: '실력치를 가장 많이 올려 주는 훈련' }, '★ '), ACTIONS[id].name, id === best && h('span', { class: 'best-tag' }, '추천')),
               h('span', { class: 'muted small' }, `${statOrder(id)} · ${actionTags({ id }, state).filter((t) => t.includes('컨디션') || !t.endsWith('↑')).join(' · ')}`.replace(/ · $/, '')),
             ),
           ),

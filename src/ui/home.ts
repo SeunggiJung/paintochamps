@@ -8,8 +8,8 @@ import { genrePower } from '../engine/power.ts'
 import { choosePrep, expectedScore, PREP, testItems, testName, upcomingTest } from '../engine/routes.ts'
 import { acceptOffer, eventsFor, requestTransfer, rollMidSeasonOffer, stageName, transferBlocker } from '../engine/season.ts'
 import type { ActionId, GameState } from '../engine/state.ts'
-import { applyCoachSwap, coachSwapOffer, type CoachOffer } from '../engine/training.ts'
-import { ACTIONS, turnsPerSeason } from '../engine/turn.ts'
+import { applyCoachSwap, coachSwapOffer, trainingValue, type CoachOffer } from '../engine/training.ts'
+import { ACTIONS, ageShiftPerTurn, turnsPerSeason } from '../engine/turn.ts'
 import { STAT_KEYS } from '../engine/types.ts'
 import { markGuideDone, saveGame } from '../save/storage.ts'
 import { cleanTeamName, TEAM_NAME_MAX } from './newGame.ts'
@@ -68,7 +68,20 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         { class: 'stack-tight' },
         h('p', { class: 'eyebrow' }, '코치의 제안'),
         h('p', { class: 'event-text' }, `${offer.eventName}에서 지금 ${offer.rank}위야. 우리 전력과 네 실력이면 ${offer.expected}위권은 해야 하는데... 지금 하는 ${ACTIONS[s.seasonTraining!].name}을(를) 다른 훈련으로 바꿔 볼래?`),
-        h('div', { class: 'choices vertical' }, ...offer.options.map((t) => h('button', { class: 'choice', onclick: () => close(t) }, h('strong', {}, `${ACTIONS[t].name}으로 바꾼다`), h('span', { class: 'muted small' }, actionTags({ id: t }, s).join(' · '))))),
+        h(
+          'div',
+          { class: 'choices vertical' },
+          ...offer.options.map((t) => {
+            // 지금 훈련보다 실력치를 더 많이 올려 주는 제안은 강조한다
+            const better = trainingValue(s, t) > trainingValue(s, s.seasonTraining!)
+            return h(
+              'button',
+              { class: `choice${better ? ' best' : ''}`, onclick: () => close(t) },
+              h('strong', {}, better && h('span', { class: 'best-star' }, '★ '), `${ACTIONS[t].name}으로 바꾼다`, better && h('span', { class: 'best-tag' }, '지금보다 도움')),
+              h('span', { class: 'muted small' }, actionTags({ id: t }, s).join(' · ')),
+            )
+          }),
+        ),
         h('button', { class: 'btn ghost small', onclick: () => close(null) }, `지금 훈련(${ACTIONS[s.seasonTraining!].name})을 유지한다`),
       ),
     )
@@ -144,7 +157,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         { class: 'stack-tight' },
         h('p', { class: 'eyebrow' }, `${modes[before.mode].turnMonths}개월이 지났다`),
         ...r.notes.map((n) => h('p', { class: 'risk' }, `⚠ ${n}`)),
-        turnChangeGraph(before, next),
+        turnChangeGraph(before, next, { ageShift: ageShiftPerTurn(before) }),
         h('button', { class: 'btn primary', onclick: () => close() }, '다음'),
       ),
     )
