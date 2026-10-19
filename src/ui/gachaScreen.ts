@@ -19,6 +19,10 @@ const SUSPENSE_MS = 350
 const BAR_MAX = gacha.statTotal - gacha.statMin * (STAT_KEYS.length - 1)
 /** 장르 가중치가 이 값 이상인 능력치를 핵심 능력치로 표시한다 */
 const KEY_WEIGHT = 20
+/** 낮은 등급부터 높은 등급 순 */
+const GRADE_ORDER: Grade[] = ['N', 'R', 'SR', 'SSR', 'UR']
+/** 목표 등급 자동 뽑기가 한 번에 돌 수 있는 최대 횟수 (UR도 평균 100번 안쪽이라 사실상 안 닿는다) */
+const AUTO_ROLL_LIMIT = 100_000
 
 export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   const genre = genres[draft.genre]
@@ -28,6 +32,14 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   const stage = h('div', { class: 'gacha-card', role: 'status', 'aria-live': 'polite' })
   const rerollBtn = h('button', { class: 'btn' })
   const startBtn = h('button', { class: 'btn primary' }, '이 캐릭터로 시작')
+  let targetGrade: Grade = 'SSR'
+  const targetSelect = h(
+    'select',
+    { class: 'auto-roll-select', 'aria-label': '목표 등급' },
+    ...GRADE_ORDER.slice(1).map((g) => h('option', { value: g, selected: g === targetGrade }, `${GRADE_LABEL[g]} 이상`)),
+  ) as HTMLSelectElement
+  targetSelect.onchange = () => (targetGrade = targetSelect.value as Grade)
+  const autoBtn = h('button', { class: 'btn' }, '원하는 등급이 나올 때까지 뽑기')
 
   const clearTimers = () => {
     timers.forEach(clearTimeout)
@@ -130,6 +142,8 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   const setBusy = (busy: boolean) => {
     rerollBtn.textContent = rollIndex > 0 ? `다시 뽑기 (${rollIndex}회 다시 뽑음)` : '다시 뽑기'
     rerollBtn.disabled = busy
+    autoBtn.disabled = busy
+    targetSelect.disabled = busy
     startBtn.disabled = busy
     stage.title = busy ? '눌러서 건너뛰기' : ''
   }
@@ -138,6 +152,16 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
 
   rerollBtn.onclick = () => {
     rollIndex++
+    roll()
+  }
+  // 목표 등급 이상이 나올 때까지 연출 없이 돌리고, 마지막 결과만 보여 준다. 돌린 횟수는 다시 뽑기 횟수에 그대로 센다.
+  autoBtn.onclick = () => {
+    const goal = GRADE_ORDER.indexOf(targetGrade)
+    let tries = 0
+    do {
+      rollIndex++
+      tries++
+    } while (GRADE_ORDER.indexOf(rollAt(draft.seed, draft.genre, rollIndex).grade) < goal && tries < AUTO_ROLL_LIMIT)
     roll()
   }
   startBtn.onclick = () => {
@@ -160,6 +184,7 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
     h('h2', {}, `${draft.name}의 재능`),
     h('p', { class: 'muted small' }, `${genre.name} · ${MODE_INFO[draft.mode].name} 모드 · 합계 ${gacha.statTotal}`),
     stage,
+    h('div', { class: 'auto-roll' }, targetSelect, autoBtn),
     h('div', { class: 'stack' }, startBtn, rerollBtn, h('button', { class: 'btn ghost', onclick: () => ctx.toCreate() }, '처음부터')),
   )
   roll()

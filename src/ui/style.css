@@ -389,3 +389,7 @@ input[type='text'] {
 .train-list { gap: 3px; margin: 6px 0 0; }
 .btn.reroll { background: #232a47; border: 2px solid var(--accent); color: var(--text); font-weight: 700; white-space: nowrap; }
 .btn.reroll:not(:disabled):hover { background: var(--accent); color: var(--accent-text); }
+
+.auto-roll { display: flex; gap: 8px; align-items: stretch; }
+.auto-roll .btn { flex: 1; }
+.auto-roll-select { padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; min-height: 48px; }
