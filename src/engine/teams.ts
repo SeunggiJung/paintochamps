@@ -88,6 +88,40 @@ export function teamBoost(state: GameState): number {
   return contracts.teamWeight * (teamPower(state.seed, state.season, state.team.id, tier) - TIERS[tier].mean)
 }
 
+/** 이번 시즌 이미 공개된 대회에서 한 팀이 거둔 성적 한 줄 */
+export interface TeamResult {
+  event: string
+  rank: number
+  /** 리그만: 전적 */
+  wins?: number
+  losses?: number
+  /** 중간 순위인가 (대회가 아직 끝나지 않음) */
+  ongoing: boolean
+}
+
+/**
+ * 이번 시즌에 이미 공개된 대회들에서 그 팀의 성적. 리그는 순위표(중간·최종), 토너먼트는 최종 순서를 본다.
+ * 그 대회에 나오지 않은 팀은 빠진다. 아카데미 리그의 팀 이름은 구단 이름 뒤에 '아카데미'가 붙는다.
+ */
+export function seasonResultsOf(state: GameState, team: TeamRef): TeamResult[] {
+  const run = state.seasonRun
+  if (!run || run.season !== state.season) return []
+  const names = [team.name, `${team.name} 아카데미`]
+  const out: TeamResult[] = []
+  for (const r of run.runs) {
+    if (r.revealed === 'none') continue
+    const rows = r.revealed === 'end' ? r.table : r.mid
+    if (rows) {
+      const i = rows.findIndex((row) => !row.isPlayer && names.includes(row.name))
+      if (i >= 0) out.push({ event: r.name, rank: i + 1, wins: rows[i].wins, losses: rows[i].losses, ongoing: r.revealed !== 'end' })
+    } else if (r.revealed === 'end') {
+      const i = r.order.findIndex((t) => !t.isPlayer && t.id === team.id)
+      if (i >= 0) out.push({ event: r.name, rank: i + 1, ongoing: false })
+    }
+  }
+  return out
+}
+
 export interface OfferTerms {
   profile: TeamProfile
   /** 내 장르 실력치 */

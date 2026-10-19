@@ -88,7 +88,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         h(
           'div',
           { class: 'choices vertical' },
-          ...pending.offers.map((o, i) => offerButton(s, o, () => close(i))),
+          ...pending.offers.map((o, i) => offerButton(s, o, () => close(i), undefined, true)),
         ),
         h('button', { class: 'btn ghost small', onclick: () => close(null) }, '지금 팀에 남는다'),
       ),
