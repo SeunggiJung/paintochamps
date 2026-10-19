@@ -36,9 +36,18 @@ beforeEach(() => {
 
 describe('세이브', () => {
   it('저장한 상태를 그대로 불러온다', () => {
-    const s = make({ age: 21, fame: 33, team: { id: 'org_2', name: '미스트워커' } })
+    const s = make({ age: 21, fame: 33, team: { id: 'fps_pro1_t1', name: 'T1' } })
     expect(saveGame(storage, s)).toBe(true)
     expect(loadGame(storage)).toEqual(s)
+  })
+
+  it('실존 구단으로 바뀌기 전 세이브의 가상 팀은 실존 팀으로 옮겨 불러온다', () => {
+    saveGame(storage, make({ stage: 'pro1', team: { id: 'org_2', name: '미스트워커' }, debutTeamId: 'org_2' }))
+    const loaded = loadGame(storage)!
+    expect(loaded.team?.id).toMatch(/^fps_pro1_/)
+    expect(loaded.debutTeamId).toBe(loaded.team?.id)
+    saveGame(storage, make({ stage: 'pro2', team: { id: 'org_7', name: '실버폭스' } }))
+    expect(loadGame(storage)!.team?.id).toMatch(/^fps_pro2_/)
   })
 
   it('저장이 없으면 null', () => {

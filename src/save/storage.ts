@@ -1,6 +1,7 @@
 import { earnedAchievements, type AchievementId } from '../engine/achievements.ts'
+import { pro2Teams, proOrgs } from '../engine/field.ts'
 import { STAT_KEYS } from '../engine/types.ts'
-import type { EndingId, GameState, StageId } from '../engine/state.ts'
+import type { EndingId, GameState, StageId, TeamRef } from '../engine/state.ts'
 
 /** localStorage와 같은 모양. 테스트에서는 메모리 구현을 넘긴다. */
 export interface KeyValueStorage {
@@ -61,8 +62,24 @@ export function loadGame(storage: KeyValueStorage): GameState | null {
     if (!text) return null
     const parsed = JSON.parse(text) as Record<string, unknown>
     const data = parsed && typeof parsed === 'object' ? migrate(parsed) : null
-    return data && looksLikeState(data) ? (data as unknown as GameState) : null
+    return data && looksLikeState(data) ? upgradeTeams(data as unknown as GameState) : null
   }, null)
+}
+
+/**
+ * 실존 구단으로 바뀌기 전(org_N 가상 구단) 세이브의 팀을 같은 순서의 실존 팀으로 옮긴다.
+ * 소속 단계에 맞는 풀(프로 2부면 챌린저스, 아니면 1부 구단)에서 고른다.
+ */
+function upgradeTeams(state: GameState): GameState {
+  const legacy = (ref: TeamRef | null, pro2: boolean): TeamRef | null => {
+    const m = ref && /^org_(\d+)$/.exec(ref.id)
+    if (!ref || !m) return ref
+    const pool = pro2 ? pro2Teams(state.genre) : proOrgs(state.genre)
+    return pool[Number(m[1]) % pool.length]
+  }
+  const team = legacy(state.team, state.stage === 'pro2')
+  const debut = state.debutTeamId && /^org_(\d+)$/.test(state.debutTeamId) ? legacy({ id: state.debutTeamId, name: '' }, false)!.id : state.debutTeamId
+  return team === state.team && debut === state.debutTeamId ? state : { ...state, team, debutTeamId: debut }
 }
 
 export function clearGame(storage: KeyValueStorage): void {

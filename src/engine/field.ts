@@ -2,6 +2,7 @@ import competitions from '../data/competitions.json'
 import teamData from '../data/teams.json'
 import { createRng, gaussian, mixSeed, shuffled, type Rng } from './rng.ts'
 import type { TeamRef } from './state.ts'
+import type { GenreId } from './types.ts'
 import type { Team } from './tournament.ts'
 
 export type NamePool = 'amateur' | 'cafe' | 'orgs' | 'academy' | 'intl'
@@ -21,24 +22,85 @@ interface Tier {
 }
 const TIERS = competitions.tiers as Record<string, Tier>
 
-const ORG_REFS: TeamRef[] = teamData.orgs.map((name, i) => ({ id: `org_${i}`, name }))
+/** 풀에 든 팀 하나. slug는 id와 로고 파일 이름에 쓰고, parent는 2군이 속한 1군의 slug다. */
+interface PoolEntry {
+  slug: string
+  name: string
+  logo?: string
+  parent?: string
+}
+type LeagueKey = 'aos' | 'fps'
+type LeagueKind = 'pro1' | 'pro2' | 'intl'
+
+/** 장르가 따르는 리그: AOS·RTS는 LCK 계열, FPS·격투는 VCT 퍼시픽 계열 */
+const LEAGUE_OF: Record<GenreId, LeagueKey> = { aos: 'aos', rts: 'aos', fps: 'fps', fighting: 'fps' }
+export const leagueOf = (genre: GenreId): LeagueKey => LEAGUE_OF[genre]
+
+const LEAGUES = teamData.leagues as Record<LeagueKey, Record<LeagueKind, PoolEntry[]>>
+const idOf = (league: LeagueKey, kind: LeagueKind, slug: string) => `${league}_${kind}_${slug}`
+
+const REFS = new Map<string, TeamRef>()
+const ENTRY_OF = new Map<string, PoolEntry>()
+const POOLS = new Map<string, TeamRef[]>()
+for (const league of Object.keys(LEAGUES) as LeagueKey[]) {
+  for (const kind of Object.keys(LEAGUES[league]) as LeagueKind[]) {
+    const refs = LEAGUES[league][kind].map((e) => {
+      const ref: TeamRef = { id: idOf(league, kind, e.slug), name: e.name }
+      REFS.set(ref.id, ref)
+      ENTRY_OF.set(ref.id, e)
+      return ref
+    })
+    POOLS.set(`${league}:${kind}`, refs)
+  }
+}
 const AMATEUR_REFS: TeamRef[] = teamData.amateur.map((name, i) => ({ id: `am_${i}`, name }))
 const CAFE_REFS: TeamRef[] = teamData.cafe.map((name, i) => ({ id: `cafe_${i}`, name }))
-const INTL_REFS: TeamRef[] = teamData.intl.map((name, i) => ({ id: `intl_${i}`, name }))
 
-function pool(kind: NamePool): TeamRef[] {
-  if (kind === 'amateur') return AMATEUR_REFS
-  if (kind === 'cafe') return CAFE_REFS
-  if (kind === 'intl') return INTL_REFS
-  return ORG_REFS
+function leaguePool(genre: GenreId, kind: LeagueKind): TeamRef[] {
+  return POOLS.get(`${leagueOf(genre)}:${kind}`)!
 }
 
-/** 구단(프로 팀) 목록. 스카우트·이적 제안에 쓴다. */
-export function proOrgs(): TeamRef[] {
-  return ORG_REFS
+function pool(kind: NamePool, genre: GenreId): TeamRef[] {
+  if (kind === 'amateur') return AMATEUR_REFS
+  if (kind === 'cafe') return CAFE_REFS
+  if (kind === 'intl') return leaguePool(genre, 'intl')
+  if (kind === 'academy') return leaguePool(genre, 'pro2')
+  return leaguePool(genre, 'pro1')
+}
+
+/** 1부 구단 목록. 스카우트·이적 제안에 쓴다. */
+export function proOrgs(genre: GenreId): TeamRef[] {
+  return leaguePool(genre, 'pro1')
+}
+/** 2부 팀(챌린저스) 목록 */
+export function pro2Teams(genre: GenreId): TeamRef[] {
+  return leaguePool(genre, 'pro2')
 }
 export function amateurTeams(): TeamRef[] {
   return AMATEUR_REFS
+}
+
+/** 로고 파일 이름. 풀에 없는 팀(옛 세이브·가상 팀)이면 null. */
+export function logoSlugOf(teamId: string): string | null {
+  const e = ENTRY_OF.get(teamId)
+  return e ? (e.logo ?? e.slug) : null
+}
+
+/** 2부 팀의 모 구단(1부 팀). 연계된 1군이 없으면 null. */
+export function parentOrgOf(team: TeamRef, genre: GenreId): TeamRef | null {
+  const parent = ENTRY_OF.get(team.id)?.parent
+  return parent ? (REFS.get(idOf(leagueOf(genre), 'pro1', parent)) ?? null) : null
+}
+
+/** 1부 구단에 연계된 2부 팀(있으면) */
+export function farmTeamOf(org: TeamRef, genre: GenreId): TeamRef | null {
+  const slug = ENTRY_OF.get(org.id)?.slug
+  return leaguePool(genre, 'pro2').find((t) => ENTRY_OF.get(t.id)?.parent === slug) ?? null
+}
+
+/** 이 팀이 2부(챌린저스) 팀인가 */
+export function isPro2Team(teamId: string): boolean {
+  return /^(aos|fps)_pro2_/.test(teamId)
 }
 
 /** 같은 구단의 2군 이름 */
@@ -77,13 +139,33 @@ export function teamPower(seed: number, season: number, teamId: string, tier: st
 
 const gradeById = new Map<string, Grade>()
 const gradedSeeds = new Set<string>()
-/** 시드마다 구단들을 섞어서 등급별 팀 수만큼 강호·중위권·약팀으로 나눈다 */
+
+/** 등급별 팀 수를 풀 크기에 맞춰 비례 배분한다 (12팀 기준 5·4·3을 10팀 리그면 4·3·3으로) */
+function scaledCounts(grades: Grade[], size: number): number[] {
+  const total = grades.reduce((sum, g) => sum + g.count, 0)
+  const raw = grades.map((g) => (g.count * size) / total)
+  const counts = raw.map(Math.floor)
+  let rest = size - counts.reduce((a, b) => a + b, 0)
+  const byRemainder = raw.map((r, i) => ({ i, r: r - Math.floor(r) })).sort((a, b) => b.r - a.r)
+  for (const { i } of byRemainder) {
+    if (rest <= 0) break
+    counts[i]++
+    rest--
+  }
+  return counts
+}
+
+/** 시드마다 구단들을 섞어서 등급별 팀 수만큼 강호·중위권·약팀으로 나눈다. 1부 풀은 팀 id가 가리키는 리그의 것이다. */
 function gradeOf(seed: number, teamId: string, grades: Grade[]): Grade {
-  const key = `${seed}:${grades.length}`
+  const league = /^(aos|fps)_pro1_/.exec(teamId)?.[1] as LeagueKey | undefined
+  if (!league) return grades[grades.length - 1]
+  const key = `${seed}:${grades.length}:${league}`
   if (!gradedSeeds.has(key)) {
     gradedSeeds.add(key)
-    const order = [...ORG_REFS].sort((a, b) => hashId(`${seed}:${a.id}`) - hashId(`${seed}:${b.id}`))
-    const slots = grades.flatMap((g) => Array<Grade>(g.count).fill(g))
+    const refs = POOLS.get(`${league}:pro1`)!
+    const order = [...refs].sort((a, b) => hashId(`${seed}:${a.id}`) - hashId(`${seed}:${b.id}`))
+    const counts = scaledCounts(grades, refs.length)
+    const slots = grades.flatMap((g, i) => Array<Grade>(counts[i]).fill(g))
     order.forEach((t, i) => gradeById.set(`${key}:${t.id}`, slots[i] ?? grades[grades.length - 1]))
   }
   return gradeById.get(`${key}:${teamId}`) ?? grades[grades.length - 1]
@@ -96,19 +178,21 @@ export function makeOpponents(
   tier: string,
   count: number,
   exclude: ReadonlySet<string>,
+  genre: GenreId,
   profile?: { seed: number; season: number },
 ): Team[] {
-  const candidates = shuffled(rng, pool(names).filter((t) => !exclude.has(t.id))).slice(0, count)
+  const candidates = shuffled(rng, pool(names, genre).filter((t) => !exclude.has(t.id))).slice(0, count)
   return candidates.map((t) => ({
     id: t.id,
-    name: names === 'academy' ? academyName(t) : t.name,
+    name: t.name,
     power: profile ? teamPower(profile.seed, profile.season, t.id, tier) : rollPower(rng, tier),
   }))
 }
 
 export { TIERS }
 
-/** 제안으로 보여 줄 팀 후보 count개 (현재 팀 제외) */
-export function pickTeams(rng: Rng, kind: 'amateur' | 'pro', count: number, exclude: ReadonlySet<string>): TeamRef[] {
-  return shuffled(rng, (kind === 'amateur' ? AMATEUR_REFS : ORG_REFS).filter((t) => !exclude.has(t.id))).slice(0, count)
+/** 제안으로 보여 줄 팀 후보 count개 (현재 팀 제외). pro1·pro2는 장르가 따르는 리그의 팀이다. */
+export function pickTeams(rng: Rng, kind: 'amateur' | 'pro1' | 'pro2', count: number, exclude: ReadonlySet<string>, genre: GenreId): TeamRef[] {
+  const refs = kind === 'amateur' ? AMATEUR_REFS : kind === 'pro2' ? pro2Teams(genre) : proOrgs(genre)
+  return shuffled(rng, refs.filter((t) => !exclude.has(t.id))).slice(0, count)
 }

@@ -153,7 +153,7 @@ export function routeStep(before: GameState, after: GameState, { placementOf, sc
       const t = takeTest(before, 'academy_test', rng)
       tests.push(t)
       if (t.passed) {
-        const org = pickTeams(rng, 'pro', 1, new Set())[0]
+        const org = pickTeams(rng, 'pro1', 1, new Set(), after.genre)[0]
         move('amateur_team', 'academy')
         s = { ...s, academyInvite: false, team: { id: org.id, name: academyName(org) } }
         notes.push(`아카데미 입단 테스트 합격! ${academyName(org)}의 연습생이 되었다.`)

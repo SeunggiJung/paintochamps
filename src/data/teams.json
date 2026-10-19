@@ -1,28 +1,108 @@
 {
-  "amateur": [
-    "새벽늑대", "붉은여우", "푸른바람", "검은고래", "불꽃주먹", "별빛사수", "철벽수비대", "번개토끼",
-    "달그림자", "폭풍노루", "강철매미", "은빛화살", "황금사자", "소나기", "북극곰", "도깨비불",
-    "청룡회", "한강물개", "남산호랑이", "동네고수", "야간근무조", "라면부대", "옥상정상회담", "골목대장"
-  ],
-  "cafe": [
-    "이기고자라", "접으셈", "ㅇㅈ?", "PC방알바생", "김밥천국팀", "야자째고왔다", "컵라면연합", "닥치고서폿",
-    "빡겜러들", "형들만믿어", "오늘만산다", "손풀러왔음", "아무튼이김", "치킨내기", "동네백수들", "탈주금지", "졌잘싸"
-  ],
-  "orgs": [
-    "T1", "Gen.G", "Hanwha Life Esports", "KT Rolster", "Dplus KIA", "DRX",
-    "Nongshim RedForce", "BNK FearX", "OK BRION", "DN Freecs", "Liiv SANDBOX", "Griffin"
-  ],
-  "orgSlugs": [
-    "t1", "geng", "hle", "kt", "dk", "drx", "ns", "bnk", "brion", "freecs", "sandbox", "griffin"
-  ],
-  "intl": [
-    "Cloud9", "Team Liquid", "FlyQuest", "100 Thieves", "G2 Esports", "Fnatic",
-    "Karmine Corp", "Movistar KOI", "JD Gaming", "Bilibili Gaming", "Top Esports", "Anyone's Legend",
-    "LNG Esports", "Weibo Gaming", "Invictus Gaming", "CTBC Flying Oyster", "PSG Talon", "GAM Esports",
-    "DetonatioN FocusMe", "LOUD", "paiN Gaming", "Team Vitality", "Team Heretics", "Paper Rex"
-  ],
-  "intlSlugs": [
-    "c9", "tl", "fly", "100t", "g2", "fnc", "kc", "koi", "jdg", "blg", "tes", "al",
-    "lng", "wbg", "ig", "cfo", "psgtalon", "gam", "dfm", "loud", "pain", "vit", "th", "prx"
-  ]
+  "amateur": ["새벽늑대", "붉은여우", "푸른바람", "검은고래", "불꽃주먹", "별빛사수", "철벽수비대", "번개토끼", "달그림자", "폭풍노루", "강철매미", "은빛화살", "황금사자", "소나기", "북극곰", "도깨비불", "청룡회", "한강물개", "남산호랑이", "동네고수", "야간근무조", "라면부대", "옥상정상회담", "골목대장"],
+  "cafe": ["이기고자라", "접으셈", "ㅇㅈ?", "PC방알바생", "김밥천국팀", "야자째고왔다", "컵라면연합", "닥치고서폿", "빡겜러들", "형들만믿어", "오늘만산다", "손풀러왔음", "아무튼이김", "치킨내기", "동네백수들", "탈주금지", "졌잘싸"],
+  "leagues": {
+    "aos": {
+      "pro1": [
+        {"slug": "t1", "name": "T1"},
+        {"slug": "geng", "name": "Gen.G"},
+        {"slug": "hle", "name": "Hanwha Life Esports"},
+        {"slug": "kt", "name": "KT Rolster"},
+        {"slug": "dk", "name": "Dplus KIA"},
+        {"slug": "brion", "name": "Hanjin Brion"},
+        {"slug": "ns", "name": "Nongshim RedForce"},
+        {"slug": "bnk", "name": "BNK FearX"},
+        {"slug": "drx", "name": "KIWOOM DRX"},
+        {"slug": "soopers", "name": "DN SOOPers"}
+      ],
+      "pro2": [
+        {"slug": "t1-academy", "name": "T1 Esports Academy", "logo": "t1", "parent": "t1"},
+        {"slug": "geng-academy", "name": "Gen.G Global Academy", "logo": "geng", "parent": "geng"},
+        {"slug": "hle-challengers", "name": "HLE Challengers", "logo": "hle", "parent": "hle"},
+        {"slug": "kt-challengers", "name": "kt Challengers", "logo": "kt", "parent": "kt"},
+        {"slug": "dk-challengers", "name": "DK Challengers", "logo": "dk", "parent": "dk"},
+        {"slug": "brion-challengers", "name": "BRO Challengers", "logo": "brion", "parent": "brion"},
+        {"slug": "ns-challengers", "name": "NS Challengers", "logo": "ns", "parent": "ns"},
+        {"slug": "bnk-youth", "name": "BNK FEARX Youth", "logo": "bnk", "parent": "bnk"},
+        {"slug": "drx-challengers", "name": "KRX Challengers", "logo": "drx", "parent": "drx"},
+        {"slug": "soopers-challengers", "name": "DNS Challengers", "logo": "soopers", "parent": "soopers"}
+      ],
+      "intl": [
+        {"slug": "blg", "name": "Bilibili Gaming"},
+        {"slug": "tes", "name": "Top Esports"},
+        {"slug": "jdg", "name": "JD Gaming"},
+        {"slug": "al", "name": "Anyone's Legend"},
+        {"slug": "lng", "name": "LNG Esports"},
+        {"slug": "wbg", "name": "Weibo Gaming"},
+        {"slug": "g2", "name": "G2 Esports"},
+        {"slug": "kc", "name": "Karmine Corp"},
+        {"slug": "fnc", "name": "Fnatic"},
+        {"slug": "koi", "name": "Movistar KOI"},
+        {"slug": "vit", "name": "Team Vitality"},
+        {"slug": "th", "name": "Team Heretics"},
+        {"slug": "lyon", "name": "LYON"},
+        {"slug": "tl", "name": "Team Liquid"},
+        {"slug": "c9", "name": "Cloud9"},
+        {"slug": "fly", "name": "FlyQuest"},
+        {"slug": "100t", "name": "100 Thieves"},
+        {"slug": "shopify", "name": "Shopify Rebellion"},
+        {"slug": "secret", "name": "Team Secret Whales"},
+        {"slug": "dcg", "name": "Deep Cross Gaming"},
+        {"slug": "cfo", "name": "CTBC Flying Oyster"},
+        {"slug": "gam", "name": "GAM Esports"},
+        {"slug": "furia", "name": "FURIA"},
+        {"slug": "loud", "name": "LOUD"}
+      ]
+    },
+    "fps": {
+      "pro1": [
+        {"slug": "dfm", "name": "DetonatioN FocusMe"},
+        {"slug": "drx", "name": "DRX"},
+        {"slug": "fullsense", "name": "FULL SENSE"},
+        {"slug": "geng", "name": "Gen.G"},
+        {"slug": "ge", "name": "Global Esports"},
+        {"slug": "ns", "name": "Nongshim RedForce"},
+        {"slug": "prx", "name": "Paper Rex"},
+        {"slug": "rrq", "name": "Rex Regum Qeon"},
+        {"slug": "t1", "name": "T1"},
+        {"slug": "secret", "name": "Team Secret"},
+        {"slug": "varrel", "name": "VARREL"},
+        {"slug": "zeta", "name": "ZETA DIVISION"}
+      ],
+      "pro2": [
+        {"slug": "onside", "name": "ONSIDE GAMING"},
+        {"slug": "arete", "name": "ARETE"},
+        {"slug": "dk", "name": "Dplus KIA"},
+        {"slug": "t1-academy", "name": "T1 Academy", "logo": "t1", "parent": "t1"},
+        {"slug": "geng-academy", "name": "Gen.G Global Academy", "logo": "geng", "parent": "geng"},
+        {"slug": "drx-academy", "name": "DRX Academy", "logo": "drx", "parent": "drx"}
+      ],
+      "intl": [
+        {"slug": "c9", "name": "Cloud9"},
+        {"slug": "100t", "name": "100 Thieves"},
+        {"slug": "eg", "name": "Evil Geniuses"},
+        {"slug": "furia", "name": "FURIA"},
+        {"slug": "kru", "name": "KRÜ Esports"},
+        {"slug": "leviatan", "name": "Leviatán"},
+        {"slug": "loud", "name": "LOUD"},
+        {"slug": "mibr", "name": "MIBR"},
+        {"slug": "nrg", "name": "NRG"},
+        {"slug": "sen", "name": "Sentinels"},
+        {"slug": "fnc", "name": "Fnatic"},
+        {"slug": "kc", "name": "Karmine Corp"},
+        {"slug": "navi", "name": "Natus Vincere"},
+        {"slug": "th", "name": "Team Heretics"},
+        {"slug": "tl", "name": "Team Liquid"},
+        {"slug": "vit", "name": "Team Vitality"},
+        {"slug": "bbl", "name": "BBL Esports"},
+        {"slug": "fut", "name": "FUT Esports"},
+        {"slug": "gm", "name": "Gentle Mates"},
+        {"slug": "giantx", "name": "GIANTX"},
+        {"slug": "blg", "name": "Bilibili Gaming"},
+        {"slug": "edg", "name": "Edward Gaming"},
+        {"slug": "fpx", "name": "FunPlus Phoenix"},
+        {"slug": "jdg", "name": "JD Gaming"}
+      ]
+    }
+  }
 }

@@ -20,8 +20,9 @@ export interface EventDef {
   modes?: ModeId[]
   format: 'league' | 'elimination'
   field?: { names: NamePool; tier: string; size: number }
-  /** 앞선 이벤트 순위표의 상위 top팀으로 치른다 (플레이어가 거기 못 들면 열리지 않는다) */
-  from?: { event: string; top: number }
+  /** 앞선 이벤트 순위표의 상위 top팀(side가 bottom이면 하위 top팀)으로 치른다 (플레이어가 거기 못 들면 열리지 않는다).
+   * 시즌 도중 승급해 앞선 이벤트를 치르지 않았다면 field가 있을 때 field로 대신 치른다. */
+  from?: { event: string; top: number; side?: 'bottom' }
   /** 이 진출권을 얻어야 열린다 */
   needs?: string
   rounds?: number
@@ -34,7 +35,10 @@ export interface EventDef {
   /** 월드 챔피언십 */
   world?: boolean
   rewards: Reward[]
-  qualifies?: { to: string; top: number }[]
+  /** 순위가 min~top이면 진출권을 얻는다 (min이 없으면 1위부터) */
+  qualifies?: { to: string; top: number; min?: number }[]
+  /** 리그 순위를 시즌 성적(활약·카드)에는 쓰지만 강등 판정에서는 뺀다 */
+  noRelegate?: boolean
   points?: number[]
   pointsQualify?: { to: string; minPoints: number }
   /** 공식 일정이 아닌 초청 대회. 골든로드 같은 "시즌 모든 대회" 기록에서 빠진다. */

@@ -27,19 +27,19 @@
     ],
     "amateur_team": [
       {
-        "id": "amateur_league", "span": [0, 1], "name": "아카데미 시리즈", "format": "league",
+        "id": "amateur_league", "span": [0, 1], "name": "아마추어 아카데미 시리즈", "format": "league",
         "field": { "names": "amateur", "tier": "amateur", "size": 6 }, "rounds": 2, "bestOf": 1, "rank": true,
         "rewards": [{ "upTo": 1, "fame": 8, "money": 30 }, { "upTo": 3, "fame": 4, "money": 10 }, { "upTo": 99, "fame": 1, "money": 0 }]
       }
     ],
     "pro2": [
       {
-        "id": "pro2_spring", "span": [0, 0.5], "name": "챌린저스 리그 스프링", "format": "league",
+        "id": "pro2_spring", "span": [0, 0.5], "name": "챌린저스 코리아 스플릿 1", "format": "league",
         "field": { "names": "academy", "tier": "pro2", "size": 6 }, "rounds": 2, "bestOf": 3,
         "rewards": [{ "upTo": 1, "fame": 5, "money": 40 }, { "upTo": 3, "fame": 3, "money": 20 }, { "upTo": 99, "fame": 1, "money": 10 }]
       },
       {
-        "id": "pro2_autumn", "span": [0.5, 1], "name": "챌린저스 리그 서머", "format": "league",
+        "id": "pro2_autumn", "span": [0.5, 1], "name": "챌린저스 코리아 스플릿 2", "format": "league",
         "field": { "names": "academy", "tier": "pro2", "size": 6 }, "rounds": 2, "bestOf": 3, "rank": true,
         "rewards": [{ "upTo": 1, "fame": 10, "money": 80 }, { "upTo": 3, "fame": 5, "money": 40 }, { "upTo": 99, "fame": 2, "money": 20 }]
       }
@@ -47,43 +47,73 @@
     "pro1": {
       "aos": [
         {
-          "id": "split1", "span": [0, 0.3], "name": "LCK 스프링", "format": "league",
+          "id": "lck_cup_groups", "span": [0, 0.07], "name": "LCK컵 조별 대항전", "format": "league",
+          "field": { "names": "orgs", "tier": "pro1", "size": 10 }, "rounds": 1, "bestOf": 3,
+          "rewards": [{ "upTo": 3, "fame": 2, "money": 20 }, { "upTo": 99, "fame": 1, "money": 10 }]
+        },
+        {
+          "id": "lck_cup", "span": [0.07, 0.14], "name": "LCK컵 플레이오프", "format": "elimination",
+          "from": { "event": "lck_cup_groups", "top": 6 }, "k": 2, "bestOf": 5, "big": true,
+          "qualifies": [{ "to": "first_stand", "top": 2 }],
+          "rewards": [{ "upTo": 1, "fame": 10, "money": 80 }, { "upTo": 3, "fame": 5, "money": 40 }, { "upTo": 99, "fame": 2, "money": 15 }]
+        },
+        {
+          "id": "first_stand", "span": [0.14, 0.2], "name": "퍼스트 스탠드", "format": "elimination", "needs": "first_stand",
+          "field": { "names": "intl", "tier": "intl", "size": 8 }, "k": 2, "bestOf": 5, "big": true,
+          "rewards": [{ "upTo": 1, "fame": 12, "money": 100 }, { "upTo": 4, "fame": 6, "money": 50 }, { "upTo": 99, "fame": 2, "money": 20 }]
+        },
+        {
+          "id": "rounds12", "span": [0.2, 0.44], "name": "LCK 라운드 1~2", "format": "league",
           "field": { "names": "orgs", "tier": "pro1", "size": 10 }, "rounds": 2, "bestOf": 3,
+          "qualifies": [{ "to": "road_to_msi", "top": 6 }],
           "rewards": [{ "upTo": 3, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
         },
         {
-          "id": "mid_qualifier", "span": [0.3, 0.38], "name": "MSI 선발전", "format": "elimination",
-          "from": { "event": "split1", "top": 6 }, "k": 1, "bestOf": 5, "big": true,
-          "qualifies": [{ "to": "midseason", "top": 1 }],
-          "rewards": [{ "upTo": 1, "fame": 6, "money": 40 }, { "upTo": 99, "fame": 1, "money": 0 }]
+          "id": "road_to_msi", "span": [0.44, 0.5], "name": "로드 투 MSI", "format": "elimination", "needs": "road_to_msi",
+          "from": { "event": "rounds12", "top": 6 }, "k": 1, "bestOf": 5, "big": true,
+          "qualifies": [{ "to": "msi", "top": 2 }],
+          "rewards": [{ "upTo": 2, "fame": 6, "money": 50 }, { "upTo": 99, "fame": 1, "money": 0 }]
         },
         {
-          "id": "midseason", "span": [0.38, 0.5], "name": "MSI", "format": "elimination", "needs": "midseason",
+          "id": "msi", "span": [0.5, 0.6], "name": "MSI", "format": "elimination", "needs": "msi",
           "field": { "names": "intl", "tier": "intl", "size": 12 }, "k": 2, "bestOf": 5, "big": true,
           "qualifies": [{ "to": "world", "top": 1 }],
           "points": [8, 5, 3, 2, 2, 1],
           "rewards": [{ "upTo": 1, "fame": 20, "money": 200 }, { "upTo": 4, "fame": 10, "money": 80 }, { "upTo": 99, "fame": 4, "money": 30 }]
         },
         {
-          "id": "split2", "span": [0.5, 0.78], "name": "LCK 서머", "format": "league",
-          "field": { "names": "orgs", "tier": "pro1", "size": 10 }, "rounds": 2, "bestOf": 3, "rank": true,
+          "id": "legend_group", "span": [0.6, 0.82], "name": "LCK 라운드 3~4 레전드 그룹", "format": "league",
+          "from": { "event": "rounds12", "top": 5 }, "field": { "names": "orgs", "tier": "pro1", "size": 5 }, "rounds": 2, "bestOf": 3, "rank": true, "noRelegate": true,
+          "qualifies": [{ "to": "playoffs", "top": 4 }, { "to": "playin", "top": 5, "min": 5 }],
           "rewards": [{ "upTo": 3, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
         },
         {
-          "id": "playoffs", "span": [0.78, 0.86], "name": "LCK 플레이오프", "format": "elimination",
-          "from": { "event": "split2", "top": 6 }, "k": 2, "bestOf": 5, "big": true,
+          "id": "rise_group", "span": [0.6, 0.82], "name": "LCK 라운드 3~4 라이즈 그룹", "format": "league",
+          "from": { "event": "rounds12", "top": 5, "side": "bottom" }, "rounds": 2, "bestOf": 3, "rank": true,
+          "qualifies": [{ "to": "playin", "top": 3 }],
+          "rewards": [{ "upTo": 3, "fame": 2, "money": 30 }, { "upTo": 99, "fame": 1, "money": 15 }]
+        },
+        {
+          "id": "season_playin", "span": [0.82, 0.86], "name": "LCK 시즌 플레이인", "format": "elimination", "needs": "playin",
+          "field": { "names": "orgs", "tier": "pro1", "size": 4 }, "k": 2, "bestOf": 5, "big": true,
+          "qualifies": [{ "to": "playoffs", "top": 2 }],
+          "rewards": [{ "upTo": 2, "fame": 4, "money": 30 }, { "upTo": 99, "fame": 1, "money": 10 }]
+        },
+        {
+          "id": "playoffs", "span": [0.86, 0.93], "name": "LCK 시즌 플레이오프", "format": "elimination", "needs": "playoffs",
+          "field": { "names": "orgs", "tier": "pro1", "size": 6 }, "k": 2, "bestOf": 5, "big": true,
           "qualifies": [{ "to": "world", "top": 2 }],
           "points": [6, 4, 3, 2, 1, 1],
           "rewards": [{ "upTo": 1, "fame": 15, "money": 150 }, { "upTo": 3, "fame": 8, "money": 80 }, { "upTo": 99, "fame": 3, "money": 30 }]
         },
         {
-          "id": "world", "span": [0.86, 1], "name": "월드 챔피언십", "format": "elimination", "needs": "world", "world": true,
+          "id": "world", "span": [0.93, 1], "name": "월드 챔피언십", "format": "elimination", "needs": "world", "world": true,
           "field": { "names": "intl", "tier": "intl", "size": 16 }, "k": 2, "bestOf": 5, "big": true,
           "rewards": [{ "upTo": 1, "fame": 50, "money": 500 }, { "upTo": 2, "fame": 30, "money": 250 }, { "upTo": 4, "fame": 20, "money": 120 }, { "upTo": 99, "fame": 8, "money": 50 }]
         },
         {
           "id": "invitational", "span": [0.55, 0.65], "name": "e스포츠 월드컵", "format": "elimination", "unofficial": true, "everyNSeasons": 2,
-          "invite": { "minFame": 80, "anyOf": [{ "event": "split2", "top": 4 }, { "played": "world" }] },
+          "invite": { "minFame": 80, "anyOf": [{ "event": "legend_group", "top": 4 }, { "played": "world" }] },
           "field": { "names": "intl", "tier": "intl", "size": 16 }, "k": 2, "bestOf": 5, "big": true,
           "rewards": [{ "upTo": 1, "fame": 25, "money": 1200 }, { "upTo": 2, "fame": 15, "money": 600 }, { "upTo": 4, "fame": 8, "money": 300 }, { "upTo": 99, "fame": 3, "money": 100 }]
         }
@@ -96,7 +126,7 @@
           "rewards": [{ "upTo": 3, "fame": 5, "money": 50 }, { "upTo": 99, "fame": 1, "money": 20 }]
         },
         {
-          "id": "masters1", "span": [0.12, 0.22], "name": "VCT 마스터즈 1", "format": "elimination", "needs": "masters1",
+          "id": "masters1", "span": [0.12, 0.22], "name": "VCT 마스터즈 산티아고", "format": "elimination", "needs": "masters1",
           "field": { "names": "intl", "tier": "intl", "size": 12 }, "k": 2, "bestOf": 3, "big": true,
           "points": [8, 5, 3, 2, 2, 1],
           "rewards": [{ "upTo": 1, "fame": 18, "money": 180 }, { "upTo": 4, "fame": 9, "money": 70 }, { "upTo": 99, "fame": 4, "money": 30 }]
@@ -114,7 +144,7 @@
           "rewards": [{ "upTo": 1, "fame": 12, "money": 120 }, { "upTo": 3, "fame": 6, "money": 60 }, { "upTo": 99, "fame": 2, "money": 30 }]
         },
         {
-          "id": "masters2", "span": [0.52, 0.62], "name": "VCT 마스터즈 2", "format": "elimination", "needs": "masters2",
+          "id": "masters2", "span": [0.52, 0.62], "name": "VCT 마스터즈 런던", "format": "elimination", "needs": "masters2",
           "field": { "names": "intl", "tier": "intl", "size": 12 }, "k": 2, "bestOf": 3, "big": true,
           "points": [8, 5, 3, 2, 2, 1],
           "rewards": [{ "upTo": 1, "fame": 18, "money": 180 }, { "upTo": 4, "fame": 9, "money": 70 }, { "upTo": 99, "fame": 4, "money": 30 }]
@@ -133,7 +163,7 @@
           "rewards": [{ "upTo": 1, "fame": 15, "money": 150 }, { "upTo": 3, "fame": 8, "money": 80 }, { "upTo": 99, "fame": 3, "money": 30 }]
         },
         {
-          "id": "world", "span": [0.92, 1], "name": "VCT 챔피언스", "format": "elimination", "needs": "world", "world": true,
+          "id": "world", "span": [0.92, 1], "name": "VCT 챔피언스 상하이", "format": "elimination", "needs": "world", "world": true,
           "field": { "names": "intl", "tier": "intl", "size": 16 }, "k": 2, "bestOf": 5, "big": true,
           "rewards": [{ "upTo": 1, "fame": 50, "money": 500 }, { "upTo": 2, "fame": 30, "money": 250 }, { "upTo": 4, "fame": 20, "money": 120 }, { "upTo": 99, "fame": 8, "money": 50 }]
         },

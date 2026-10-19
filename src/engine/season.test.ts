@@ -8,6 +8,9 @@ import { applyTurn, startNextSeason } from './turn.ts'
 import type { GenreId, Stats } from './types.ts'
 
 const TEAM = { id: 'org_0', name: '나이트호크' }
+/** 2부(챌린저스) 팀과 그 팀이 속한 1군 구단 */
+const FARM = { id: 'fps_pro2_t1-academy', name: 'T1 Academy' }
+const PARENT = { id: 'fps_pro1_t1', name: 'T1' }
 
 function stats(power: number): Stats {
   return { reaction: power, accuracy: power, focus: power, judgment: power, mental: power, teamwork: power }
@@ -29,7 +32,9 @@ function atSeasonEnd(overrides: Partial<GameState> & { power?: number } = {}, ge
 describe('이벤트 목록', () => {
   it('방구석 단계의 PC방 대회는 모든 모드에 열리고, 1부는 장르별 일정이 다르다', () => {
     for (const mode of ['tutorial', 'standard'] as const) expect(eventsFor({ stage: 'basement', genre: 'fps', mode }).map((e) => e.id)).toEqual(['cafe_cup'])
-    expect(eventsFor({ stage: 'pro1', genre: 'aos', mode: 'standard' }).map((e) => e.id)).toEqual(['split1', 'mid_qualifier', 'midseason', 'split2', 'playoffs', 'world'])
+    expect(eventsFor({ stage: 'pro1', genre: 'aos', mode: 'standard' }).map((e) => e.id)).toEqual([
+      'lck_cup_groups', 'lck_cup', 'first_stand', 'rounds12', 'road_to_msi', 'msi', 'legend_group', 'rise_group', 'season_playin', 'playoffs', 'world',
+    ])
     expect(eventsFor({ stage: 'pro1', genre: 'fps', mode: 'standard' }).map((e) => e.id)).toEqual([
       'kickoff', 'masters1', 'stage1', 'stage1_playoffs', 'masters2', 'stage2', 'stage2_playoffs', 'world',
     ])
@@ -97,13 +102,13 @@ describe('승급과 강등', () => {
   })
 
   it('프로 2부에서 조건을 채우면 자동 승급이 아니라 1부 팀의 콜업 제안이 온다 (지금 팀의 1군 콜업이 첫 번째)', () => {
-    const { state, report } = settleSeason(atSeasonEnd({ stage: 'pro2', team: TEAM, power: 900, everPro: true }))
+    const { state, report } = settleSeason(atSeasonEnd({ stage: 'pro2', team: FARM, power: 900, everPro: true }))
     // 압도적으로 강하면 2부 1위이므로 강등되지 않는다. 제안을 고르기 전까지는 2부다.
     expect(state.stage).toBe('pro2')
     expect(report.promoted).toBe(false)
     expect(state.pendingOffers?.kind).toBe('callup')
     expect(state.pendingOffers?.stage).toBe('pro1')
-    expect(state.pendingOffers?.offers[0].team).toEqual(TEAM)
+    expect(state.pendingOffers?.offers[0].team).toEqual(PARENT)
     expect(new Set(state.pendingOffers?.offers.map((o) => o.team.id)).size).toBe(state.pendingOffers?.offers.length)
     expect(() => startNextSeason(state)).toThrow()
   })
@@ -260,7 +265,7 @@ describe('PC방 대회와 뽑기 기록', () => {
   })
 
   it('PC방 대회 상대는 조잡한 이름 목록에서 뽑고 서로 겹치지 않는다', () => {
-    const teams = makeOpponents(createRng(3), 'cafe', 'cafe', 7, new Set(['player']))
+    const teams = makeOpponents(createRng(3), 'cafe', 'cafe', 7, new Set(['player']), 'fps')
     expect(new Set(teams.map((t) => t.name)).size).toBe(7)
     expect(teams.every((t) => t.id.startsWith('cafe_'))).toBe(true)
   })
@@ -388,9 +393,9 @@ describe('시즌 도중 승급', () => {
   })
 
   it('프로 2부에서도 1부 콜업이 시즌 도중 온다', () => {
-    const s = rollMidSeasonPromotion(atSeasonEnd({ stage: 'pro2', team: TEAM, fame: 20, power: 500, turnInSeason: 2, seasonRun: run([rec('pro2_spring', 1, 'end')]) }))
+    const s = rollMidSeasonPromotion(atSeasonEnd({ stage: 'pro2', team: FARM, fame: 20, power: 500, turnInSeason: 2, seasonRun: run([rec('pro2_spring', 1, 'end')]) }))
     expect(s.pendingOffers?.stage).toBe('pro1')
-    expect(s.pendingOffers?.offers[0].team.id).toBe(TEAM.id)
+    expect(s.pendingOffers?.offers[0].team.id).toBe(PARENT.id)
   })
 
   it('시즌 도중 승급한 시즌의 결산에는 이전 단계에서 끝낸 대회도 들어가고 강등되지 않는다', () => {

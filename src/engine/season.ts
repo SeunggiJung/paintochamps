@@ -4,13 +4,14 @@ import { evaluateEnding } from './endings.ts'
 import { advanceCalendar } from './calendar.ts'
 import { moneyScale } from './economy.ts'
 import { eventsFor, playerPower, type EventDef } from './competitions.ts'
-import { pickTeams } from './field.ts'
+import { farmTeamOf, parentOrgOf, pickTeams } from './field.ts'
 import { playSeries } from './match.ts'
 import { seasonHighlights, type Highlights } from './highlights.ts'
 import { genrePower } from './power.ts'
 import { createRng, gaussian, mixSeed, type Rng } from './rng.ts'
 import type { EndingId, EventRecord, GameState, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
 import { pathOf, routeStep, type TestResult } from './routes.ts'
+import type { GenreId } from './types.ts'
 import { isCareerOver, isSettled, turnScale, turnsPerSeason } from './turn.ts'
 
 interface StageDef {
@@ -53,8 +54,8 @@ export interface SeasonReport {
   highlights: Highlights
 }
 
-function makeScoutOffers(rng: Rng, kind: 'amateur' | 'pro', exclude: Set<string>, count: number = OFFERS.count): PendingOffers {
-  const offers: Offer[] = pickTeams(rng, kind, count, exclude).map((team) => ({
+function makeScoutOffers(rng: Rng, kind: 'amateur' | 'pro1' | 'pro2', exclude: Set<string>, genre: GenreId, count: number = OFFERS.count): PendingOffers {
+  const offers: Offer[] = pickTeams(rng, kind, count, exclude, genre).map((team) => ({
     team,
     perk: rng() < 0.5 ? 'salary' : 'playtime',
   }))
@@ -62,10 +63,10 @@ function makeScoutOffers(rng: Rng, kind: 'amateur' | 'pro', exclude: Set<string>
 }
 
 /** 프로 2부 → 1부 콜업 제안: 지금 소속 팀의 1군 콜업이 첫 번째, 나머지는 다른 구단에서 온다. 모두 1부 팀이다. */
-function makeCallupOffers(rng: Rng, own: GameState['team'], stage: StageId = 'pro1'): PendingOffers {
-  // 1부 콜업은 지금 팀의 1군이 첫째다. 아마추어에서 2부로 오를 때는 다른 팀들이 제안한다.
-  const mine = own && stage === 'pro1' ? own : null
-  const others = pickTeams(rng, 'pro', mine ? OFFERS.callupCount - 1 : OFFERS.callupCount, new Set(own ? [own.id] : []))
+function makeCallupOffers(rng: Rng, own: GameState['team'], genre: GenreId, stage: StageId = 'pro1'): PendingOffers {
+  // 1부 콜업은 지금 팀의 1군(2부 팀의 모 구단)이 첫째다. 아마추어에서 2부로 오를 때나 연계된 1군이 없으면 다른 팀들만 제안한다.
+  const mine = own && stage === 'pro1' ? (parentOrgOf(own, genre) ?? (own.id.includes('_pro1_') ? own : null)) : null
+  const others = pickTeams(rng, stage === 'pro1' ? 'pro1' : 'pro2', mine ? OFFERS.callupCount - 1 : OFFERS.callupCount, new Set([...(own ? [own.id] : []), ...(mine ? [mine.id] : [])]), genre)
   const teams = mine ? [mine, ...others] : others
   return { kind: 'callup', stage, offers: teams.map((team) => ({ team, perk: rng() < 0.5 ? 'salary' : 'playtime' })) }
 }
@@ -80,11 +81,11 @@ export function rollMidSeasonOffer(state: GameState): GameState {
   if (state.turnInSeason >= turnsPerSeason(state.mode)) return state
   if (state.fame < OFFERS.midMinFame) return state
   if (state.stage === 'amateur_team' && pathOf(state) === 'academy') return state // 연습생은 이적 제안을 받지 않는다
-  const kind = state.stage === 'amateur_team' ? 'amateur' : state.stage === 'pro2' || state.stage === 'pro1' ? 'pro' : null
+  const kind = state.stage === 'amateur_team' ? 'amateur' : state.stage === 'pro2' ? 'pro2' : state.stage === 'pro1' ? 'pro1' : null
   if (!kind) return state
   const rng = createRng(mixSeed(state.seed, state.turnCount, 0x0ff3))
   if (rng() >= 1 - (1 - OFFERS.midChance) ** turnScale(state.mode)) return state
-  const offers = makeScoutOffers(rng, kind, new Set([state.team.id])).offers.slice(0, 2)
+  const offers = makeScoutOffers(rng, kind, new Set([state.team.id]), state.genre).offers.slice(0, 2)
   return { ...state, pendingOffers: { kind: 'transfer', offers }, midOfferSeason: state.season }
 }
 
@@ -128,7 +129,7 @@ export function rollMidSeasonPromotion(state: GameState): GameState {
   const standing = revealedStanding(state, def.events)
   if (!standing || standing.rank > Math.max(1, Math.ceil(standing.size * def.topRatio))) return state
   const rng = createRng(mixSeed(state.seed, state.turnCount, 0x9a0b))
-  return { ...state, promoOfferSeason: state.season, pendingOffers: makeCallupOffers(rng, state.team, def.to) }
+  return { ...state, promoOfferSeason: state.season, pendingOffers: makeCallupOffers(rng, state.team, state.genre, def.to) }
 }
 
 /** 시즌 도중에 단계가 바뀐다: 끝나지 않은 대회는 접고, 이미 시작한 새 단계 대회는 건너뛰며, 승급 전 단계를 기록해 둔다. */
@@ -174,11 +175,11 @@ export function transferSuccessChance(fame: number): number {
 export function requestTransfer(state: GameState, when: TransferWhen): { ok: true; state: GameState; success: boolean } | { ok: false; error: string } {
   const error = transferBlocker(state, when)
   if (error) return { ok: false, error }
-  const kind = state.stage === 'amateur_team' ? 'amateur' : 'pro'
+  const kind = state.stage === 'amateur_team' ? 'amateur' : state.stage === 'pro2' ? 'pro2' : 'pro1'
   const rng = createRng(mixSeed(state.seed, state.season, state.turnCount, when === 'mid' ? 0x7e51 : 0x7e52))
   const marks = when === 'mid' ? { transferMidSeason: state.season, midOfferSeason: state.season } : { transferSettleSeason: state.season }
   if (rng() >= transferSuccessChance(state.fame)) return { ok: true, state: { ...state, ...marks }, success: false }
-  const offers = makeScoutOffers(rng, kind, new Set([state.team!.id]), OFFERS.count).offers
+  const offers = makeScoutOffers(rng, kind, new Set([state.team!.id]), state.genre, OFFERS.count).offers
   return { ok: true, state: { ...state, ...marks, pendingOffers: { kind: 'transfer', offers } }, success: true }
 }
 
@@ -204,7 +205,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
   const run = advanced.seasonRun!
   let next: GameState = { ...advanced, seasonsInPro1: advanced.seasonsInPro1 + (state.stage === 'pro1' ? 1 : 0) }
   const results: EventResult[] = []
-  let rank: { placement: number; size: number } | null = null
+  let rank: { placement: number; size: number; safe: boolean } | null = null
   let worldChampion = false
 
   // 시즌 도중 승급했다면 승급 전 단계에서 끝낸 대회도 이번 시즌 결과에 들어간다
@@ -214,7 +215,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
     const rec = run.runs.find((r) => r.id === ev.id)
     if (!rec) continue
     results.push({ id: ev.id, name: ev.name, placement: rec.placement, fieldSize: rec.fieldSize, fame: rec.fame, money: rec.money })
-    if (ev.rank) rank = { placement: rec.placement, size: rec.fieldSize }
+    if (ev.rank) rank = { placement: rec.placement, size: rec.fieldSize, safe: !!ev.noRelegate }
     if (ev.world) {
       next = { ...next, worldAppearances: next.worldAppearances + 1 }
       if (rec.placement === 1) {
@@ -242,22 +243,24 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
   const idx = STAGE_ORDER.indexOf(state.stage)
   // 정석 루트의 연습생은 아마추어 리그 성적이 나빠도 방출되지 않는다 (배우는 단계)
   const trainee = state.stage === 'amateur_team' && pathOf(state) === 'academy'
-  if (!worldChampion && !trainee && !midPromoted && rank && idx >= 2 && isRelegated(rank.placement, rank.size)) {
+  if (!worldChampion && !trainee && !midPromoted && rank && !rank.safe && idx >= 2 && isRelegated(rank.placement, rank.size)) {
     relegated = true
     const lower = STAGE_ORDER[idx - 1]
     let team = next.team
     if (state.stage === 'amateur_team') team = null
-    if (state.stage === 'pro2') team = pickTeams(rng, 'amateur', 1, new Set())[0]
+    if (state.stage === 'pro2') team = pickTeams(rng, 'amateur', 1, new Set(), state.genre)[0]
+    // 1부에서 강등되면 같은 구단의 2부 팀(챌린저스)으로 내려간다. 연계된 팀이 없으면 무작위 2부 팀.
+    if (state.stage === 'pro1') team = (team && farmTeamOf(team, state.genre)) ?? pickTeams(rng, 'pro2', 1, new Set(), state.genre)[0]
     next = { ...next, stage: lower, team, path: 'open', salaryMult: 1, negotiatedSeason: 0 }
   } else if (!worldChampion && state.stage === 'pro2') {
     // 프로 2부 → 1부는 자동 승급이 아니라 1부 팀의 콜업 제안이다. 지금 팀(1군 콜업)과 다른 구단에서 온다. 거절하면 2부에 남는다.
     const cond = STAGES[state.stage].next!
     const power = genrePower(state.stats, state.genre)
-    if (power >= cond.minPower && next.fame >= (cond.minFame ?? 0)) pendingOffers = makeCallupOffers(rng, next.team)
+    if (power >= cond.minPower && next.fame >= (cond.minFame ?? 0)) pendingOffers = makeCallupOffers(rng, next.team, state.genre)
   } else if (!worldChampion && (state.stage === 'basement' || state.stage === 'local_cup' || state.stage === 'amateur_team')) {
     const step = routeStep(advanced, next, {
       placementOf: (id) => results.find((r) => r.id === id)?.placement,
-      scout: (kind, count) => makeScoutOffers(rng, kind, new Set(next.team ? [next.team.id] : []), count),
+      scout: (kind, count) => makeScoutOffers(rng, kind === 'pro' ? 'pro2' : kind, new Set(next.team ? [next.team.id] : []), state.genre, count),
       rng,
     })
     next = step.state
@@ -268,7 +271,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
   }
   next = { ...next, testPrep: null }
   if (!pendingOffers && !worldChampion && next.stage === 'pro1' && next.team && next.fame >= OFFERS.transferMinFame && rng() < OFFERS.transferChance) {
-    pendingOffers = { kind: 'transfer', offers: makeScoutOffers(rng, 'pro', new Set([next.team.id])).offers.slice(0, 2) }
+    pendingOffers = { kind: 'transfer', offers: makeScoutOffers(rng, 'pro1', new Set([next.team.id]), state.genre).offers.slice(0, 2) }
   }
   next = { ...next, pendingOffers }
 

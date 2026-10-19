@@ -1,9 +1,10 @@
 import contracts from '../data/contracts.json'
-import { amateurTeams, proOrgs, teamPower, TIERS } from './field.ts'
+import { amateurTeams, pro2Teams, proOrgs, teamPower, TIERS } from './field.ts'
 import { salaryFameMultiplier } from './economy.ts'
 import { genrePower } from './power.ts'
 import { pathOf } from './routes.ts'
 import type { GameState, Offer, StageId, TeamRef } from './state.ts'
+import type { GenreId } from './types.ts'
 
 /** 팀이 속한 리그의 실력 등급 (competitions.json의 tiers 키) */
 const TIER_OF_STAGE: Partial<Record<StageId, string>> = { amateur_team: 'amateur', pro2: 'pro2', pro1: 'pro1' }
@@ -26,9 +27,9 @@ export interface TeamProfile {
   salary: number
 }
 
-/** 이 단계에서 팀이 속할 풀: 아마추어 팀 단계는 아마추어 팀, 프로 2부 이상은 구단 */
-function poolOf(stage: StageId): TeamRef[] {
-  return stage === 'amateur_team' ? amateurTeams() : proOrgs()
+/** 이 단계에서 팀이 속할 풀: 아마추어 팀 단계는 아마추어 팀, 프로 2부는 챌린저스 팀, 프로 1부는 구단 */
+function poolOf(stage: StageId, genre: GenreId): TeamRef[] {
+  return stage === 'amateur_team' ? amateurTeams() : stage === 'pro2' ? pro2Teams(genre) : proOrgs(genre)
 }
 
 /** 팀 전력이 같은 리그 평균에서 얼마나 위인지에 따른 월급 배율 (약한 팀 0.8 ~ 강한 팀 1.4) */
@@ -40,13 +41,13 @@ function salaryFor(stage: Contracted, power: number): number {
 }
 
 /** 팀의 이번 시즌 정보: 전력, 지난 시즌 순위, 제시하는 월급. 시드로 정해져서 어느 화면에서 봐도 같다. */
-export function teamProfile(seed: number, season: number, team: TeamRef, stage: StageId, fame = 0): TeamProfile | null {
+export function teamProfile(seed: number, season: number, team: TeamRef, stage: StageId, fame = 0, genre: GenreId = 'fps'): TeamProfile | null {
   const tier = TIER_OF_STAGE[stage]
   if (!tier) return null
   const contracted = stage as Contracted
   const power = teamPower(seed, season, team.id, tier)
   // 지난 시즌 순위: 같은 풀의 팀들을 지난 시즌 전력으로 줄 세우고, 리그 팀 수에 맞춰 환산한다
-  const pool = poolOf(stage)
+  const pool = poolOf(stage, genre)
   const last = Math.max(1, season - 1)
   const order = pool.map((t) => ({ id: t.id, p: teamPower(seed, last, t.id, tier) })).sort((a, b) => b.p - a.p)
   const index = Math.max(0, order.findIndex((t) => t.id === team.id))
@@ -63,7 +64,7 @@ function isTrainee(state: Pick<GameState, 'stage' | 'path'>): boolean {
 export function salaryOf(state: GameState): number {
   if (!state.team) return 0
   if (isTrainee(state)) return contracts.traineeSalary
-  const profile = teamProfile(state.seed, state.season, state.team, state.stage, state.fame)
+  const profile = teamProfile(state.seed, state.season, state.team, state.stage, state.fame, state.genre)
   return Math.round((profile?.salary ?? 0) * (state.salaryMult ?? 1))
 }
 
@@ -137,7 +138,7 @@ export interface OfferTerms {
 
 /** 제안을 받은 팀의 조건 요약. 이적·입단 결정에 쓰는 정보다. */
 export function offerTerms(state: GameState, offer: Offer, stage: StageId = state.stage): OfferTerms | null {
-  const profile = teamProfile(state.seed, state.season, offer.team, stage, state.fame)
+  const profile = teamProfile(state.seed, state.season, offer.team, stage, state.fame, state.genre)
   if (!profile) return null
   const myPower = genrePower(state.stats, state.genre)
   const gap = profile.power - myPower

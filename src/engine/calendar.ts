@@ -2,7 +2,7 @@ import modes from '../data/modes.json'
 import routes from '../data/routes.json'
 import { eventsFor, isInvited, midPhase, playerPower, type EventDef } from './competitions.ts'
 import { moneyScale } from './economy.ts'
-import { academyName, makeOpponents } from './field.ts'
+import { academyName, isPro2Team, makeOpponents } from './field.ts'
 import { createRng, mixSeed } from './rng.ts'
 import type { GameState, RunRecord, SeasonRun, StandingRow } from './state.ts'
 import { teamBoost } from './teams.ts'
@@ -56,7 +56,7 @@ const rows = (standings: Standing[]): StandingRow[] =>
 
 function playerTeam(state: GameState, ev: EventDef, power: number): Team {
   const base = state.team ?? { id: 'player', name: state.name }
-  const name = ev.field?.names === 'academy' ? academyName(base) : ev.field?.names === 'cafe' ? (state.cafeTeamName ?? `${state.name}팀`) : base.name
+  const name = ev.field?.names === 'academy' && !isPro2Team(base.id) ? academyName(base) : ev.field?.names === 'cafe' ? (state.cafeTeamName ?? `${state.name}팀`) : base.name
   return { id: base.id, name, power, isPlayer: true }
 }
 
@@ -73,18 +73,22 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
   // 소속 팀이 리그 평균보다 강하면 전력이 오르고 약하면 내려간다 (PC방 대회처럼 팀 없이 나가는 대회는 제외)
   const power = playerPower(state, ev.big ?? false) + (ev.field?.names === 'cafe' ? 0 : teamBoost(state)) + (ev.world ? worldBonus(state.mode) : 0)
 
+  const fieldTeams = (): Team[] => {
+    const f = ev.field!
+    const me = playerTeam(state, ev, power)
+    return [me, ...makeOpponents(rng, f.names, f.tier, f.size - 1, new Set([me.id]), state.genre, f.names === 'cafe' || f.names === 'intl' ? undefined : { seed: state.seed, season: state.season })]
+  }
   let teams: Team[]
   if (ev.from) {
     const prev = run.runs.find((r) => r.id === ev.from!.event)
-    if (!prev) return null
-    const top = prev.order.slice(0, ev.from.top)
-    if (!top.some((t) => t.isPlayer)) return null
-    teams = top.map((t) => (t.isPlayer ? { ...t, power } : t))
-  } else {
-    const f = ev.field!
-    const me = playerTeam(state, ev, power)
-    teams = [me, ...makeOpponents(rng, f.names, f.tier, f.size - 1, new Set([me.id]), f.names === 'cafe' || f.names === 'intl' ? undefined : { seed: state.seed, season: state.season })]
-  }
+    if (prev) {
+      const picked = ev.from.side === 'bottom' ? prev.order.slice(-ev.from.top) : prev.order.slice(0, ev.from.top)
+      if (!picked.some((t) => t.isPlayer)) return null
+      teams = picked.map((t) => (t.isPlayer ? { ...t, power } : t))
+    } else if (run.promotedFrom && ev.field) {
+      teams = fieldTeams() // 시즌 도중 승급해 앞 대회를 치르지 않았으면 새 팀 소속으로 바로 합류한다
+    } else return null
+  } else teams = fieldTeams()
 
   let order: Team[]
   let expected: number | undefined
@@ -106,7 +110,7 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
   const nameOf = (id: string) => events.find((e) => e.id === id)?.name ?? id
   const advanced: string[] = []
   for (const q of ev.qualifies ?? []) {
-    if (placement <= q.top) {
+    if (placement <= q.top && placement >= (q.min ?? 1)) {
       qualified.push(q.to)
       advanced.push(`${nameOf(q.to)} 진출!`)
     }

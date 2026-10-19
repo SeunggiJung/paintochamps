@@ -19,7 +19,7 @@ function make(stage: StageId, o: Partial<GameState> = {}): GameState {
     seed: 5,
     gacha: { stats: stats(600), trait: { id: 'quick_hands', name: '손이 빠름', stat: 'reaction' }, grade: 'R', power: 600 },
   })
-  return { ...base, age: 24, stage, team: stage === 'basement' || stage === 'local_cup' ? null : proOrgs()[0], condition: 70, money: 1_000_000, trainingMenu: ['basics', 'aim_lab', 'video_review'], ...o }
+  return { ...base, age: 24, stage, team: stage === 'basement' || stage === 'local_cup' ? null : proOrgs('fps')[0], condition: 70, money: 1_000_000, trainingMenu: ['basics', 'aim_lab', 'video_review'], ...o }
 }
 
 describe('돈의 규모 (소속 단계에 따라 커진다)', () => {
@@ -70,7 +70,7 @@ describe('장비와 월급', () => {
   })
 
   it('월급은 실제 프로 연봉에 가까운 규모이고(프로 1부 연 1억 이상), 명성이 높을수록 오른다', () => {
-    const team = proOrgs()[0]
+    const team = proOrgs('fps')[0]
     const amateur = teamProfile(5, 5, team, 'amateur_team')!.salary
     const pro2 = teamProfile(5, 5, team, 'pro2')!.salary
     const pro1 = teamProfile(5, 5, team, 'pro1')!.salary

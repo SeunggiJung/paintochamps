@@ -86,12 +86,12 @@ describe('시간에 따른 대회 진행', () => {
     expect(split.seasonRun!.runs.map((r) => [r.id, r.placement])).toEqual(direct.state.seasonRun!.runs.map((r) => [r.id, r.placement]))
   })
 
-  it('프로 1부 AOS는 전반기 → … → 월드 순서로, 대회가 끝나는 시점마다 결과가 나온다', () => {
+  it('프로 1부 AOS는 LCK컵 → … → 월드 순서로, 대회가 끝나는 시점마다 결과가 나온다', () => {
     const update = advanceCalendar(make({ stage: 'pro1' }, 1000), 1)
     const ends = update.beats.filter((b) => b.kind === 'end').map((b) => b.eventId)
-    const order = ['split1', 'mid_qualifier', 'midseason', 'split2', 'playoffs', 'world']
+    const order = ['lck_cup_groups', 'lck_cup', 'first_stand', 'rounds12', 'road_to_msi', 'msi', 'legend_group', 'rise_group', 'season_playin', 'playoffs', 'world']
     // 진출권을 못 얻은 대회는 열리지 않으므로 일부만 나올 수 있지만, 순서는 늘 달력 순이다
-    expect(ends[0]).toBe('split1')
+    expect(ends[0]).toBe('lck_cup_groups')
     expect(ends).toEqual(order.filter((id) => ends.includes(id)))
     const phases = update.beats.map((b) => b.phase)
     expect([...phases].sort((a, b) => a - b)).toEqual(phases)
@@ -102,7 +102,7 @@ describe('시간에 따른 대회 진행', () => {
     const r = applyTurn({ ...s, trainingMenu: ['basics', 'aim_lab', 'video_review'] }, REST)
     if (!r.ok) throw new Error(r.error)
     const ended = r.calendar.beats.filter((b) => b.kind === 'end')
-    expect(ended[0].eventId).toBe('split1')
+    expect(ended[0].eventId).toBe('lck_cup_groups')
     for (const b of ended) expect(b.phase).toBeLessThanOrEqual(0.5)
     expect(ended.map((b) => b.eventId)).not.toContain('world')
     expect(r.calendar.phaseAfter).toBe(0.5)
@@ -151,7 +151,7 @@ describe('시간에 따른 대회 진행', () => {
 })
 
 describe('비공식 초청 대회 (슈퍼 인비테이셔널)', () => {
-  const prev = (placement: number) => [{ season: 5, age: 23, stage: 'pro1' as const, events: [{ id: 'split2', name: '후반기 리그', placement, fieldSize: 10 }] }]
+  const prev = (placement: number) => [{ season: 5, age: 23, stage: 'pro1' as const, events: [{ id: 'legend_group', name: 'LCK 라운드 3~4 레전드 그룹', placement, fieldSize: 5 }] }]
   const invitational = () => eventsFor({ stage: 'pro1', genre: 'aos', mode: 'standard', season: 6 }).find((e) => e.id === 'invitational')!
 
   it('2시즌에 한 번(짝수 시즌)만 일정에 있고, 비공식 대회로 분류된다', () => {
@@ -172,7 +172,7 @@ describe('비공식 초청 대회 (슈퍼 인비테이셔널)', () => {
   })
 
   it('직전 시즌에 월드 챔피언십에 나갔다면 리그 성적이 낮아도 초청받는다', () => {
-    const history = [{ season: 5, age: 23, stage: 'pro1' as const, events: [{ id: 'split2', name: '후반기 리그', placement: 9, fieldSize: 10 }, { id: 'world', name: '월드 챔피언십', placement: 8, fieldSize: 16 }] }]
+    const history = [{ season: 5, age: 23, stage: 'pro1' as const, events: [{ id: 'legend_group', name: 'LCK 라운드 3~4 레전드 그룹', placement: 9, fieldSize: 10 }, { id: 'world', name: '월드 챔피언십', placement: 8, fieldSize: 16 }] }]
     expect(isInvited(make({ season: 6, fame: 200, history }), invitational())).toBe(true)
   })
 
