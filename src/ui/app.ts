@@ -6,6 +6,7 @@ import { endingScreen } from './ending.ts'
 import { createScreen, type NewGameDraft } from './create.ts'
 import { gachaScreen } from './gachaScreen.ts'
 import { homeScreen } from './home.ts'
+import { infoScreen, isInfoPageId, type InfoPageId } from './infoPages.ts'
 import { seasonScreen } from './seasonScreen.ts'
 import { titleScreen } from './title.ts'
 
@@ -29,7 +30,20 @@ export interface Ctx {
   /** 커리어가 끝난 뒤의 엔딩 화면 */
   toEnding(state: GameState, info: EndingInfo): void
   toCodex(): void
+  /** 서비스 소개·게임 가이드·개인정보처리방침·이용약관·문의 */
+  toInfo(page: InfoPageId): void
 }
+
+/** 주소창의 #해시만 바꾼다 (기록에 쌓이지 않게 replace) */
+function setHash(hash: string): void {
+  try {
+    history.replaceState(null, '', hash ? `#${hash}` : location.pathname + location.search)
+  } catch {
+    // 주소를 바꿀 수 없는 환경이면 무시한다
+  }
+}
+
+const pageFromHash = (): string => location.hash.replace(/^#\/?/, '')
 
 export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
   const show = (el: HTMLElement) => root.replaceChildren(el)
@@ -38,6 +52,7 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     meta: loadMeta(storage),
     toTitle() {
       ctx.meta = loadMeta(storage)
+      setHash('')
       show(titleScreen(ctx, loadGame(storage)))
     },
     toCreate: () => show(createScreen(ctx)),
@@ -46,6 +61,18 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     toSeason: (state) => show(seasonScreen(ctx, state)),
     toEnding: (state, info) => show(endingScreen(ctx, state, info)),
     toCodex: () => show(codexScreen(ctx)),
+    toInfo(page) {
+      setHash(`/${page}`)
+      show(infoScreen(ctx, page))
+      scrollTo(0, 0)
+    },
   }
-  ctx.toTitle()
+  // 주소 뒤에 #/terms 처럼 붙이면 정보 페이지를 바로 열 수 있다 (링크 공유용)
+  const first = pageFromHash()
+  if (isInfoPageId(first)) ctx.toInfo(first)
+  else ctx.toTitle()
+  window.addEventListener('hashchange', () => {
+    const page = pageFromHash()
+    if (isInfoPageId(page)) show(infoScreen(ctx, page))
+  })
 }

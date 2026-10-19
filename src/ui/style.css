@@ -393,3 +393,17 @@ input[type='text'] {
 .auto-roll { display: flex; gap: 8px; align-items: stretch; }
 .auto-roll .btn { flex: 1; }
 .auto-roll-select { padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; min-height: 48px; }
+
+.info { gap: 12px; text-align: left; }
+.info h2 { margin: 4px 0 0; }
+.info-section h3 { margin: 12px 0 4px; font-size: 1.05rem; }
+.info-section p { margin: 6px 0; line-height: 1.6; }
+.info-list { padding-left: 18px; list-style: disc; }
+.info-list li { margin: 4px 0; line-height: 1.55; }
+.info-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.info-nav .current { border-color: var(--accent); color: var(--accent); }
+.info-footer { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.info-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; }
+.link-btn { background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.85rem; text-decoration: underline; cursor: pointer; padding: 4px; }
+.rights { line-height: 1.5; text-align: center; max-width: 34em; }
+.info .rights { text-align: left; }

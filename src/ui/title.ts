@@ -7,6 +7,7 @@ import { MODE_INFO } from './labels.ts'
 import { supportButton } from './support.ts'
 import { maybeShowUpdateLog, openUpdateLog } from './updateLog.ts'
 import { titleHero } from './titleScene.ts'
+import { infoFooter } from './infoPages.ts'
 
 export function titleScreen(ctx: Ctx, saved: GameState | null): HTMLElement {
   const resume = saved
@@ -43,5 +44,6 @@ export function titleScreen(ctx: Ctx, saved: GameState | null): HTMLElement {
     titleHero(),
     h('div', { class: 'stack' }, resume, newGame, h('button', { class: 'btn ghost', onclick: () => ctx.toCodex() }, `엔딩 도감 (${ENDINGS.filter((e) => ctx.meta.endings[e.id]).length}/${ENDINGS.length})`), h('button', { class: 'btn ghost', onclick: () => void openUpdateLog() }, '업데이트 로그')),
     ctx.meta.finishedRuns > 0 && h('p', { class: 'muted small' }, `완주 ${ctx.meta.finishedRuns}회`),
+    infoFooter(ctx),
   )
 }
