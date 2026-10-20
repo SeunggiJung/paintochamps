@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { analystBonus, buyFacility, checkFacility, facilityCost, facilityEffectLines, facilityEffectText, FACILITY_IDS, mentalGuard, studioBoost, trainerGuard, trainerRecovery } from './facilities.ts'
 import { createInitialState, type GameState } from './state.ts'
 import { applyTurn } from './turn.ts'
+import { acquireTeam, assetGrade, buyHome, homeBlocker, homeSlumpFactor, netWorth, ownerBlocker, HOMES } from './life.ts'
+import { applyEffects } from './effects.ts'
+import { earnedAchievements } from './achievements.ts'
+import { isEligible, EVENTS } from './events.ts'
+import { endingDef, evaluateEnding } from './endings.ts'
 import type { GenreId, Stats } from './types.ts'
 
 const stats = (power: number): Stats => ({ reaction: power, accuracy: power, focus: power, judgment: power, mental: power, teamwork: power })
@@ -52,5 +57,59 @@ describe('스태프 시설', () => {
     expect(boosted).toBeGreaterThan(plain)
     const bought = buyFacility(base, 'studio')
     expect(bought.ok && bought.state.facilities.studio).toBe(1)
+  })
+})
+
+describe('집과 자산', () => {
+  it('프로 2부 이상에서 돈이 되면 3단계까지 집을 살 수 있다', () => {
+    expect(homeBlocker(proState('fps', { stage: 'amateur_team' }))).not.toBeNull()
+    expect(homeBlocker(proState('fps', { money: 100 }))).not.toBeNull()
+    let s = proState('fps', { money: 10_000_000 })
+    for (let i = 0; i < 3; i++) {
+      const r = buyHome(s)
+      expect(r.ok).toBe(true)
+      if (r.ok) s = r.state
+    }
+    expect(s.home).toBe(3)
+    expect(s.money).toBe(10_000_000 - HOMES.reduce((a, h) => a + h.price, 0))
+    expect(homeBlocker(s)).not.toBeNull()
+  })
+
+  it('집이 있으면 슬럼프가 짧아진다', () => {
+    const slump = (home: number) => applyEffects(proState('fps', { home }), { slumpMonths: 6 }).slumpMonths
+    expect(slump(3)).toBeCloseTo(slump(0) * 0.7)
+    expect(homeSlumpFactor(proState())).toBe(1)
+  })
+
+  it('순자산 등급은 돈과 집 가치로 정한다', () => {
+    expect(assetGrade(proState('fps', { money: 100 }))).toBe('평범한 살림')
+    expect(assetGrade(proState('fps', { money: 60_000 }))).toBe('부자')
+    expect(assetGrade(proState('fps', { money: 210_000 }))).toBe('갑부')
+    expect(assetGrade(proState('fps', { money: 600_000 }))).toBe('재벌')
+    expect(netWorth(proState('fps', { money: 1000, home: 2 }))).toBe(1000 + (10_000 + 40_000) * 0.5)
+  })
+
+  it('집 3단계는 업적 효도, 가족 이벤트는 집이 있을 때만 나온다', () => {
+    const done = { ...proState(), finished: 'legend' as const, home: 3, history: [] }
+    expect(earnedAchievements(done)).toContain('filial')
+    expect(earnedAchievements({ ...done, home: 2 })).not.toContain('filial')
+    const family = EVENTS.filter((e) => e.when.home !== undefined && e.id !== 'family_slump_home')
+    expect(family.length).toBeGreaterThanOrEqual(4)
+    const base = proState('fps', { condition: 80, fame: 50 })
+    for (const e of family) expect(isEligible({ ...base, home: 0 }, e)).toBe(false)
+    expect(isEligible({ ...base, home: 3, team: { id: 'fps_pro1_t1', name: 'T1' } }, EVENTS.find((e) => e.id === 'family_housewarming')!)).toBe(true)
+  })
+
+  it('재산이 충분하면 끝난 커리어에서 구단을 인수해 구단주 엔딩을 본다', () => {
+    const over = proState('fps', { money: 600_000, finished: 'legend', everPro: true })
+    expect(ownerBlocker(over)).toBeNull()
+    const owned = acquireTeam(over)
+    expect(owned.finished).toBe('owner')
+    expect(owned.owner).toBe(true)
+    expect(owned.money).toBe(400_000)
+    expect(endingDef('owner').name).toBe('구단주')
+    expect(ownerBlocker(proState('fps', { money: 600_000, finished: null }))).not.toBeNull()
+    expect(ownerBlocker({ ...over, money: 250_000 })).not.toBeNull()
+    expect(evaluateEnding(proState('fps', { money: 600_000 }))).not.toBe('owner')
   })
 })

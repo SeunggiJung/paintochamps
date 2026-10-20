@@ -8,6 +8,7 @@ import { startNextSeason } from '../engine/turn.ts'
 import { recordFinish, saveGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { confirmSheet } from './confirm.ts'
+import { acquireTeam, assetGrade, netWorth, OWNER, ownerBlocker } from '../engine/life.ts'
 import { domesticLeagueId, isOverseas, leagueDef, leagueIdOf, OVERSEAS_RULES } from '../engine/leagues.ts'
 import { interestedLeagues, overseasBlocker } from '../engine/overseas.ts'
 import { h } from './dom.ts'
@@ -63,7 +64,17 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
   const fameGain = Math.round(settled.fame - before.fame)
   const moneyGain = Math.round(settled.money - before.money)
 
-  const proceed = () => {
+  const proceed = async () => {
+    // 커리어가 끝나는 시즌이고 재산이 충분하면 구단을 인수해 구단주 엔딩으로 끝낼 수 있다
+    if (state.finished && !ownerBlocker(state)) {
+      const yes = await confirmSheet({
+        title: '구단을 인수할까요?',
+        message: `순자산 ${formatMoney(Math.round(netWorth(state)))}(${assetGrade(state)})으로 구단을 인수하면 ${formatMoney(OWNER.cost)}을 내고 구단주가 되어 커리어를 마무리해요. 인수하지 않으면 원래 엔딩으로 끝나요.`,
+        ok: '구단을 인수한다',
+        cancel: '인수하지 않는다',
+      })
+      if (yes) state = acquireTeam(state)
+    }
     if (state.finished) {
       const before = ctx.meta
       const isNew = !before.endings[state.finished]
@@ -95,7 +106,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     )
     if (!yes) return
     state = retire(state)
-    proceed()
+    void proceed()
   }
 
   const choose = async (index: number | null) => {
@@ -279,7 +290,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
       state.finished && h('section', { class: 'card' }, h('h3', {}, '기록'), h('p', { class: 'muted' }, state.rerolls > 0 ? `능력치 뽑기를 ${state.rerolls}번 다시 뽑았다.` : '능력치 뽑기를 한 번에 확정했다.')),
       h(
         'button',
-        { class: 'btn primary', disabled: !!state.pendingOffers, onclick: proceed },
+        { class: 'btn primary', disabled: !!state.pendingOffers, onclick: () => void proceed() },
         state.finished ? '커리어 마무리' : state.pendingOffers ? '제안을 골라 주세요' : `${before.season + 1}시즌 시작`,
       ),
       canRetire() && h('button', { class: 'btn ghost small', onclick: askRetire }, '여기서 은퇴하기'),

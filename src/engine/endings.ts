@@ -2,6 +2,8 @@ import endingData from '../data/endings.json'
 import type { EndingId, GameState } from './state.ts'
 
 interface When {
+  /** true면 구단을 인수한 경우에만 (엔딩 화면 직전 '구단 인수' 선택으로만 열린다) */
+  owner?: boolean
   minWorldTitles?: number
   minWorldAppearances?: number
   minSeasonsInPro1?: number
@@ -28,6 +30,7 @@ export interface EndingDef {
 export const ENDINGS = endingData.order as EndingDef[]
 
 function matches(state: GameState, w: When): boolean {
+  if (w.owner !== undefined && !!state.owner !== w.owner) return false
   if (w.minWorldTitles !== undefined && state.worldTitles < w.minWorldTitles) return false
   if (w.minWorldAppearances !== undefined && state.worldAppearances < w.minWorldAppearances) return false
   if (w.minSeasonsInPro1 !== undefined && state.seasonsInPro1 < w.minSeasonsInPro1) return false

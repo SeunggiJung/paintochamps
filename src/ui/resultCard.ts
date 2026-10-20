@@ -1,5 +1,6 @@
 import genres from '../data/genres.json'
 import { endingDef } from '../engine/endings.ts'
+import { assetGrade } from '../engine/life.ts'
 import { stageName } from '../engine/season.ts'
 import type { GameState } from '../engine/state.ts'
 import { bestStageOf } from '../save/storage.ts'
@@ -78,6 +79,7 @@ export async function drawResultCard(state: GameState): Promise<HTMLCanvasElemen
   const rows: [string, string][] = [
     ['가장 높이 오른 곳', best],
     ['월드 챔피언십', state.worldTitles > 0 ? `우승 ${state.worldTitles}회` : state.worldAppearances > 0 ? `진출 ${state.worldAppearances}회` : '진출 없음'],
+    ['최종 자산', assetGrade(state)],
     ['모드 · 시즌', `${MODE_INFO[state.mode].name} · ${state.season}시즌`],
   ]
   ctx.font = `500 34px ${font}`

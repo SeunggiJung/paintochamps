@@ -1,6 +1,7 @@
 import genres from '../data/genres.json'
 import { achievementDef } from '../engine/achievements.ts'
 import { endingDef } from '../engine/endings.ts'
+import { assetGrade, homeEpilogue, netWorth } from '../engine/life.ts'
 import { stageName } from '../engine/season.ts'
 import type { EndingId, GameState } from '../engine/state.ts'
 import { bestStageOf } from '../save/storage.ts'
@@ -9,6 +10,7 @@ import { celebrate } from './confetti.ts'
 import { h } from './dom.ts'
 import { endingSceneSvg } from './endingScenes.ts'
 import { MODE_INFO } from './labels.ts'
+import { formatMoney } from './format.ts'
 import { openResultCard } from './resultCard.ts'
 
 /**
@@ -56,6 +58,7 @@ export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements }
       isNew && h('span', { class: 'chip new-chip' }, '도감에 새로 기록!'),
       h('p', { class: 'headline-title' }, def.name),
       h('p', { class: 'event-text' }, def.epilogue.replaceAll('{name}', state.name)),
+      homeEpilogue(state) && h('p', { class: 'muted small' }, homeEpilogue(state)),
     ),
     ...achievements.map((a) => {
       const def = achievementDef(a.id)
@@ -69,6 +72,7 @@ export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements }
       row('마지막 나이', `${state.age}세 (${state.season}시즌)`),
       row('가장 높이 오른 곳', stageName(best)),
       row('월드 챔피언십', state.worldTitles > 0 ? `우승 ${state.worldTitles}회` : state.worldAppearances > 0 ? `진출 ${state.worldAppearances}회` : '진출 없음'),
+      row('최종 자산', `${assetGrade(state)} (${formatMoney(Math.round(netWorth(state)))})`),
       row('능력치 뽑기', state.rerolls > 0 ? `${state.rerolls}번 다시 뽑음` : '한 번에 확정'),
     ),
     state.history.length > 0 &&

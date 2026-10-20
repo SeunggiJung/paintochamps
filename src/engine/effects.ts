@@ -1,6 +1,7 @@
 import gacha from '../data/gacha.json'
 import rules from '../data/rules.json'
 import { moneyScale } from './economy.ts'
+import { homeSlumpFactor } from './life.ts'
 import type { GameState } from './state.ts'
 import { STAT_KEYS, type Stats } from './types.ts'
 
@@ -42,7 +43,7 @@ export function applyEffects(state: GameState, fx: Effects, scale = 1): GameStat
 
   let slump = state.slumpMonths
   if (fx.slumpMonths !== undefined) {
-    slump = fx.slumpMonths > 0 ? Math.max(slump, fx.slumpMonths * slumpDurationFactor(state.stats.mental)) : Math.max(0, slump + fx.slumpMonths * scale)
+    slump = fx.slumpMonths > 0 ? Math.max(slump, fx.slumpMonths * slumpDurationFactor(state.stats.mental) * homeSlumpFactor(state)) : Math.max(0, slump + fx.slumpMonths * scale)
   }
   let injured = state.injuredMonths
   if (fx.injuredMonths !== undefined) {

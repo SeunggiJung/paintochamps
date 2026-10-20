@@ -2,6 +2,8 @@ import equipmentData from '../data/equipment.json'
 import rules from '../data/rules.json'
 import { equipmentCost } from '../engine/economy.ts'
 import { isOverseas } from '../engine/leagues.ts'
+import { assetGrade, buyHome, HOMES, homeBlocker, homeLevel, netWorth } from '../engine/life.ts'
+import { confirmSheet } from './confirm.ts'
 import { buyFacility, checkFacility, facilityEffectText, FACILITIES, FACILITY_IDS, facilityCost, facilityLevel } from '../engine/facilities.ts'
 import { planOf, PRESETS, setSeasonPlan, type PresetId } from '../engine/plan.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
@@ -57,6 +59,38 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
 
   return openSheet<GameState>((close) => {
     const root = h('div', { class: 'stack-tight plan-sheet' })
+
+    /** 집과 가족: 다음 단계 집을 마련하면 슬럼프가 짧아지고 가족 이벤트가 열린다 */
+    const homeSection = (): HTMLElement | null => {
+      if (!['pro2', 'pro1'].includes(state.stage)) return null
+      const level = homeLevel(state)
+      const next = HOMES[level]
+      const reason = homeBlocker(state)
+      return h(
+        'div',
+        { class: 'stack-tight' },
+        h('div', { class: 'row' }, h('h3', {}, '집과 가족'), h('span', { class: 'muted small' }, `순자산 ${formatMoney(Math.round(netWorth(state)))} · ${assetGrade(state)}`)),
+        h('p', { class: 'muted small' }, level > 0 ? `지금: ${HOMES[level - 1].name} (슬럼프 기간 -${Math.round(HOMES[level - 1].slumpCut * 100)}%)` : '아직 집을 마련하지 못했습니다. 집을 마련하면 슬럼프가 짧아지고 가족 이벤트가 열립니다.'),
+        next
+          ? h(
+              'button',
+              {
+                class: 'choice',
+                disabled: !!reason,
+                onclick: async () => {
+                  const ok = await confirmSheet({ title: next.name, message: `${next.desc} (${formatMoney(next.price)}, 슬럼프 기간 -${Math.round(next.slumpCut * 100)}%)`, ok: '마련한다', cancel: '다음에' })
+                  if (!ok) return
+                  const r = buyHome(state)
+                  if (r.ok) state = r.state
+                  draw()
+                },
+              },
+              h('strong', {}, `${next.name} · ${formatMoney(next.price)}`),
+              h('span', { class: 'muted small' }, `${next.desc}${reason ? ` — ${reason}` : ''}`),
+            )
+          : h('p', { class: 'notice' }, '내 집까지 마련했습니다.'),
+      )
+    }
 
     const draw = () => {
       const menu = trainingMenuOf(state)
@@ -194,6 +228,8 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
             )
           }),
         ),
+
+        homeSection() ?? '',
 
         h(
           'button',

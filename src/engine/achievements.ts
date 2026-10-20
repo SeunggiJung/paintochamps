@@ -1,6 +1,7 @@
 import achievementData from '../data/achievements.json'
 import { isUnofficial, isWorldEvent } from './competitions.ts'
 import { domesticLeagueId, worldHost } from './leagues.ts'
+import { homeLevel } from './life.ts'
 import type { GameState, SeasonRecord } from './state.ts'
 
 export type AchievementId = string
@@ -91,6 +92,8 @@ export function earnedAchievements(state: GameState): AchievementId[] {
   const titleLeagues = new Set(h.filter((r) => r.events.some((e) => LEAGUE_TITLE_EVENTS.includes(e.id) && e.placement === 1)).map(leagueOf))
   if (titleLeagues.size >= 2) out.add('worldwide')
   if (new Set(h.map(leagueOf)).size >= 3) out.add('mercenary_king')
+  // 마지막까지 내 집을 마련했다
+  if (homeLevel(state) >= 3) out.add('filial')
   // 백지수표를 거절하고 국내에 남았다
   if (state.blankCheckDeclined) out.add('best_player')
   // 연봉(월급 × 4) 최고치에 따른 업적

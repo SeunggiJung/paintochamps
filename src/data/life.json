@@ -1,0 +1,16 @@
+{
+  "homeFromStage": ["pro2", "pro1"],
+  "homeValueRate": 0.5,
+  "homes": [
+    { "id": "rent", "name": "월세방 탈출", "price": 10000, "slumpCut": 0.1, "desc": "합숙소 옆 원룸에서 나와 내 이름의 월세 집을 얻는다. 가족이 처음으로 놀러 온다.", "epilogue": "{name}은(는) 처음 얻은 작은 집의 열쇠를 지금도 간직하고 있다." },
+    { "id": "lease", "name": "전셋집 마련", "price": 40000, "slumpCut": 0.2, "desc": "부모님과 함께 지낼 수 있는 넓은 전셋집으로 옮긴다.", "epilogue": "{name}은(는) 부모님을 모시고 전셋집에서 처음 가족 식사를 했던 날을 가장 행복한 기억으로 꼽는다." },
+    { "id": "house", "name": "내 집 마련", "price": 120000, "slumpCut": 0.3, "desc": "마당이 있는 내 집을 산다. 이제 어떤 슬럼프가 와도 돌아갈 곳이 있다.", "epilogue": "{name}의 집 거실에는 우승 트로피보다 가족사진이 더 눈에 띄는 자리에 걸려 있다." }
+  ],
+  "assetGrades": [
+    { "min": 0, "name": "평범한 살림" },
+    { "min": 50000, "name": "부자" },
+    { "min": 200000, "name": "갑부" },
+    { "min": 500000, "name": "재벌" }
+  ],
+  "owner": { "cost": 200000, "minWorth": 300000 }
+}

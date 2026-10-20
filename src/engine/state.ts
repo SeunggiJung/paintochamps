@@ -45,6 +45,7 @@ export type FacilityId = 'housing' | 'coach' | 'medic' | 'pr' | 'language' | 'an
 export type PathId = 'rookie' | 'academy' | 'open'
 export type StageId = 'basement' | 'local_cup' | 'amateur_team' | 'pro2' | 'pro1'
 export type EndingId =
+  | 'owner'
   | 'hidden_loyal'
   | 'goat'
   | 'emperor'
@@ -222,6 +223,10 @@ export interface GameState {
   adaptation: number
   /** 중국 구단의 백지수표 제안을 거절한 적이 있는지 (업적 '최고의 선수가 있을 곳은'). 옛 세이브에는 없을 수 있다 */
   blankCheckDeclined: boolean
+  /** 마련한 집 단계 (0~3). 옛 세이브에는 없을 수 있다 — homeLevel */
+  home: number
+  /** 구단을 인수했는지 (구단주 엔딩) */
+  owner: boolean
   /** 마지막으로 리그를 옮긴(해외 이적·복귀) 시즌. 시즌당 한 번만 옮길 수 있다 */
   leagueMoveSeason: number
 
@@ -301,6 +306,8 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     adaptation: 100,
     leagueMoveSeason: 0,
     blankCheckDeclined: false,
+    home: 0,
+    owner: false,
     stage: 'basement',
     team: null,
     debutTeamId: null,

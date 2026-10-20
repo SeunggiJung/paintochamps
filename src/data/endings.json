@@ -1,5 +1,6 @@
 {
   "order": [
+    { "id": "owner", "name": "구단주", "when": { "owner": true }, "desc": "은퇴 뒤 모아 둔 재산으로 구단을 인수해 구단주가 되었다.", "epilogue": "{name}은(는) 선수 시절 모은 재산으로 구단을 인수했다. 첫 구단주 인사말은 짧았다. '여러분이 뛰던 자리에서 이제는 제가 뛰겠습니다.' 팬들은 유니폼을 입은 구단주를 오래도록 응원한다." },
     {
       "id": "hidden_loyal", "name": "원클럽 레전드", "when": { "minWorldTitles": 1, "debutTeam": true, "notMode": "tutorial" },
       "desc": "1부에 처음 올라간 팀을 떠나지 않고 월드 챔피언십에서 우승했다.",
