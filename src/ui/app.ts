@@ -8,7 +8,7 @@ import { gachaScreen } from './gachaScreen.ts'
 import { homeScreen } from './home.ts'
 import { infoScreen, isInfoPageId, type InfoPageId } from './infoPages.ts'
 import { seasonScreen } from './seasonScreen.ts'
-import { installClickSound, soundToggle } from './sound.ts'
+import { soundToggle } from './sound.ts'
 import { titleScreen } from './title.ts'
 
 /** 엔딩 화면에 넘기는 기록 정보 */
@@ -48,7 +48,6 @@ const pageFromHash = (): string => location.hash.replace(/^#\/?/, '')
 
 export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
   const show = (el: HTMLElement) => root.replaceChildren(el)
-  installClickSound()
   document.body.append(soundToggle())
   const ctx: Ctx = {
     storage,

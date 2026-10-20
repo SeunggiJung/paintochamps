@@ -5,7 +5,7 @@ import type { Grade } from '../engine/types.ts'
  * 브라우저 정책상 첫 터치 뒤에야 소리가 나므로 AudioContext는 처음 필요할 때 만든다.
  * 켜짐/꺼짐은 localStorage에 기억하고, 저장소에 접근할 수 없으면 켜진 채로 둔다.
  */
-export type Sfx = 'click' | 'turn' | 'statUp' | 'stamp' | 'win' | 'lose' | 'upgrade' | 'hurt' | 'grade-N' | 'grade-R' | 'grade-SR' | 'grade-SSR' | 'grade-UR'
+export type Sfx = 'statUp' | 'stamp' | 'win' | 'lose' | 'upgrade' | 'hurt' | 'grade-N' | 'grade-R' | 'grade-SR' | 'grade-SSR' | 'grade-UR'
 
 interface Note {
   /** 시작 시각(초) */
@@ -27,11 +27,6 @@ const semi = (n: number) => 523.25 * 2 ** (n / 12)
 const arpeggio = (steps: number[], gap: number, len: number, type: OscillatorType = 'triangle', gain = 0.8): Note[] => steps.map((s, i) => ({ at: i * gap, freq: semi(s), len, type, gain }))
 
 const SOUNDS: Record<Sfx, Note[]> = {
-  click: [{ at: 0, freq: 660, to: 520, len: 0.05, type: 'square', gain: 0.35 }],
-  turn: [
-    { at: 0, freq: 300, to: 600, len: 0.12, type: 'sine', gain: 0.6 },
-    { at: 0.1, freq: 600, to: 450, len: 0.1, type: 'sine', gain: 0.4 },
-  ],
   statUp: arpeggio([0, 4, 7], 0.06, 0.12, 'square', 0.35),
   stamp: [
     { at: 0, freq: 140, to: 50, len: 0.18, type: 'sine', gain: 1 },
@@ -120,18 +115,6 @@ export function vibrate(pattern: number | number[]): void {
   navigator.vibrate(pattern)
 }
 
-/** 모든 버튼을 누를 때 클릭음을 낸다. 앱 시작 때 한 번만 부른다. */
-export function installClickSound(): void {
-  document.addEventListener(
-    'click',
-    (e) => {
-      const target = e.target as Element | null
-      if (target?.closest('button:not(:disabled):not([data-silent])')) playSfx('click')
-    },
-    true,
-  )
-}
-
 /** 화면 오른쪽 위에 떠 있는 소리 켜기/끄기 버튼 */
 export function soundToggle(): HTMLButtonElement {
   const btn = document.createElement('button')
@@ -146,7 +129,6 @@ export function soundToggle(): HTMLButtonElement {
   paint()
   btn.addEventListener('click', () => {
     setSoundEnabled(!enabled)
-    if (enabled) playSfx('click')
   })
   onSoundChange(paint)
   return btn
