@@ -17,7 +17,7 @@
       "leagues": [
         { "id": "lck", "name": "LCK", "region": "한국", "domestic": true, "strength": 0, "salaryMult": 1, "prestige": 1, "adaptStart": 100, "adaptHard": "-", "minPower": 0 },
         {
-          "id": "lpl", "name": "LPL", "region": "중국", "strength": 25, "salaryMult": 1.5, "prestige": 1, "adaptStart": 25, "adaptHard": "큼", "minPower": 700, "transferable": true,
+          "id": "lpl", "name": "LPL", "region": "중국", "strength": 25, "salaryMult": 1.6, "prestige": 1, "adaptStart": 25, "adaptHard": "큼", "minPower": 700, "transferable": true,
           "teams": [
             { "slug": "blg", "name": "Bilibili Gaming" }, { "slug": "tes", "name": "Top Esports" }, { "slug": "jdg", "name": "JD Gaming" },
             { "slug": "al", "name": "Anyone's Legend" }, { "slug": "lng", "name": "LNG Esports" }, { "slug": "wbg", "name": "Weibo Gaming" },
@@ -27,7 +27,7 @@
           ]
         },
         {
-          "id": "lec", "name": "LEC", "region": "유럽", "strength": -20, "salaryMult": 1.1, "prestige": 0.9, "adaptStart": 40, "adaptHard": "중간", "minPower": 600, "transferable": true,
+          "id": "lec", "name": "LEC", "region": "유럽", "strength": -20, "salaryMult": 1.15, "prestige": 0.9, "adaptStart": 40, "adaptHard": "중간", "minPower": 600, "transferable": true,
           "teams": [
             { "slug": "g2", "name": "G2 Esports" }, { "slug": "kc", "name": "Karmine Corp" }, { "slug": "fnc", "name": "Fnatic" },
             { "slug": "koi", "name": "Movistar KOI" }, { "slug": "vit", "name": "Team Vitality" }, { "slug": "th", "name": "Team Heretics" },
@@ -36,7 +36,7 @@
           ]
         },
         {
-          "id": "lcs", "name": "LCS", "region": "북미", "strength": -55, "salaryMult": 1.2, "prestige": 0.8, "adaptStart": 40, "adaptHard": "중간", "minPower": 500, "transferable": true,
+          "id": "lcs", "name": "LCS", "region": "북미", "strength": -55, "salaryMult": 1.05, "prestige": 0.8, "adaptStart": 40, "adaptHard": "중간", "minPower": 500, "transferable": true,
           "teams": [
             { "slug": "lyon", "name": "LYON" }, { "slug": "tl", "name": "Team Liquid" }, { "slug": "c9", "name": "Cloud9" },
             { "slug": "fly", "name": "FlyQuest" }, { "slug": "shopify", "name": "Shopify Rebellion" }, { "slug": "sen", "name": "Sentinels" },
@@ -51,7 +51,7 @@
           ]
         },
         {
-          "id": "cblol", "name": "CBLOL", "region": "브라질", "strength": -60, "salaryMult": 1, "prestige": 0.7, "adaptStart": 40, "adaptHard": "중간", "minPower": 500,
+          "id": "cblol", "name": "CBLOL", "region": "브라질", "strength": -60, "salaryMult": 0.9, "prestige": 0.7, "adaptStart": 40, "adaptHard": "중간", "minPower": 500,
           "teams": [{ "slug": "furia", "name": "FURIA" }, { "slug": "loud", "name": "LOUD" }]
         }
       ]
@@ -80,7 +80,7 @@
           ]
         },
         {
-          "id": "vct_china", "name": "VCT 차이나", "region": "중국", "strength": -35, "salaryMult": 1, "prestige": 0.85, "adaptStart": 30, "adaptHard": "큼", "minPower": 520, "transferable": true,
+          "id": "vct_china", "name": "VCT 차이나", "region": "중국", "strength": -35, "salaryMult": 1.5, "prestige": 0.85, "adaptStart": 30, "adaptHard": "큼", "minPower": 520, "transferable": true,
           "teams": [
             { "slug": "blg", "name": "Bilibili Gaming" }, { "slug": "edg", "name": "Edward Gaming" }, { "slug": "fpx", "name": "FunPlus Phoenix" },
             { "slug": "jdg", "name": "JD Gaming" }, { "slug": "ag", "name": "All Gamers" }, { "slug": "tyloo", "name": "TYLOO" },

@@ -61,7 +61,7 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 
 `src/sim/` — 난이도 측정: `bot.ts`(봇 3종) `report.ts`(집계) `balance.test.ts`(회귀 테스트)
 
-`docs/` — `polish-plan.md` 플레이 감성 마무리 계획과 AI 이미지 도구 요청서, `design.md` 기획서 전문, `ending-images.md` 엔딩·도감 이미지 장면 목록, `feedback.md` 테스트 플레이 피드백·우선순위, `early-career-plan.md`·`career-pacing-plan.md`·`season-calendar-plan.md` 개편안, `overseas-league-plan.md` 해외 1부 리그·해외 이적 기획(2026-10-20, 구현 현황은 §12), `images/` 게임 루프·로드맵 SVG
+`docs/` — `polish-plan.md` 플레이 감성 마무리 계획과 AI 이미지 도구 요청서, `design.md` 기획서 전문, `ending-images.md` 엔딩·도감 이미지 장면 목록, `feedback.md` 테스트 플레이 피드백·우선순위, `early-career-plan.md`·`career-pacing-plan.md`·`season-calendar-plan.md` 개편안, `money-economy-plan.md` 돈 소비처·수입원(광고·콜라보) 확장 기획 초안(2026-10-20, 결정 대기), `overseas-league-plan.md` 해외 1부 리그·해외 이적 기획(2026-10-20, 구현 현황은 §12), `images/` 게임 루프·로드맵 SVG
 
 ## 5. 게임 진행 API (2단계 UI가 부를 순서)
 
