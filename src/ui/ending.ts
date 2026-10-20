@@ -9,6 +9,7 @@ import { celebrate } from './confetti.ts'
 import { h } from './dom.ts'
 import { endingSceneSvg } from './endingScenes.ts'
 import { MODE_INFO } from './labels.ts'
+import { openResultCard } from './resultCard.ts'
 
 /**
  * 엔딩 그림 자리. 지금은 코드로 그린 도트 장면(`endingScenes.ts`)이고, 일러스트가 준비되면 이미지로 바꾼다.
@@ -77,6 +78,6 @@ export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements }
         h('h3', {}, '시즌별 기록'),
         ...state.history.map((r) => h('div', { class: 'event-row' }, h('div', { class: 'row' }, h('b', {}, `${r.age}세 · ${stageName(r.stage)}`)), h('span', { class: 'muted small' }, bestOfSeason(r.events) + (r.highlights ? ` · 평점 ${r.highlights.rating.toFixed(1)}${r.highlights.awards.length ? ` · 🏆 ${r.highlights.awards.join(', ')}` : ''}` : '')))),
       ),
-    h('div', { class: 'stack' }, h('button', { class: 'btn primary', onclick: () => ctx.toCodex() }, '엔딩 도감 보기'), h('button', { class: 'btn', onclick: () => ctx.toTitle() }, '타이틀로')),
+    h('div', { class: 'stack' }, h('button', { class: 'btn primary', onclick: () => void openResultCard(state) }, '결과 카드 만들기'), h('button', { class: 'btn', onclick: () => ctx.toCodex() }, '엔딩 도감 보기'), h('button', { class: 'btn', onclick: () => ctx.toTitle() }, '타이틀로')),
   )
 }

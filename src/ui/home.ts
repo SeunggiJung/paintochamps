@@ -36,12 +36,15 @@ import { formatMoney } from './format.ts'
 import { runGuide } from './guide.ts'
 import { turnChangeGraph } from './turnResult.ts'
 import { playSfx, vibrate } from './sound.ts'
+import { countUp } from './countUp.ts'
 
 const BAR_MAX = gacha.statMax
 
 export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
   let state = initial
   let busy = false
+  // 직전에 화면에 보여 준 값: 달라진 숫자는 이 값에서 새 값으로 올라가는(내려가는) 연출을 한다
+  let shown = { money: initial.money, fame: initial.fame, power: Math.round(genrePower(initial.stats, initial.genre)), stats: { ...initial.stats } }
   const root = h('main', { class: 'screen home' })
 
   const seasonOver = () => state.turnInSeason >= turnsPerSeason(state.mode)
@@ -257,8 +260,8 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
           'div',
           { class: 'meters' },
           h('div', {}, h('span', { class: 'muted small cond-label' }, '컨디션', conditionHelp(state)), h('div', { class: 'bar' }, h('div', { class: `bar-fill${tier.max <= 30 ? ' low' : tier.label === '완벽' ? ' perfect' : ''}`, style: `width:${state.condition}%` })), h('b', {}, conditionText(state))),
-          h('div', { class: 'kv' }, h('span', { class: 'muted small' }, '돈'), h('b', {}, formatMoney(state.money))),
-          h('div', { class: 'kv' }, h('span', { class: 'muted small' }, '명성'), h('b', {}, String(Math.round(state.fame)))),
+          h('div', { class: 'kv' }, h('span', { class: 'muted small' }, '돈'), countUp(shown.money, state.money, (n) => formatMoney(Math.round(n)))),
+          h('div', { class: 'kv' }, h('span', { class: 'muted small' }, '명성'), countUp(Math.round(shown.fame), Math.round(state.fame))),
         ),
         statusChips().length > 0 && h('div', { class: 'chips' }, ...statusChips()),
       ),
@@ -267,14 +270,14 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       h(
         'section',
         { class: 'card', 'data-guide': 'stats' },
-        h('div', { class: 'row' }, h('h3', {}, '능력치'), h('span', { class: 'power' }, `${genres[state.genre].name} 실력치 `, h('b', {}, String(power)))),
+        h('div', { class: 'row' }, h('h3', {}, '능력치'), h('span', { class: 'power' }, `${genres[state.genre].name} 실력치 `, countUp(shown.power, power))),
         ...STAT_KEYS.map((k) =>
           h(
             'div',
             { class: 'stat-row compact' },
             statName(k, state.genre, genres[state.genre].weights[k] >= 20),
             h('div', { class: 'bar' }, h('div', { class: 'bar-fill', style: `width:${(state.stats[k] / BAR_MAX) * 100}%` })),
-            h('span', { class: 'stat-value' }, String(Math.round(state.stats[k]))),
+            h('span', { class: 'stat-value' }, countUp(Math.round(shown.stats[k]), Math.round(state.stats[k]))),
             state.trait.stat === k ? h('span', { class: 'tag' }, '특성') : h('span', {}),
           ),
         ),
@@ -289,6 +292,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       ),
     ]
     root.replaceChildren(...parts.filter((p): p is HTMLElement => !!p))
+    shown = { money: state.money, fame: state.fame, power, stats: { ...state.stats } }
   }
 
   /** PC방 대회에 처음 나가기 전에 팀 이름을 직접 짓게 한다. */

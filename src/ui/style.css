@@ -412,3 +412,16 @@ input[type='text'] {
 .sound-toggle { position: fixed; top: 8px; right: 8px; z-index: 15; width: 34px; height: 34px; border-radius: 999px; border: 1px solid var(--line); background: #232a47; color: var(--text); font-size: 1rem; line-height: 1; cursor: pointer; }
 .sound-toggle:hover, .sound-toggle:focus-visible { border-color: var(--accent); outline: none; }
 .screen { padding-top: 48px; }
+.result-card-img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
+
+/* 손맛: 버튼 눌림·호버 피드백, 화면 전환 페이드 (모션 줄이기를 켠 사람에게는 끈다) */
+.btn, .choice { transition: transform 0.08s ease, filter 0.12s ease; }
+.btn:not(:disabled):hover, .choice:not(:disabled):hover { filter: brightness(1.12); }
+.btn:not(:disabled):active, .choice:not(:disabled):active { transform: scale(0.97); filter: brightness(0.95); }
+.screen { animation: screenIn 0.22s ease-out; }
+@keyframes screenIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .btn, .choice { transition: none; }
+  .btn:not(:disabled):active, .choice:not(:disabled):active { transform: none; }
+  .screen { animation: none; }
+}
