@@ -2,11 +2,13 @@ import type { CalendarBeat, CalendarUpdate } from '../engine/calendar.ts'
 import { isInvited } from '../engine/competitions.ts'
 import { eventsFor } from '../engine/season.ts'
 import type { GameState, StandingRow } from '../engine/state.ts'
+import type { GenreId } from '../engine/types.ts'
 import { runOf } from '../engine/calendar.ts'
 import { turnsPerSeason } from '../engine/turn.ts'
 import { celebrate } from './confetti.ts'
 import { formatMoney } from './format.ts'
 import { h } from './dom.ts'
+import { playBroadcast } from './broadcast.ts'
 import { openSheet } from './sheet.ts'
 import { playSfx } from './sound.ts'
 
@@ -37,7 +39,9 @@ function tableView(rows: StandingRow[], limit = 5): HTMLElement {
 }
 
 /** 대회 결과·중간 순위 카드. 확인을 누르면 이어서 진행한다. */
-export function showBeat(beat: CalendarBeat): Promise<void> {
+export async function showBeat(beat: CalendarBeat, context?: { genre: GenreId; seed: number; season: number }): Promise<void> {
+  // 결승 중계 대회에서 결승까지 올랐다면 결과 카드 전에 중계 연출이 먼저 나온다
+  if (beat.kind === 'end' && beat.final && context) await playBroadcast(beat.final, context.genre, context.seed, context.season)
   if (beat.kind === 'end' && beat.world && beat.placement === 1) celebrate('UR')
   else if (beat.kind === 'end' && beat.placement === 1) celebrate('SR')
   else if (beat.kind === 'end') playSfx(beat.placement <= 3 ? 'statUp' : 'lose')
@@ -139,7 +143,7 @@ export function playTimeline({ before, calendar, actions, brief }: TimelineInput
         // 결과 카드가 떠 있는 동안에는 진행 화면을 숨긴다
         const panel = root.closest<HTMLElement>('.sheet')
         if (panel) panel.style.visibility = 'hidden'
-        await showBeat(beat)
+        await showBeat(beat, { genre: before.genre, seed: before.seed, season: before.season })
         if (panel) panel.style.visibility = ''
       }
       if (phaseAfter > at) await segment(at, phaseAfter)
