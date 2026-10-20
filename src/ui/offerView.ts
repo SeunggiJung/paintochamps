@@ -3,7 +3,7 @@ import { moneyScale } from '../engine/economy.ts'
 import { leagueDef, OVERSEAS_RULES } from '../engine/leagues.ts'
 import { leagueRankOf } from '../engine/leagueRank.ts'
 import type { GameState, Offer, StageId } from '../engine/state.ts'
-import { offerTerms, seasonResultsOf, type Strength } from '../engine/teams.ts'
+import { offerTerms, salaryOf, seasonResultsOf, type Strength } from '../engine/teams.ts'
 import { h } from './dom.ts'
 import { formatMoney, formatMoneyDelta } from './format.ts'
 import { teamIcon } from './teamIcon.ts'
@@ -40,6 +40,10 @@ export function offerButton(state: GameState, offer: Offer, onPick: () => void, 
       h('span', { class: 'offer-line muted' }, `대회 전력 ${signed(boost)} · ${perkLabel(offer, stage)}`),
     )
   } else lines.push(h('span', { class: 'offer-line muted' }, perkLabel(offer, stage)))
+  // 백지수표: 지금 월급의 몇 배인지 앞세워 보여 준다
+  if (offer.checkMult !== undefined) {
+    lines.unshift(h('span', { class: 'offer-line' }, h('b', {}, `백지수표 · 지금 월급의 ${offer.checkMult}배 (${formatMoney(salaryOf(state) * offer.checkMult)} / 3개월)`)))
+  }
   // 다른 리그의 제안이면 리그 정보(지역·리그 순위·적응 난이도·계약금)를 앞세워 보여 준다
   if (offer.league) {
     const lg = leagueDef(offer.league)

@@ -68,6 +68,8 @@ export interface Offer {
   perk: 'salary' | 'playtime'
   /** 해외 이적 제안이면 제안한 리그 (국내 복귀 제안도 리그를 가진다) */
   league?: string
+  /** 백지수표 제안이면 지금 월급의 몇 배를 주겠다는 것인지 */
+  checkMult?: number
 }
 
 export interface PendingOffers {
@@ -137,6 +139,8 @@ export interface SeasonRecord {
   events: EventRecord[]
   /** 이 시즌의 소속 리그 id (옛 세이브에는 없을 수 있다 — 국내 리그로 본다) */
   league?: string
+  /** 이 시즌의 연봉(만 원, 월급 × 4). 연봉 업적용, 옛 세이브에는 없을 수 있다 */
+  salary?: number
   /** 이 시즌 국제전에서 리그마다 낸 성적 [점수 합, 출전 팀 수] (리그 순위 집계용) */
   intlPoints?: Record<string, [number, number]>
   /** 시즌 활약 요약: 평점·리그 내 순위·수상 이름 (옛 세이브에는 없을 수 있다) */
@@ -216,6 +220,8 @@ export interface GameState {
   league: string
   /** 해외 적응도 (0~100). 국내 소속이면 100. 낮으면 대회 전력이 깎인다. 옛 세이브에는 없을 수 있다 — adaptationOf */
   adaptation: number
+  /** 중국 구단의 백지수표 제안을 거절한 적이 있는지 (업적 '최고의 선수가 있을 곳은'). 옛 세이브에는 없을 수 있다 */
+  blankCheckDeclined: boolean
   /** 마지막으로 리그를 옮긴(해외 이적·복귀) 시즌. 시즌당 한 번만 옮길 수 있다 */
   leagueMoveSeason: number
 
@@ -294,6 +300,7 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     league: domesticLeagueId(genre),
     adaptation: 100,
     leagueMoveSeason: 0,
+    blankCheckDeclined: false,
     stage: 'basement',
     team: null,
     debutTeamId: null,

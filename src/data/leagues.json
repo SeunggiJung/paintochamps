@@ -8,7 +8,8 @@
     "recoveryPenalty": 3,
     "signingBonusTurns": 2,
     "homeAdvantage": 10,
-    "rankSeasons": 3
+    "rankSeasons": 3,
+    "blankCheck": { "minFame": 150, "chance": 0.3, "minMult": 5, "maxMult": 7, "leagues": ["lpl", "vct_china"] }
   },
   "families": {
     "aos": {

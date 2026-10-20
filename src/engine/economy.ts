@@ -18,7 +18,13 @@ export function salaryFameMultiplier(fame: number): number {
 
 const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string; base: number }>
 
-/** 장비를 level단계에서 level+1단계로 올리는 가격(만 원): 기본가 × 2^level */
+/**
+ * 장비를 level단계에서 level+1단계로 올리는 가격(만 원): 기본 단계(10단계)까지는 기본가 × 2^level.
+ * 그 뒤 11~15단계는 가격이 완만하게(slowFactor배씩) 오른다. 4종을 15단계까지 올리는 합계는 약 39억 원.
+ */
 export function equipmentCost(item: EquipmentId, level: number): number {
-  return Math.round(EQUIPMENT[item].base * rules.equipment.costFactor ** level)
+  const { baseLevels, costFactor, slowFactor } = rules.equipment
+  const early = Math.min(level, baseLevels - 1)
+  const late = Math.max(0, level - (baseLevels - 1))
+  return Math.round(EQUIPMENT[item].base * costFactor ** early * slowFactor ** late)
 }

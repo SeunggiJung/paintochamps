@@ -1,0 +1,16 @@
+{
+  "unlockFame": 60,
+  "slotFame": [60, 120, 200],
+  "valueExponent": 0.5,
+  "valueCap": 2,
+  "perfBase": 0.75,
+  "perfSpan": 0.5,
+  "perf": { "title": 1, "finalist": 0.8, "world": 0.55, "playoffs": 0.3, "other": 0.1 },
+  "types": {
+    "single": { "name": "단발 촬영", "base": 2000, "shoots": 1 },
+    "season": { "name": "시즌 모델", "base": 8000, "shoots": 2 },
+    "world": { "name": "월드 특약", "base": 1000, "bonus": 8000, "bonusTop": 4, "shoots": 1 }
+  },
+  "order": ["season", "single", "world"],
+  "brands": ["식음료", "주변기기", "의류", "금융·통신", "모바일 게임", "자동차"]
+}

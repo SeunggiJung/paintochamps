@@ -9,9 +9,9 @@ import { playSeries } from './match.ts'
 import { seasonHighlights, type Highlights } from './highlights.ts'
 import { domesticLeagueId, isOverseas, leagueIdOf, OVERSEAS_RULES } from './leagues.ts'
 import { intlPointsOf, leagueRanking, type LeagueStanding } from './leagueRank.ts'
-import { adaptationAfterMove, makeOverseasOffers, movesLeague, overseasBlocker } from './overseas.ts'
+import { adaptationAfterMove, makeBlankCheckOffer, makeOverseasOffers, movesLeague, overseasBlocker } from './overseas.ts'
 import { genrePower } from './power.ts'
-import { salaryOf } from './teams.ts'
+import { salaryOf, teamProfile } from './teams.ts'
 import { createRng, gaussian, mixSeed, type Rng } from './rng.ts'
 import type { EndingId, EventRecord, GameState, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
 import { pathOf, routeStep, type TestResult } from './routes.ts'
@@ -294,6 +294,11 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
 
   const highlights = seasonHighlights(state, run, seasonEvents)
   const intlPoints = intlPointsOf(state, run, seasonEvents)
+  // 월드를 우승하고 평점 상위(MVP·베스트 멤버)였다면 중국 구단이 백지수표를 내밀 수 있다 (별도 난수)
+  if (!next.pendingOffers && worldChampion && state.stage === 'pro1') {
+    const mvp = highlights.awards.some((a) => a.id === 'mvp' || a.id === 'best')
+    next = { ...next, pendingOffers: makeBlankCheckOffer(next, createRng(mixSeed(state.seed, state.season, 0xb1a9)), mvp) }
+  }
   const record: SeasonRecord = {
     season: state.season,
     age: state.age,
@@ -301,6 +306,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
     events: results.map(({ id, name, placement, fieldSize }) => ({ id, name, placement, fieldSize })),
     highlights: { rating: highlights.rating, rank: highlights.ratingRank, players: highlights.players, awards: highlights.awards.map((a) => a.name) },
     teamId: state.team?.id ?? null,
+    salary: salaryOf(state) * 4,
     league: leagueIdOf(state),
     intlPoints,
     setback: state.injuredMonths > 0 || state.slumpMonths > 0,
@@ -332,7 +338,8 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
   if (!pending) throw new Error('받은 제안이 없다')
   if (index === null) {
     if (pending.kind === 'scout') throw new Error('입단 제안은 하나를 골라야 한다')
-    return { ...state, pendingOffers: null } // 이적·콜업 제안은 거절할 수 있다 (콜업을 거절하면 2부에 남는다)
+    // 이적·콜업 제안은 거절할 수 있다 (콜업을 거절하면 2부에 남는다). 백지수표를 거절하면 기록해 둔다.
+    return { ...state, pendingOffers: null, blankCheckDeclined: state.blankCheckDeclined || pending.offers.some((o) => o.checkMult !== undefined) }
   }
   const offer = pending.offers[index]
   if (!offer) throw new Error('없는 제안이다')
@@ -349,7 +356,11 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
     leagueMoveSeason: leagueMove ? state.season : (state.leagueMoveSeason ?? 0),
   }
   // 해외 이적은 계약금(월급 몇 턴분)을 받는다
-  const bonus = leagueMove && league !== domesticLeagueId(state.genre) ? Math.round(salaryOf({ ...joined, team: offer.team, salaryMult: 1 }) * OVERSEAS_RULES.signingBonusTurns) : 0
+  // 백지수표는 새 월급이 지금 월급의 checkMult배가 되도록 협상 배율을 정한다
+  const baseSalary = teamProfile(state.seed, state.season, offer.team, 'pro1', state.fame, state.genre)?.salary ?? 0
+  const checkSalary = offer.checkMult !== undefined ? salaryOf(state) * offer.checkMult : 0
+  const salaryMult = offer.checkMult !== undefined && baseSalary > 0 ? checkSalary / baseSalary : 1
+  const bonus = leagueMove && league !== domesticLeagueId(state.genre) ? Math.round((offer.checkMult !== undefined ? checkSalary : salaryOf({ ...joined, team: offer.team, salaryMult: 1 })) * OVERSEAS_RULES.signingBonusTurns) : 0
   return {
     ...joined,
     everPro: moved.everPro || stage === 'pro2' || stage === 'pro1',
@@ -357,7 +368,7 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
     team: offer.team,
     money: state.money + (offer.perk === 'salary' ? OFFERS.salaryMoney * moneyScale(stage) : 0) + bonus,
     fame: state.fame + (offer.perk === 'playtime' ? OFFERS.playtimeFame : 0),
-    salaryMult: 1,
+    salaryMult,
     negotiatedSeason: 0,
     pendingOffers: null,
   }

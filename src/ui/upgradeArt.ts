@@ -144,7 +144,9 @@ const DRAW: Record<UpgradeKind, (l: number, t: Tier) => string> = { keyboard, mo
 export function upgradeArtSvg(kind: UpgradeKind, level: number, max: number): string {
   const shown = Math.max(1, level)
   const body = DRAW[kind](shown, tierOf(shown, max))
-  const pips = Array.from({ length: max }, (_, i) => r(Math.floor((32 - max * 3) / 2) + i * 3, 30, 2, 1, i < level ? '#ffd34d' : '#3a4256')).join('')
+  // 단계 표시 점: 10단계 넘는 장비는 간격을 좁혀 32칸 안에 넣는다
+  const step = max > 10 ? 2 : 3
+  const pips = Array.from({ length: max }, (_, i) => r(Math.floor((32 - max * step) / 2) + i * step, 30, step - 1, 1, i < level ? '#ffd34d' : '#3a4256')).join('')
   return `<svg viewBox="0 0 32 32" shape-rendering="crispEdges" class="upg-svg${level <= 0 ? ' empty' : ''}" aria-hidden="true"><g>${body}</g>${pips}</svg>`
 }
 

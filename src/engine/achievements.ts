@@ -19,6 +19,14 @@ const GOLDEN_MIN_EVENTS = 3
 /** 리그 우승으로 치는 대회 (AOS 시즌 플레이오프, FPS 스테이지 플레이오프) */
 const LEAGUE_TITLE_EVENTS = ['playoffs', 'stage1_playoffs', 'stage2_playoffs']
 
+/** 연봉 업적 기준(만 원, 한 시즌의 월급 × 4) */
+const SALARY_TIERS = [
+  { id: 'pay_1', min: 10_000 },
+  { id: 'pay_5', min: 50_000 },
+  { id: 'pay_10', min: 100_000 },
+  { id: 'pay_20', min: 200_000 },
+]
+
 const worldPlace = (r: SeasonRecord): number | null => r.events.find((e) => isWorldEvent(e.id))?.placement ?? null
 const wonWorld = (r: SeasonRecord): boolean => worldPlace(r) === 1
 
@@ -83,6 +91,11 @@ export function earnedAchievements(state: GameState): AchievementId[] {
   const titleLeagues = new Set(h.filter((r) => r.events.some((e) => LEAGUE_TITLE_EVENTS.includes(e.id) && e.placement === 1)).map(leagueOf))
   if (titleLeagues.size >= 2) out.add('worldwide')
   if (new Set(h.map(leagueOf)).size >= 3) out.add('mercenary_king')
+  // 백지수표를 거절하고 국내에 남았다
+  if (state.blankCheckDeclined) out.add('best_player')
+  // 연봉(월급 × 4) 최고치에 따른 업적
+  const topSalary = Math.max(0, ...h.map((r) => r.salary ?? 0))
+  for (const tier of SALARY_TIERS) if (topSalary >= tier.min) out.add(tier.id)
 
   if (state.seasonsInPro1 >= 10) out.add('pro1_pillar')
   if (longestStreak(h, (r) => worldPlace(r) !== null) >= 5) out.add('ironman')

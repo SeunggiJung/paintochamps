@@ -189,13 +189,13 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     return h(
       'section',
       { class: 'card' },
-      h('h3', {}, pending.kind === 'scout' ? '입단 제안 (하나를 골라야 한다)' : pending.kind === 'callup' ? '1부 콜업 제안 (거절하면 2부에 남는다)' : pending.kind === 'overseas' ? (isOverseas(state) ? '다른 리그의 제안 (거절할 수 있다)' : '해외 이적 제안 (거절할 수 있다)') : '이적 제안 (거절할 수 있다)'),
+      h('h3', {}, pending.kind === 'scout' ? '입단 제안 (하나를 골라야 한다)' : pending.kind === 'callup' ? '1부 콜업 제안 (거절하면 2부에 남는다)' : pending.kind === 'overseas' ? (pending.offers.some((o) => o.checkMult !== undefined) ? '백지수표 제안 (거절할 수 있다)' : isOverseas(state) ? '다른 리그의 제안 (거절할 수 있다)' : '해외 이적 제안 (거절할 수 있다)') : '이적 제안 (거절할 수 있다)'),
       h(
         'div',
         { class: 'choices vertical' },
         ...pending.offers.map((o, i) => offerButton(state, o, () => choose(i))),
       ),
-      pending.kind !== 'scout' && h('button', { class: 'btn ghost small', onclick: () => choose(null) }, pending.kind === 'callup' ? '콜업을 거절하고 2부에 남는다' : pending.kind === 'overseas' ? '지금 리그에 남는다' : '이적하지 않는다'),
+      pending.kind !== 'scout' && h('button', { class: 'btn ghost small', onclick: () => choose(null) }, pending.kind === 'callup' ? '콜업을 거절하고 2부에 남는다' : pending.kind === 'overseas' ? (pending.offers.some((o) => o.checkMult !== undefined) ? '거절하고 이곳에 남는다' : '지금 리그에 남는다') : '이적하지 않는다'),
     )
   }
 

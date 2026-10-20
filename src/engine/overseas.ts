@@ -1,8 +1,9 @@
-import { pickTeams } from './field.ts'
+import { leagueTeams, pickTeams } from './field.ts'
 import { domesticLeagueId, isOverseas, leagueDef, leagueIdOf, leaguesOf, OVERSEAS_RULES, type LeagueId } from './leagues.ts'
 import { genrePower } from './power.ts'
 import { shuffled, type Rng } from './rng.ts'
 import type { GameState, Offer, PendingOffers } from './state.ts'
+import { strengthOf, teamProfile } from './teams.ts'
 
 /**
  * 해외 이적. 국내 1부 선수가 해외 리그의 제안을 받거나, 해외 선수가 다른 해외 리그·국내로 돌아오는 제안을 받는다.
@@ -48,4 +49,27 @@ export function movesLeague(state: GameState, offer: Offer): boolean {
 /** 옮겨 가는 리그에서 시작할 적응도 (국내 복귀는 100) */
 export function adaptationAfterMove(genre: GameState['genre'], league: LeagueId): number {
   return league === domesticLeagueId(genre) ? 100 : leagueDef(league).adaptStart
+}
+
+const CHECK = OVERSEAS_RULES.blankCheck
+
+/**
+ * 백지수표 제안: 국내 리그에서 월드를 우승하고 MVP급 활약을 한 명성 높은 선수에게, 중국 구단이 지금 월급의 5~7배를 제시한다.
+ * 늘 뜨지는 않는다. 팀이 인기·자금이 넉넉하고(리그 평균보다 강하고) 전력 보강이 절실한(지난 시즌 4위 밖) 구단이 있을 때 가끔(chance) 온다.
+ * 거절할 수 있고, 거절하면 업적 '최고의 선수가 있을 곳은'이 쌓인다.
+ */
+export function makeBlankCheckOffer(state: GameState, rng: Rng, mvp: boolean): PendingOffers | null {
+  if (!mvp || state.stage !== 'pro1' || !state.team || state.fame < CHECK.minFame) return null
+  if (isOverseas(state) || (state.leagueMoveSeason ?? 0) === state.season) return null
+  if (rng() >= CHECK.chance) return null
+  const league = CHECK.leagues.find((id) => leaguesOf(state.genre).some((l) => l.id === id))
+  if (!league) return null
+  const wanting = leagueTeams(league).filter((team) => {
+    const p = teamProfile(state.seed, state.season, team, 'pro1', state.fame, state.genre)
+    return !!p && strengthOf('pro1', p.power, league) !== 'weak' && p.lastRank > 3
+  })
+  if (wanting.length === 0) return null
+  const team = shuffled(rng, wanting)[0]
+  const checkMult = CHECK.minMult + Math.floor(rng() * (CHECK.maxMult - CHECK.minMult + 1))
+  return { kind: 'overseas', offers: [{ team, perk: 'salary', league, checkMult }] }
 }

@@ -28,8 +28,11 @@ export function conditionCoef(condition: number): number {
 /** 장비 효율 e: 12단계(4종 × 3단계)를 모두 채우면 1.2 */
 export function equipmentEfficiency(equipment: Record<EquipmentId, number>): number {
   const levels = Object.values(equipment)
-  const max = levels.length * rules.equipment.maxLevel
-  return 1 + (rules.equipment.maxEfficiencyBonus * levels.reduce((a, b) => a + b, 0)) / max
+  const { baseLevels, maxLevel, maxEfficiencyBonus, extraBonus } = rules.equipment
+  // 10단계까지는 예전 그대로, 11~15단계는 작은 추가 보너스(전부 15단계면 +extraBonus)
+  const base = levels.reduce((a, b) => a + Math.min(b, baseLevels), 0) / (levels.length * baseLevels)
+  const extra = levels.reduce((a, b) => a + Math.max(0, Math.min(b, maxLevel) - baseLevels), 0) / (levels.length * (maxLevel - baseLevels))
+  return 1 + maxEfficiencyBonus * base + extraBonus * extra
 }
 
 /**

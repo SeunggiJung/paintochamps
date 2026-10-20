@@ -55,14 +55,16 @@ describe('성장 공식', () => {
     expect(run(make({ age: 20, condition: 99 }), [{ id: 'rest' }, { id: 'rest' }]).state.condition).toBe(100)
   })
 
-  it('장비를 모두 최고 단계로 올리면 효율 1.2', () => {
+  it('장비를 모두 10단계로 올리면 효율 1.2, 15단계까지 올리면 1.22', () => {
     expect(equipmentEfficiency({ keyboard: 0, mouse: 0, monitor: 0, pc: 0 })).toBe(1)
+    const base = rules.equipment.baseLevels
+    expect(equipmentEfficiency({ keyboard: base, mouse: base, monitor: base, pc: base })).toBeCloseTo(1.2)
     const max = rules.equipment.maxLevel
-    expect(equipmentEfficiency({ keyboard: max, mouse: max, monitor: max, pc: max })).toBeCloseTo(1.2)
+    expect(equipmentEfficiency({ keyboard: max, mouse: max, monitor: max, pc: max })).toBeCloseTo(1.22)
   })
 
-  it('장비는 최고 10단계이고, 단계마다 가격이 2배로 오른다', () => {
-    expect(rules.equipment.maxLevel).toBe(10)
+  it('장비는 최고 15단계이고, 10단계까지는 단계마다 가격이 2배로 오른다', () => {
+    expect(rules.equipment.maxLevel).toBe(15)
     expect([0, 1, 2, 3].map((l) => equipmentCost('keyboard', l))).toEqual([5, 10, 20, 40])
     expect(equipmentCost('keyboard', 9)).toBe(5 * 2 ** 9)
     // 한 종류를 끝까지 올리는 비용은 첫 단계 가격의 약 2배^10
@@ -215,7 +217,7 @@ describe('조건과 비용', () => {
 
   it('돈이 부족하거나 최고 단계면 구매할 수 없다', () => {
     expect(buyEquipment(make({ age: 20, money: 5 }), 'pc').ok).toBe(false)
-    const maxed = make({ age: 20, money: 9999999, equipment: { keyboard: 10, mouse: 0, monitor: 0, pc: 0 } })
+    const maxed = make({ age: 20, money: 9999999, equipment: { keyboard: 15, mouse: 0, monitor: 0, pc: 0 } })
     expect(buyEquipment(maxed, 'keyboard').ok).toBe(false)
   })
 

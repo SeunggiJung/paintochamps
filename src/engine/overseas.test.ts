@@ -6,7 +6,9 @@ import { checkFacility } from './facilities.ts'
 import { leagueOfTeam, leagueTeams, makeOpponents, teamPower } from './field.ts'
 import { adaptationOf, adaptationPenalty, intlOffset, leaguesOf, transferableLeagues, worldHost } from './leagues.ts'
 import { leagueRanking } from './leagueRank.ts'
-import { interestedLeagues, makeOverseasOffers, overseasBlocker } from './overseas.ts'
+import { interestedLeagues, makeBlankCheckOffer, makeOverseasOffers, overseasBlocker } from './overseas.ts'
+import { equipmentCost } from './economy.ts'
+import { equipmentEfficiency } from './growth.ts'
 import { createRng } from './rng.ts'
 import { acceptOffer, requestTransfer, settleSeason } from './season.ts'
 import { createInitialState, type GameState } from './state.ts'
@@ -223,5 +225,79 @@ describe('리그 순위와 업적', () => {
     const homeOnly = earnedAchievements({ ...s, history: [win(1, 'lck'), win(5, 'lck')] })
     expect(homeOnly).not.toContain('library_master')
     expect(homeOnly).not.toContain('mercenary_king')
+  })
+})
+
+describe('백지수표', () => {
+  const star = (over: Partial<GameState> = {}) => pro1('aos', { fame: 220, season: 8, ...over })
+  const find = (state: GameState, mvp = true) => {
+    for (let seed = 1; seed < 200; seed++) {
+      const o = makeBlankCheckOffer(state, createRng(seed), mvp)
+      if (o) return o
+    }
+    return null
+  }
+
+  it('월드 우승·MVP급·명성 높은 국내 선수에게 가끔 중국 구단이 제안하고, 지금 월급의 5~7배다', () => {
+    const o = find(star())!
+    expect(o).not.toBeNull()
+    expect(o.kind).toBe('overseas')
+    expect(o.offers).toHaveLength(1)
+    expect(['lpl']).toContain(o.offers[0].league)
+    expect(o.offers[0].checkMult).toBeGreaterThanOrEqual(5)
+    expect(o.offers[0].checkMult).toBeLessThanOrEqual(7)
+    // 늘 뜨지는 않는다
+    const hits = Array.from({ length: 200 }, (_, i) => makeBlankCheckOffer(star(), createRng(i + 1), true)).filter(Boolean).length
+    expect(hits).toBeGreaterThan(0)
+    expect(hits).toBeLessThan(150)
+  })
+
+  it('MVP급이 아니거나 명성이 모자라거나 이미 해외 선수면 오지 않는다', () => {
+    expect(find(star(), false)).toBeNull()
+    expect(find(star({ fame: 100 }))).toBeNull()
+    expect(find(star({ league: 'lec', adaptation: 50 }))).toBeNull()
+  })
+
+  it('수락하면 새 월급이 지금 월급의 배수가 되고, 거절하면 업적 최고의 선수가 있을 곳은이 쌓인다', () => {
+    const base = star()
+    const pending = find(base)!
+    const before = salaryOf(base)
+    const mult = pending.offers[0].checkMult!
+    const moved = acceptOffer({ ...base, pendingOffers: pending }, 0)
+    expect(moved.league).toBe('lpl')
+    expect(salaryOf(moved)).toBeGreaterThan(before * (mult - 0.01))
+    expect(salaryOf(moved)).toBeLessThan(before * (mult + 0.01))
+    expect(moved.blankCheckDeclined).toBe(false)
+
+    const declined = acceptOffer({ ...base, pendingOffers: pending }, null)
+    expect(declined.league).toBe('lck')
+    expect(declined.blankCheckDeclined).toBe(true)
+    const ending = { ...declined, finished: 'legend' as const, history: [] }
+    expect(earnedAchievements(ending)).toContain('best_player')
+    expect(earnedAchievements({ ...ending, blankCheckDeclined: false })).not.toContain('best_player')
+  })
+
+  it('한 시즌 연봉(월급 × 4)이 기준을 넘으면 연봉 업적이 쌓인다', () => {
+    const rec = (salary: number) => ({ season: 1, age: 22, stage: 'pro1' as const, events: [], salary })
+    const ach = (salary: number) => earnedAchievements({ ...pro1(), finished: 'legend' as const, history: [rec(salary)] })
+    expect(ach(5_000)).not.toContain('pay_1')
+    expect(ach(12_000)).toContain('pay_1')
+    expect(ach(120_000)).toEqual(expect.arrayContaining(['pay_1', 'pay_5', 'pay_10']))
+    expect(ach(120_000)).not.toContain('pay_20')
+    expect(ach(250_000)).toContain('pay_20')
+  })
+})
+
+describe('장비 15단계', () => {
+  it('10단계까지는 예전 가격과 효율 그대로이고 11~15단계는 완만하게 오른다', () => {
+    expect(equipmentCost('pc', 9)).toBe(15 * 512)
+    expect(equipmentCost('pc', 10)).toBe(Math.round(15 * 512 * 1.5))
+    expect(equipmentCost('pc', 14)).toBe(Math.round(15 * 512 * 1.5 ** 5))
+    const total = (['keyboard', 'mouse', 'monitor', 'pc'] as const).reduce((sum, item) => sum + Array.from({ length: 15 }, (_, l) => equipmentCost(item, l)).reduce((a, b) => a + b, 0), 0)
+    expect(total / 10_000).toBeGreaterThan(35)
+    expect(total / 10_000).toBeLessThan(45)
+    const all = (n: number) => ({ keyboard: n, mouse: n, monitor: n, pc: n })
+    expect(equipmentEfficiency(all(10))).toBeCloseTo(1.2)
+    expect(equipmentEfficiency(all(15))).toBeCloseTo(1.22)
   })
 })
