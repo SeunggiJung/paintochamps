@@ -425,3 +425,4 @@ input[type='text'] {
   .btn:not(:disabled):active, .choice:not(:disabled):active { transform: none; }
   .screen { animation: none; }
 }
+.season-line { margin: 0; font-style: italic; color: var(--muted); }

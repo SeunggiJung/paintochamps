@@ -16,6 +16,7 @@ import { LEVEL_TEXT } from '../engine/highlights.ts'
 import { canNegotiate } from '../engine/negotiation.ts'
 import { openNegotiation } from './negotiationView.ts'
 import { openSheet } from './sheet.ts'
+import { seasonLine } from '../engine/seasonLine.ts'
 
 const ENDING_NAME = Object.fromEntries(endings.order.map((e) => [e.id, e.name]))
 
@@ -180,6 +181,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     const parts = [
       h('p', { class: 'eyebrow' }, `${before.season}시즌 결산`),
       h('h2', {}, `${before.name} · ${before.age}세`),
+      h('p', { class: 'season-line' }, seasonLine({ name: before.name, season: before.season, report, powerGain: powerAfter - powerBefore })),
       h(
         'section',
         { class: `card headline ${head.tone}` },
