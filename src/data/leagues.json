@@ -1,0 +1,94 @@
+{
+  "rules": {
+    "minFame": 50,
+    "maxAge": 28,
+    "offerChance": 0.5,
+    "adaptGain": 25,
+    "maxPenalty": 50,
+    "recoveryPenalty": 3,
+    "signingBonusTurns": 2,
+    "homeAdvantage": 10,
+    "rankSeasons": 3
+  },
+  "families": {
+    "aos": {
+      "domestic": "lck",
+      "worldHosts": ["lck", "lpl", "lec", "lcs"],
+      "leagues": [
+        { "id": "lck", "name": "LCK", "region": "한국", "domestic": true, "strength": 0, "salaryMult": 1, "prestige": 1, "adaptStart": 100, "adaptHard": "-", "minPower": 0 },
+        {
+          "id": "lpl", "name": "LPL", "region": "중국", "strength": 25, "salaryMult": 1.5, "prestige": 1, "adaptStart": 25, "adaptHard": "큼", "minPower": 700, "transferable": true,
+          "teams": [
+            { "slug": "blg", "name": "Bilibili Gaming" }, { "slug": "tes", "name": "Top Esports" }, { "slug": "jdg", "name": "JD Gaming" },
+            { "slug": "al", "name": "Anyone's Legend" }, { "slug": "lng", "name": "LNG Esports" }, { "slug": "wbg", "name": "Weibo Gaming" },
+            { "slug": "ig", "name": "Invictus Gaming" }, { "slug": "edg", "name": "EDward Gaming" }, { "slug": "nip", "name": "Ninjas in Pyjamas" },
+            { "slug": "we", "name": "Team WE" }, { "slug": "tt", "name": "ThunderTalk Gaming" }, { "slug": "lgd", "name": "LGD Gaming" },
+            { "slug": "omg", "name": "Oh My God" }, { "slug": "up", "name": "Ultra Prime" }
+          ]
+        },
+        {
+          "id": "lec", "name": "LEC", "region": "유럽", "strength": -20, "salaryMult": 1.1, "prestige": 0.9, "adaptStart": 40, "adaptHard": "중간", "minPower": 600, "transferable": true,
+          "teams": [
+            { "slug": "g2", "name": "G2 Esports" }, { "slug": "kc", "name": "Karmine Corp" }, { "slug": "fnc", "name": "Fnatic" },
+            { "slug": "koi", "name": "Movistar KOI" }, { "slug": "vit", "name": "Team Vitality" }, { "slug": "th", "name": "Team Heretics" },
+            { "slug": "giantx", "name": "GIANTX" }, { "slug": "shifters", "name": "Shifters" }, { "slug": "sk", "name": "SK Gaming" },
+            { "slug": "navi", "name": "Natus Vincere" }
+          ]
+        },
+        {
+          "id": "lcs", "name": "LCS", "region": "북미", "strength": -55, "salaryMult": 1.2, "prestige": 0.8, "adaptStart": 40, "adaptHard": "중간", "minPower": 500, "transferable": true,
+          "teams": [
+            { "slug": "lyon", "name": "LYON" }, { "slug": "tl", "name": "Team Liquid" }, { "slug": "c9", "name": "Cloud9" },
+            { "slug": "fly", "name": "FlyQuest" }, { "slug": "shopify", "name": "Shopify Rebellion" }, { "slug": "sen", "name": "Sentinels" },
+            { "slug": "dsg", "name": "Disguised" }, { "slug": "dig", "name": "Dignitas" }
+          ]
+        },
+        {
+          "id": "lcp", "name": "LCP", "region": "아시아·태평양", "strength": -45, "salaryMult": 1, "prestige": 0.8, "adaptStart": 40, "adaptHard": "중간", "minPower": 500,
+          "teams": [
+            { "slug": "secret", "name": "Team Secret Whales" }, { "slug": "dcg", "name": "Deep Cross Gaming" },
+            { "slug": "cfo", "name": "CTBC Flying Oyster" }, { "slug": "gam", "name": "GAM Esports" }
+          ]
+        },
+        {
+          "id": "cblol", "name": "CBLOL", "region": "브라질", "strength": -60, "salaryMult": 1, "prestige": 0.7, "adaptStart": 40, "adaptHard": "중간", "minPower": 500,
+          "teams": [{ "slug": "furia", "name": "FURIA" }, { "slug": "loud", "name": "LOUD" }]
+        }
+      ]
+    },
+    "fps": {
+      "domestic": "vct_pacific",
+      "worldHosts": ["vct_pacific", "vct_americas", "vct_emea", "vct_china"],
+      "leagues": [
+        { "id": "vct_pacific", "name": "VCT 퍼시픽", "region": "퍼시픽", "domestic": true, "strength": 0, "salaryMult": 1, "prestige": 1, "adaptStart": 100, "adaptHard": "-", "minPower": 0 },
+        {
+          "id": "vct_americas", "name": "VCT 아메리카스", "region": "아메리카", "strength": 15, "salaryMult": 1.4, "prestige": 1, "adaptStart": 25, "adaptHard": "큼", "minPower": 650, "transferable": true,
+          "teams": [
+            { "slug": "g2", "name": "G2 Esports" }, { "slug": "c9", "name": "Cloud9" }, { "slug": "100t", "name": "100 Thieves" },
+            { "slug": "eg", "name": "Evil Geniuses" }, { "slug": "furia", "name": "FURIA" }, { "slug": "kru", "name": "KRÜ Esports" },
+            { "slug": "leviatan", "name": "Leviatán" }, { "slug": "loud", "name": "LOUD" }, { "slug": "mibr", "name": "MIBR" },
+            { "slug": "nrg", "name": "NRG" }, { "slug": "sen", "name": "Sentinels" }, { "slug": "envy", "name": "ENVY" }
+          ]
+        },
+        {
+          "id": "vct_emea", "name": "VCT EMEA", "region": "유럽·중동·아프리카", "strength": 5, "salaryMult": 1.2, "prestige": 0.95, "adaptStart": 40, "adaptHard": "중간", "minPower": 600, "transferable": true,
+          "teams": [
+            { "slug": "fnc", "name": "Fnatic" }, { "slug": "kc", "name": "Karmine Corp" }, { "slug": "navi", "name": "Natus Vincere" },
+            { "slug": "th", "name": "Team Heretics" }, { "slug": "tl", "name": "Team Liquid" }, { "slug": "vit", "name": "Team Vitality" },
+            { "slug": "bbl", "name": "BBL Esports" }, { "slug": "fut", "name": "FUT Esports" }, { "slug": "gm", "name": "Gentle Mates" },
+            { "slug": "giantx", "name": "GIANTX" }, { "slug": "ef", "name": "Eternal Fire" }, { "slug": "pcific", "name": "PCIFIC Esports" }
+          ]
+        },
+        {
+          "id": "vct_china", "name": "VCT 차이나", "region": "중국", "strength": -35, "salaryMult": 1, "prestige": 0.85, "adaptStart": 30, "adaptHard": "큼", "minPower": 520, "transferable": true,
+          "teams": [
+            { "slug": "blg", "name": "Bilibili Gaming" }, { "slug": "edg", "name": "Edward Gaming" }, { "slug": "fpx", "name": "FunPlus Phoenix" },
+            { "slug": "jdg", "name": "JD Gaming" }, { "slug": "ag", "name": "All Gamers" }, { "slug": "tyloo", "name": "TYLOO" },
+            { "slug": "titan", "name": "Titan Esports Club" }, { "slug": "xlg", "name": "XLG Esports" }, { "slug": "drg", "name": "Dragon Ranger Gaming" },
+            { "slug": "trace", "name": "Trace Esports" }, { "slug": "wolves", "name": "Wolves Esports" }, { "slug": "nova", "name": "Nova Esports" }
+          ]
+        }
+      ]
+    }
+  }
+}

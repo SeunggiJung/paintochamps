@@ -1,5 +1,6 @@
 import contracts from '../data/contracts.json'
-import { amateurTeams, pro2Teams, proOrgs, teamPower, TIERS } from './field.ts'
+import { amateurTeams, leagueOfTeam, leagueStrength, leagueTeams, pro2Teams, proOrgs, teamPower, TIERS } from './field.ts'
+import { domesticLeagueId, leagueDef } from './leagues.ts'
 import { salaryFameMultiplier } from './economy.ts'
 import { genrePower } from './power.ts'
 import { pathOf } from './routes.ts'
@@ -25,10 +26,13 @@ export interface TeamProfile {
   leagueSize: number
   /** 3개월당 월급(만 원) */
   salary: number
+  /** 팀이 속한 리그 (1부가 아니면 null) */
+  league: string | null
 }
 
 /** 이 단계에서 팀이 속할 풀: 아마추어 팀 단계는 아마추어 팀, 프로 2부는 챌린저스 팀, 프로 1부는 구단 */
-function poolOf(stage: StageId, genre: GenreId): TeamRef[] {
+function poolOf(stage: StageId, genre: GenreId, league: string | null): TeamRef[] {
+  if (stage === 'pro1' && league) return leagueTeams(league)
   return stage === 'amateur_team' ? amateurTeams() : stage === 'pro2' ? pro2Teams(genre) : proOrgs(genre)
 }
 
@@ -47,12 +51,17 @@ export function teamProfile(seed: number, season: number, team: TeamRef, stage: 
   const contracted = stage as Contracted
   const power = teamPower(seed, season, team.id, tier)
   // 지난 시즌 순위: 같은 풀의 팀들을 지난 시즌 전력으로 줄 세우고, 리그 팀 수에 맞춰 환산한다
-  const pool = poolOf(stage, genre)
+  const league = stage === 'pro1' ? leagueOfTeam(team.id) : null
+  const pool = poolOf(stage, genre, league)
   const last = Math.max(1, season - 1)
   const order = pool.map((t) => ({ id: t.id, p: teamPower(seed, last, t.id, tier) })).sort((a, b) => b.p - a.p)
   const index = Math.max(0, order.findIndex((t) => t.id === team.id))
-  const leagueSize = LEAGUE_SIZE[contracted]
-  return { team, stage, power, lastRank: 1 + Math.floor((index * leagueSize) / order.length), leagueSize, salary: Math.round(salaryFor(contracted, power) * salaryFameMultiplier(fame)) }
+  // 해외 리그는 팀 수가 리그마다 달라서 그 리그의 팀 수를 그대로 쓴다
+  const leagueSize = league && league !== domesticLeagueId(genre) ? pool.length : LEAGUE_SIZE[contracted]
+  // 월급은 같은 리그 안에서의 팀 강도로 정하고(리그 전력 보정은 빼고), 리그 월급 배율을 곱한다
+  const mult = league ? leagueDef(league).salaryMult : 1
+  const salary = Math.round(salaryFor(contracted, power - leagueStrength(team.id)) * mult * salaryFameMultiplier(fame))
+  return { team, stage, power, lastRank: 1 + Math.floor((index * leagueSize) / order.length), leagueSize, salary, league }
 }
 
 /** 정석 루트의 연습생은 팀 전력과 상관없이 훈련비 정도만 받는다 */
@@ -71,10 +80,11 @@ export function salaryOf(state: GameState): number {
 /** 리그 평균 대비 팀 강도: 평균보다 표준편차의 반 이상 위면 강팀, 반 이상 아래면 약팀 */
 export type Strength = 'strong' | 'average' | 'weak'
 
-export function strengthOf(stage: StageId, power: number): Strength {
+export function strengthOf(stage: StageId, power: number, league: string | null = null): Strength {
   const tier = TIER_OF_STAGE[stage]
   if (!tier) return 'average'
-  const { mean, sd } = TIERS[tier]
+  const { sd } = TIERS[tier]
+  const mean = TIERS[tier].mean + (league ? leagueDef(league).strength : 0)
   return power >= mean + sd / 2 ? 'strong' : power <= mean - sd / 2 ? 'weak' : 'average'
 }
 
@@ -86,7 +96,8 @@ export function teamBoost(state: GameState): number {
   if (!state.team || isTrainee(state)) return 0
   const tier = TIER_OF_STAGE[state.stage]
   if (!tier) return 0
-  return contracts.teamWeight * (teamPower(state.seed, state.season, state.team.id, tier) - TIERS[tier].mean)
+  // 해외 리그는 리그 전체의 전력 보정을 뺀 같은 리그 안의 강약으로 본다
+  return contracts.teamWeight * (teamPower(state.seed, state.season, state.team.id, tier) - leagueStrength(state.team.id) - TIERS[tier].mean)
 }
 
 /** 이번 시즌 이미 공개된 대회에서 한 팀이 거둔 성적 한 줄 */
@@ -148,7 +159,7 @@ export function offerTerms(state: GameState, offer: Offer, stage: StageId = stat
     myPower,
     gap,
     salaryDelta: profile.salary - salaryOf(state),
-    strength: strengthOf(stage, profile.power),
-    boost: contracts.teamWeight * (profile.power - TIERS[tier].mean),
+    strength: strengthOf(stage, profile.power, profile.league),
+    boost: contracts.teamWeight * (profile.power - leagueStrength(offer.team.id) - TIERS[tier].mean),
   }
 }

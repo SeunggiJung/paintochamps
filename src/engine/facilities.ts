@@ -1,5 +1,6 @@
 import facilityData from '../data/facilities.json'
 import { moneyScale } from './economy.ts'
+import { isOverseas } from './leagues.ts'
 import type { FacilityId, GameState } from './state.ts'
 
 export interface FacilityDef {
@@ -10,6 +11,8 @@ export interface FacilityDef {
   maxLevel: number
   perLevel: number
   unit: string
+  /** 해외 리그에 있을 때만 사고 쓸 수 있다 */
+  onlyOverseas?: boolean
 }
 
 export const FACILITIES = facilityData as Record<FacilityId, FacilityDef>
@@ -31,6 +34,7 @@ export function checkFacility(state: GameState, id: FacilityId): string | null {
   const def = FACILITIES[id]
   if (!def) return '알 수 없는 시설이다'
   if (state.finished) return '이미 끝난 커리어다'
+  if (def.onlyOverseas && !isOverseas(state)) return `${def.name}은(는) 해외 리그에 있을 때만 쓸 수 있다`
   if (facilityLevel(state, id) >= def.maxLevel) return `${def.name}은(는) 이미 최고 단계다`
   if (state.money < facilityCost(state, id)) return '돈이 부족하다'
   return null
@@ -64,4 +68,9 @@ export function medicSpeed(state: GameState): number {
 /** 홍보 에이전시가 더하는 턴당 명성 (3개월 기준) */
 export function prFame(state: GameState): number {
   return facilityLevel(state, 'pr') * FACILITIES.pr.perLevel
+}
+
+/** 통역·언어 코치가 더하는 시즌당 적응도 */
+export function languageGain(state: GameState): number {
+  return facilityLevel(state, 'language') * FACILITIES.language.perLevel
 }

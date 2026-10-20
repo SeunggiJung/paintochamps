@@ -47,12 +47,12 @@
     "pro1": {
       "aos": [
         {
-          "id": "lck_cup_groups", "span": [0, 0.07], "name": "LCK컵 조별 대항전", "format": "league",
+          "id": "lck_cup_groups", "span": [0, 0.07], "name": "{league}컵 조별 대항전", "format": "league",
           "field": { "names": "orgs", "tier": "pro1", "size": 10 }, "rounds": 1, "bestOf": 3,
           "rewards": [{ "upTo": 3, "fame": 2, "money": 20 }, { "upTo": 99, "fame": 1, "money": 10 }]
         },
         {
-          "id": "lck_cup", "span": [0.07, 0.14], "name": "LCK컵 플레이오프", "format": "elimination",
+          "id": "lck_cup", "span": [0.07, 0.14], "name": "{league}컵 플레이오프", "format": "elimination",
           "from": { "event": "lck_cup_groups", "top": 6 }, "k": 2, "bestOf": 5, "big": true,
           "qualifies": [{ "to": "first_stand", "top": 2 }],
           "rewards": [{ "upTo": 1, "fame": 10, "money": 80 }, { "upTo": 3, "fame": 5, "money": 40 }, { "upTo": 99, "fame": 2, "money": 15 }]
@@ -63,7 +63,7 @@
           "rewards": [{ "upTo": 1, "fame": 12, "money": 100 }, { "upTo": 4, "fame": 6, "money": 50 }, { "upTo": 99, "fame": 2, "money": 20 }]
         },
         {
-          "id": "rounds12", "span": [0.2, 0.44], "name": "LCK 라운드 1~2", "format": "league",
+          "id": "rounds12", "span": [0.2, 0.44], "name": "{league} 라운드 1~2", "format": "league",
           "field": { "names": "orgs", "tier": "pro1", "size": 10 }, "rounds": 2, "bestOf": 3,
           "qualifies": [{ "to": "road_to_msi", "top": 6 }],
           "rewards": [{ "upTo": 3, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
@@ -82,25 +82,25 @@
           "rewards": [{ "upTo": 1, "fame": 20, "money": 200 }, { "upTo": 4, "fame": 10, "money": 80 }, { "upTo": 99, "fame": 4, "money": 30 }]
         },
         {
-          "id": "legend_group", "span": [0.6, 0.82], "name": "LCK 라운드 3~4 레전드 그룹", "format": "league",
+          "id": "legend_group", "span": [0.6, 0.82], "name": "{league} 라운드 3~4 레전드 그룹", "format": "league",
           "from": { "event": "rounds12", "top": 5 }, "field": { "names": "orgs", "tier": "pro1", "size": 5 }, "rounds": 2, "bestOf": 3, "rank": true, "noRelegate": true,
           "qualifies": [{ "to": "playoffs", "top": 4 }, { "to": "playin", "top": 5, "min": 5 }],
           "rewards": [{ "upTo": 3, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
         },
         {
-          "id": "rise_group", "span": [0.6, 0.82], "name": "LCK 라운드 3~4 라이즈 그룹", "format": "league",
+          "id": "rise_group", "span": [0.6, 0.82], "name": "{league} 라운드 3~4 라이즈 그룹", "format": "league",
           "from": { "event": "rounds12", "top": 5, "side": "bottom" }, "rounds": 2, "bestOf": 3, "rank": true,
           "qualifies": [{ "to": "playin", "top": 3 }],
           "rewards": [{ "upTo": 3, "fame": 2, "money": 30 }, { "upTo": 99, "fame": 1, "money": 15 }]
         },
         {
-          "id": "season_playin", "span": [0.82, 0.86], "name": "LCK 시즌 플레이인", "format": "elimination", "needs": "playin",
+          "id": "season_playin", "span": [0.82, 0.86], "name": "{league} 시즌 플레이인", "format": "elimination", "needs": "playin",
           "field": { "names": "orgs", "tier": "pro1", "size": 4 }, "k": 2, "bestOf": 5, "big": true,
           "qualifies": [{ "to": "playoffs", "top": 2 }],
           "rewards": [{ "upTo": 2, "fame": 4, "money": 30 }, { "upTo": 99, "fame": 1, "money": 10 }]
         },
         {
-          "id": "playoffs", "finale": "playoffs", "span": [0.86, 0.93], "name": "LCK 시즌 플레이오프", "format": "elimination", "needs": "playoffs",
+          "id": "playoffs", "finale": "playoffs", "span": [0.86, 0.93], "name": "{league} 시즌 플레이오프", "format": "elimination", "needs": "playoffs",
           "field": { "names": "orgs", "tier": "pro1", "size": 6 }, "k": 2, "bestOf": 5, "big": true,
           "qualifies": [{ "to": "world", "top": 2 }],
           "points": [6, 4, 3, 2, 1, 1],
@@ -120,7 +120,7 @@
       ],
       "fps": [
         {
-          "id": "kickoff", "span": [0, 0.12], "name": "VCT 퍼시픽 킥오프", "format": "elimination",
+          "id": "kickoff", "span": [0, 0.12], "name": "{league} 킥오프", "format": "elimination",
           "field": { "names": "orgs", "tier": "pro1", "size": 12 }, "k": 3, "bestOf": 3, "big": true,
           "qualifies": [{ "to": "masters1", "top": 3 }],
           "rewards": [{ "upTo": 3, "fame": 5, "money": 50 }, { "upTo": 99, "fame": 1, "money": 20 }]
@@ -132,12 +132,12 @@
           "rewards": [{ "upTo": 1, "fame": 18, "money": 180 }, { "upTo": 4, "fame": 9, "money": 70 }, { "upTo": 99, "fame": 4, "money": 30 }]
         },
         {
-          "id": "stage1", "span": [0.22, 0.45], "name": "VCT 퍼시픽 스테이지 1", "format": "league",
+          "id": "stage1", "span": [0.22, 0.45], "name": "{league} 스테이지 1", "format": "league",
           "field": { "names": "orgs", "tier": "pro1", "size": 12 }, "rounds": 1, "bestOf": 3,
           "rewards": [{ "upTo": 4, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
         },
         {
-          "id": "stage1_playoffs", "finale": "vct_playoffs", "span": [0.45, 0.52], "name": "VCT 퍼시픽 스테이지 1 플레이오프", "format": "elimination",
+          "id": "stage1_playoffs", "finale": "vct_playoffs", "span": [0.45, 0.52], "name": "{league} 스테이지 1 플레이오프", "format": "elimination",
           "from": { "event": "stage1", "top": 8 }, "k": 2, "bestOf": 3, "big": true,
           "qualifies": [{ "to": "masters2", "top": 3 }],
           "points": [6, 4, 3, 2, 1, 1],
@@ -150,12 +150,12 @@
           "rewards": [{ "upTo": 1, "fame": 18, "money": 180 }, { "upTo": 4, "fame": 9, "money": 70 }, { "upTo": 99, "fame": 4, "money": 30 }]
         },
         {
-          "id": "stage2", "span": [0.62, 0.85], "name": "VCT 퍼시픽 스테이지 2", "format": "league",
+          "id": "stage2", "span": [0.62, 0.85], "name": "{league} 스테이지 2", "format": "league",
           "field": { "names": "orgs", "tier": "pro1", "size": 12 }, "rounds": 1, "bestOf": 3, "rank": true,
           "rewards": [{ "upTo": 4, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
         },
         {
-          "id": "stage2_playoffs", "finale": "vct_playoffs", "span": [0.85, 0.92], "name": "VCT 퍼시픽 스테이지 2 플레이오프", "format": "elimination",
+          "id": "stage2_playoffs", "finale": "vct_playoffs", "span": [0.85, 0.92], "name": "{league} 스테이지 2 플레이오프", "format": "elimination",
           "from": { "event": "stage2", "top": 8 }, "k": 2, "bestOf": 3, "big": true,
           "qualifies": [{ "to": "world", "top": 2 }],
           "points": [6, 4, 3, 2, 1, 1],

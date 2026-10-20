@@ -1,6 +1,7 @@
 import eventData from '../data/events.json'
 import { applyEffects, type Effects } from './effects.ts'
 import { moneyScale } from './economy.ts'
+import { adaptationOf, isOverseas } from './leagues.ts'
 import { pathOf } from './routes.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { GameState, PathId, StageId } from './state.ts'
@@ -33,6 +34,10 @@ export interface EventWhen {
   cafeAttempts?: Range
   /** 아카데미 입단 테스트 재도전 횟수 */
   academyRetries?: Range
+  /** true면 해외 리그 소속일 때만, false면 국내 소속일 때만 */
+  overseas?: boolean
+  /** 해외 적응도 범위 (해외 리그일 때만 본다) */
+  adaptation?: Range
 }
 
 export type EventEffects = Effects
@@ -70,6 +75,8 @@ export function isEligible(state: GameState, e: GameEvent): boolean {
   if (w.ageMax !== undefined && state.age > w.ageMax) return false
   if (w.team !== undefined && (state.team !== null) !== w.team) return false
   if (w.path && !w.path.includes(pathOf(state))) return false
+  if (w.overseas !== undefined && isOverseas(state) !== w.overseas) return false
+  if (w.adaptation && !inRange(adaptationOf(state), w.adaptation)) return false
   if (w.invited !== undefined && !!state.academyInvite !== w.invited) return false
   if (!inRange(state.cafeAttempts ?? 0, w.cafeAttempts) || !inRange(state.academyRetries ?? 0, w.academyRetries)) return false
   if (!inRange(state.condition, w.condition) || !inRange(state.fame, w.fame) || !inRange(state.money / moneyScale(state.stage), w.money) || !inRange(state.vice, w.vice)) return false

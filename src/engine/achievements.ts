@@ -1,5 +1,6 @@
 import achievementData from '../data/achievements.json'
 import { isUnofficial, isWorldEvent } from './competitions.ts'
+import { domesticLeagueId, worldHost } from './leagues.ts'
 import type { GameState, SeasonRecord } from './state.ts'
 
 export type AchievementId = string
@@ -14,6 +15,9 @@ export const ACHIEVEMENTS = achievementData.order as AchievementDef[]
 
 /** 한 시즌에 참가한 공식 대회가 이 수 이상이어야 "모든 대회 우승"으로 친다 (대회가 한두 개뿐인 시즌 제외) */
 const GOLDEN_MIN_EVENTS = 3
+
+/** 리그 우승으로 치는 대회 (AOS 시즌 플레이오프, FPS 스테이지 플레이오프) */
+const LEAGUE_TITLE_EVENTS = ['playoffs', 'stage1_playoffs', 'stage2_playoffs']
 
 const worldPlace = (r: SeasonRecord): number | null => r.events.find((e) => isWorldEvent(e.id))?.placement ?? null
 const wonWorld = (r: SeasonRecord): boolean => worldPlace(r) === 1
@@ -70,7 +74,15 @@ export function earnedAchievements(state: GameState): AchievementId[] {
     // 마지막 시즌(30세)에 우승
     if (wonWorld(h[h.length - 1]) && h[h.length - 1].age >= 30) out.add('last_dance')
     if (champ.some(({ r }) => r.age <= 19)) out.add('prodigy')
+    // 소속 리그 지역이 아닌 곳에서 열린 월드에서 우승
+    if (champ.some(({ r }) => (r.league ?? domesticLeagueId(state.genre)) !== worldHost(state.genre, r.season).id)) out.add('library_master')
   }
+
+  // 해외 리그 업적: 서로 다른 리그에서 리그 우승, 세 리그 이상에서 뛰기
+  const leagueOf = (r: SeasonRecord) => r.league ?? domesticLeagueId(state.genre)
+  const titleLeagues = new Set(h.filter((r) => r.events.some((e) => LEAGUE_TITLE_EVENTS.includes(e.id) && e.placement === 1)).map(leagueOf))
+  if (titleLeagues.size >= 2) out.add('worldwide')
+  if (new Set(h.map(leagueOf)).size >= 3) out.add('mercenary_king')
 
   if (state.seasonsInPro1 >= 10) out.add('pro1_pillar')
   if (longestStreak(h, (r) => worldPlace(r) !== null) >= 5) out.add('ironman')

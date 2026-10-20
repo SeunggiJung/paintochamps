@@ -7,8 +7,9 @@ import routes from '../data/routes.json'
 import rules from '../data/rules.json'
 import { advanceCalendar, type CalendarUpdate } from './calendar.ts'
 import { applyEffects, type Effects } from './effects.ts'
-import { coachEfficiency, housingRecovery, medicSpeed, prFame } from './facilities.ts'
+import { coachEfficiency, housingRecovery, languageGain, medicSpeed, prFame } from './facilities.ts'
 import { ageGrowthFactor, equipmentEfficiency, growthDelta } from './growth.ts'
+import { adaptationOf, adaptationRecoveryPenalty, isOverseas, OVERSEAS_RULES } from './leagues.ts'
 import { warmupBonus } from './minigame.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
 import type { ActionId, EquipmentId, GameState } from './state.ts'
@@ -307,7 +308,7 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
   if (next.team) next = { ...next, money: next.money + salaryOf(next) * scale }
 
   // 턴이 지나면 컨디션이 조금씩 저절로 회복된다 (3개월 기준 금액에 턴 길이 배율)
-  next = { ...next, condition: clamp(next.condition + (rules.conditionRecoveryPerBase + housingRecovery(next)) * scale, 0, 100) }
+  next = { ...next, condition: clamp(next.condition + (rules.conditionRecoveryPerBase + housingRecovery(next) - adaptationRecoveryPenalty(next)) * scale, 0, 100) }
   // 홍보 에이전시: 턴마다 명성이 조금씩 오른다
   if (prFame(next) > 0) next = { ...next, fame: next.fame + prFame(next) * scale }
 
@@ -349,6 +350,8 @@ export function startNextSeason(state: GameState): GameState {
     season: state.season + 1,
     turnInSeason: 0,
     seasonRun: null,
+    // 해외 리그에서는 시즌이 지날수록 적응도가 오른다 (리그를 옮긴 직후의 시즌은 시작값 그대로)
+    adaptation: isOverseas(state) && (state.leagueMoveSeason ?? 0) !== state.season ? Math.min(100, adaptationOf(state) + OVERSEAS_RULES.adaptGain + languageGain(state)) : adaptationOf(state),
     // 새 시즌의 훈련 후보를 뽑고, 이번 시즌 훈련은 플레이어가 다시 정한다
     trainingMenu: drawTrainingMenu(state.seed, state.season + 1, state.team !== null),
     seasonTraining: null,

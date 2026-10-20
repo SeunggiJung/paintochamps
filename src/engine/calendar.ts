@@ -3,6 +3,7 @@ import routes from '../data/routes.json'
 import { eventsFor, isInvited, midPhase, playerPower, type EventDef } from './competitions.ts'
 import { moneyScale } from './economy.ts'
 import { academyName, isPro2Team, makeOpponents } from './field.ts'
+import { adaptationPenalty, isOverseas, leagueIdOf, leagueOfState, OVERSEAS_RULES, worldHost } from './leagues.ts'
 import { finalSeries, type FinalSeries } from './broadcast.ts'
 import { createRng, mixSeed } from './rng.ts'
 import type { GameState, RunRecord, SeasonRun, StandingRow } from './state.ts'
@@ -33,6 +34,8 @@ export type CalendarBeat =
       advanced: string[]
       /** 월드 챔피언십 */
       world: boolean
+      /** 월드 챔피언십이 열린 지역 (월드가 아니면 null) */
+      host: string | null
       /** 결승 중계 연출이 붙는 대회에서 결승에 올랐을 때의 결승 시리즈 */
       final: FinalSeries | null
     }
@@ -74,18 +77,21 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
   if (!isInvited(state, ev)) return null
   const rng = createRng(mixSeed(state.seed, state.season, 0x5ea5, index))
   // 소속 팀이 리그 평균보다 강하면 전력이 오르고 약하면 내려간다 (PC방 대회처럼 팀 없이 나가는 대회는 제외)
-  const power = playerPower(state, ev.big ?? false) + (ev.field?.names === 'cafe' ? 0 : teamBoost(state)) + (ev.world ? worldBonus(state.mode) : 0)
+  // 해외에서 적응이 덜 됐으면 전력이 깎이고, 월드가 내 리그 지역에서 열리면 홈 이점을 받는다
+  const home = ev.world && worldHost(state.genre, state.season).id === leagueIdOf(state) ? OVERSEAS_RULES.homeAdvantage : 0
+  const power = playerPower(state, ev.big ?? false) + (ev.field?.names === 'cafe' ? 0 : teamBoost(state)) + (ev.world ? worldBonus(state.mode) + home : 0) - adaptationPenalty(state)
 
   const fieldTeams = (): Team[] => {
     const f = ev.field!
     const me = playerTeam(state, ev, power)
-    return [me, ...makeOpponents(rng, f.names, f.tier, f.size - 1, new Set([me.id]), state.genre, f.names === 'cafe' || f.names === 'intl' ? undefined : { seed: state.seed, season: state.season })]
+    return [me, ...makeOpponents(rng, f.names, f.tier, f.size - 1, new Set([me.id]), state.genre, f.names === 'cafe' || f.names === 'intl' ? undefined : { seed: state.seed, season: state.season }, leagueIdOf(state))]
   }
   let teams: Team[]
   if (ev.from) {
     const prev = run.runs.find((r) => r.id === ev.from!.event)
     if (prev) {
-      const picked = ev.from.side === 'bottom' ? prev.order.slice(-ev.from.top) : prev.order.slice(0, ev.from.top)
+      // 팀이 적은 리그에서는 위쪽 그룹과 겹치지 않게 남은 팀만 아래쪽 그룹이 된다
+      const picked = ev.from.side === 'bottom' ? prev.order.slice(-Math.min(ev.from.top, Math.max(1, prev.order.length - ev.from.top))) : prev.order.slice(0, ev.from.top)
       if (!picked.some((t) => t.isPlayer)) return null
       teams = picked.map((t) => (t.isPlayer ? { ...t, power } : t))
     } else if (run.promotedFrom && ev.field) {
@@ -126,8 +132,10 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
   }
 
   const reward = ev.rewards.find((r) => placement <= r.upTo) ?? ev.rewards[ev.rewards.length - 1]
+  // 해외 리그는 리그마다 대회 명성 보상 배율이 다르다 (국내 1.0)
+  const fame = isOverseas(state) ? Math.round(reward.fame * leagueOfState(state).prestige) : reward.fame
   return {
-    record: { id: ev.id, name: ev.name, placement, fieldSize: order.length, fame: reward.fame, money: reward.money * moneyScale(state.stage), order, expected, mid, table, advanced, revealed: 'none' },
+    record: { id: ev.id, name: ev.name, placement, fieldSize: order.length, fame, money: reward.money * moneyScale(state.stage), order, expected, mid, table, advanced, revealed: 'none' },
     qualified,
     points,
   }
@@ -199,6 +207,7 @@ export function advanceCalendar(state: GameState, toPhase: number): CalendarUpda
         top: rec.order.slice(0, 3).map((t) => t.name),
         advanced: advancedNotes,
         world: !!ev.world,
+        host: ev.world ? worldHost(state.genre, state.season).region : null,
         final: finalSeries(next, ev, rec),
       })
       rec = { ...rec, revealed: 'end' }

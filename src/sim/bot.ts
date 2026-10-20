@@ -24,6 +24,8 @@ export interface BotOptions {
   policy: BotPolicy
   /** 1부 이적 제안을 받아들일지 (히든 엔딩은 데뷔 팀에 남아야 한다) */
   acceptTransfers?: boolean
+  /** 해외 이적 제안을 받아들일지 (기본은 거절해서 국내 기준 난이도 측정을 지킨다) */
+  acceptOverseas?: boolean
   /** 매 턴이 끝날 때마다 불린다 (성장 속도 같은 측정용) */
   onTurn?: (s: GameState) => void
 }
@@ -162,6 +164,7 @@ export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: Bot
       if (s.finished) break
       if (s.pendingOffers) {
         if (s.pendingOffers.kind === 'transfer') s = acceptOffer(s, opts.acceptTransfers ? 0 : null)
+        else if (s.pendingOffers.kind === 'overseas') s = acceptOffer(s, opts.acceptOverseas ? 0 : null)
         else {
           const offers = s.pendingOffers.offers
           let pick = Math.floor(botRng() * offers.length)

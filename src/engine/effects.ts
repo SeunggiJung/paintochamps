@@ -17,6 +17,8 @@ export interface Effects {
   injuredMonths?: number
   /** 방탕 게이지 증감 */
   vice?: number
+  /** 해외 적응도 증감 (해외 리그에 있을 때만 의미가 있다) */
+  adaptation?: number
 }
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
@@ -55,6 +57,7 @@ export function applyEffects(state: GameState, fx: Effects, scale = 1): GameStat
     money: Math.max(0, state.money + (fx.money ?? 0) * scale * moneyScale(state.stage)),
     fame: Math.max(0, state.fame + (fx.fame ?? 0) * scale),
     vice: Math.max(0, state.vice + (fx.vice ?? 0) * scale),
+    adaptation: fx.adaptation === undefined ? state.adaptation : clamp((state.adaptation ?? 100) + fx.adaptation * scale, 0, 100),
     slumpMonths: slump,
     injuredMonths: injured,
   }

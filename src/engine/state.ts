@@ -1,4 +1,5 @@
 import rules from '../data/rules.json'
+import { domesticLeagueId } from './leagues.ts'
 import type { SeasonPlan } from './plan.ts'
 import { drawTrainingMenu } from './training.ts'
 import type { Team } from './tournament.ts'
@@ -39,7 +40,7 @@ export type ActionId =
   | 'rehab'
   | 'counseling'
 export type EquipmentId = 'keyboard' | 'mouse' | 'monitor' | 'pc'
-export type FacilityId = 'housing' | 'coach' | 'medic' | 'pr'
+export type FacilityId = 'housing' | 'coach' | 'medic' | 'pr' | 'language'
 /** 초반 루트: rookie 아직 갈림길 전, academy 정석(아카데미 출신), open 우회(공개 테스트·스카우트) */
 export type PathId = 'rookie' | 'academy' | 'open'
 export type StageId = 'basement' | 'local_cup' | 'amateur_team' | 'pro2' | 'pro1'
@@ -65,11 +66,13 @@ export interface TeamRef {
 export interface Offer {
   team: TeamRef
   perk: 'salary' | 'playtime'
+  /** 해외 이적 제안이면 제안한 리그 (국내 복귀 제안도 리그를 가진다) */
+  league?: string
 }
 
 export interface PendingOffers {
-  /** scout: 승급에 따른 입단 제안(반드시 하나 고른다), transfer: 1부 이적 제안(거절 가능), callup: 프로 2부 → 1부 콜업 제안(거절하면 2부에 남는다) */
-  kind: 'scout' | 'transfer' | 'callup'
+  /** scout: 승급에 따른 입단 제안(반드시 하나 고른다), transfer: 1부 이적 제안(거절 가능), callup: 프로 2부 → 1부 콜업 제안(거절하면 2부에 남는다), overseas: 다른 리그(해외·국내 복귀) 이적 제안(거절 가능) */
+  kind: 'scout' | 'transfer' | 'callup' | 'overseas'
   /** 제안한 팀이 뛰는 단계. 없으면 지금 단계(콜업은 프로 1부) */
   stage?: StageId
   offers: Offer[]
@@ -132,6 +135,10 @@ export interface SeasonRecord {
   age: number
   stage: StageId
   events: EventRecord[]
+  /** 이 시즌의 소속 리그 id (옛 세이브에는 없을 수 있다 — 국내 리그로 본다) */
+  league?: string
+  /** 이 시즌 국제전에서 리그마다 낸 성적 [점수 합, 출전 팀 수] (리그 순위 집계용) */
+  intlPoints?: Record<string, [number, number]>
   /** 시즌 활약 요약: 평점·리그 내 순위·수상 이름 (옛 세이브에는 없을 수 있다) */
   highlights?: { rating: number; rank: number; players: number; awards: string[] }
   /** 이 시즌의 소속 팀 id (없으면 null). 업적 판정용, 옛 세이브에는 없을 수 있다 */
@@ -205,6 +212,13 @@ export interface GameState {
   transferMidSeason: number
   transferSettleSeason: number
 
+  /** 소속 리그 id (leagues.json). 국내 1부가 아니면 해외 리그다. 옛 세이브에는 없을 수 있다 — leagueIdOf */
+  league: string
+  /** 해외 적응도 (0~100). 국내 소속이면 100. 낮으면 대회 전력이 깎인다. 옛 세이브에는 없을 수 있다 — adaptationOf */
+  adaptation: number
+  /** 마지막으로 리그를 옮긴(해외 이적·복귀) 시즌. 시즌당 한 번만 옮길 수 있다 */
+  leagueMoveSeason: number
+
   stage: StageId
   /** 소속 팀. 아마추어 팀 단계부터 생긴다. */
   team: TeamRef | null
@@ -277,6 +291,9 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     academyInvite: false,
     academyRetries: 0,
     testPrep: null,
+    league: domesticLeagueId(genre),
+    adaptation: 100,
+    leagueMoveSeason: 0,
     stage: 'basement',
     team: null,
     debutTeamId: null,

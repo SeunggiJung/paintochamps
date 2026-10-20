@@ -7,7 +7,11 @@ import { eventsFor, playerPower, type EventDef } from './competitions.ts'
 import { farmTeamOf, parentOrgOf, pickTeams } from './field.ts'
 import { playSeries } from './match.ts'
 import { seasonHighlights, type Highlights } from './highlights.ts'
+import { domesticLeagueId, isOverseas, leagueIdOf, OVERSEAS_RULES } from './leagues.ts'
+import { intlPointsOf, leagueRanking, type LeagueStanding } from './leagueRank.ts'
+import { adaptationAfterMove, makeOverseasOffers, movesLeague, overseasBlocker } from './overseas.ts'
 import { genrePower } from './power.ts'
+import { salaryOf } from './teams.ts'
 import { createRng, gaussian, mixSeed, type Rng } from './rng.ts'
 import type { EndingId, EventRecord, GameState, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
 import { pathOf, routeStep, type TestResult } from './routes.ts'
@@ -52,10 +56,12 @@ export interface SeasonReport {
   routeNotes: string[]
   /** 시즌 활약: 리그 성적·평점·리그 내 수준·수상 기록 */
   highlights: Highlights
+  /** 국제전 성적으로 본 리그 파워 랭킹 (최근 몇 시즌, 이번 시즌 포함) */
+  leagueRanking: LeagueStanding[]
 }
 
-function makeScoutOffers(rng: Rng, kind: 'amateur' | 'pro1' | 'pro2', exclude: Set<string>, genre: GenreId, count: number = OFFERS.count): PendingOffers {
-  const offers: Offer[] = pickTeams(rng, kind, count, exclude, genre).map((team) => ({
+function makeScoutOffers(rng: Rng, kind: 'amateur' | 'pro1' | 'pro2', exclude: Set<string>, genre: GenreId, count: number = OFFERS.count, league?: string): PendingOffers {
+  const offers: Offer[] = pickTeams(rng, kind, count, exclude, genre, league).map((team) => ({
     team,
     perk: rng() < 0.5 ? 'salary' : 'playtime',
   }))
@@ -85,7 +91,7 @@ export function rollMidSeasonOffer(state: GameState): GameState {
   if (!kind) return state
   const rng = createRng(mixSeed(state.seed, state.turnCount, 0x0ff3))
   if (rng() >= 1 - (1 - OFFERS.midChance) ** turnScale(state.mode)) return state
-  const offers = makeScoutOffers(rng, kind, new Set([state.team.id]), state.genre).offers.slice(0, 2)
+  const offers = makeScoutOffers(rng, kind, new Set([state.team.id]), state.genre, OFFERS.count, leagueIdOf(state)).offers.slice(0, 2)
   return { ...state, pendingOffers: { kind: 'transfer', offers }, midOfferSeason: state.season }
 }
 
@@ -172,14 +178,19 @@ export function transferSuccessChance(fame: number): number {
  * 성공하면 다른 팀 최대 3곳의 제안(거절 가능, kind: 'transfer')이 pendingOffers로 온다.
  * 시즌 중간 요청은 성공 여부와 상관없이 그 시즌의 무작위 이적 제안(rollMidSeasonOffer)도 대신한다.
  */
-export function requestTransfer(state: GameState, when: TransferWhen): { ok: true; state: GameState; success: boolean } | { ok: false; error: string } {
-  const error = transferBlocker(state, when)
+export function requestTransfer(state: GameState, when: TransferWhen, scope: 'domestic' | 'overseas' = 'domestic'): { ok: true; state: GameState; success: boolean } | { ok: false; error: string } {
+  const error = transferBlocker(state, when) ?? (scope === 'overseas' ? (when === 'settle' ? overseasBlocker(state) : '해외 이적은 시즌 결산 때만 알아볼 수 있다') : null)
   if (error) return { ok: false, error }
   const kind = state.stage === 'amateur_team' ? 'amateur' : state.stage === 'pro2' ? 'pro2' : 'pro1'
   const rng = createRng(mixSeed(state.seed, state.season, state.turnCount, when === 'mid' ? 0x7e51 : 0x7e52))
   const marks = when === 'mid' ? { transferMidSeason: state.season, midOfferSeason: state.season } : { transferSettleSeason: state.season }
   if (rng() >= transferSuccessChance(state.fame)) return { ok: true, state: { ...state, ...marks }, success: false }
-  const offers = makeScoutOffers(rng, kind, new Set([state.team!.id]), state.genre, OFFERS.count).offers
+  if (scope === 'overseas') {
+    // 관심을 보인 리그가 없으면 요청 기회만 쓴다
+    const overseas = makeOverseasOffers(state, rng)
+    return { ok: true, state: { ...state, ...marks, pendingOffers: overseas }, success: !!overseas }
+  }
+  const offers = makeScoutOffers(rng, kind, new Set([state.team!.id]), state.genre, OFFERS.count, leagueIdOf(state)).offers
   return { ok: true, state: { ...state, ...marks, pendingOffers: { kind: 'transfer', offers } }, success: true }
 }
 
@@ -250,8 +261,9 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
     if (state.stage === 'amateur_team') team = null
     if (state.stage === 'pro2') team = pickTeams(rng, 'amateur', 1, new Set(), state.genre)[0]
     // 1부에서 강등되면 같은 구단의 2부 팀(챌린저스)으로 내려간다. 연계된 팀이 없으면 무작위 2부 팀.
-    if (state.stage === 'pro1') team = (team && farmTeamOf(team, state.genre)) ?? pickTeams(rng, 'pro2', 1, new Set(), state.genre)[0]
-    next = { ...next, stage: lower, team, path: 'open', salaryMult: 1, negotiatedSeason: 0 }
+    // 해외 리그에서 밀려나면 국내로 돌아와 같은 구단 2부가 아니라 무작위 2부 팀으로 간다
+    if (state.stage === 'pro1') team = (team && !isOverseas(state) && farmTeamOf(team, state.genre)) || pickTeams(rng, 'pro2', 1, new Set(), state.genre)[0]
+    next = { ...next, stage: lower, team, path: 'open', salaryMult: 1, negotiatedSeason: 0, league: domesticLeagueId(state.genre), adaptation: 100 }
   } else if (!worldChampion && state.stage === 'pro2') {
     // 프로 2부 → 1부는 자동 승급이 아니라 1부 팀의 콜업 제안이다. 지금 팀(1군 콜업)과 다른 구단에서 온다. 거절하면 2부에 남는다.
     const cond = STAGES[state.stage].next!
@@ -270,12 +282,18 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
     routeNotes = step.notes
   }
   next = { ...next, testPrep: null }
+  // 다른 리그(해외·국내 복귀)의 제안은 국내 이적과 따로, 별도 난수로 정한다
+  if (!pendingOffers && !worldChampion && next.stage === 'pro1' && next.team && state.stage === 'pro1') {
+    const orng = createRng(mixSeed(state.seed, state.season, 0x0e5a))
+    if (orng() < OVERSEAS_RULES.offerChance) pendingOffers = makeOverseasOffers(next, orng)
+  }
   if (!pendingOffers && !worldChampion && next.stage === 'pro1' && next.team && next.fame >= OFFERS.transferMinFame && rng() < OFFERS.transferChance) {
-    pendingOffers = { kind: 'transfer', offers: makeScoutOffers(rng, 'pro1', new Set([next.team.id]), state.genre).offers.slice(0, 2) }
+    pendingOffers = { kind: 'transfer', offers: makeScoutOffers(rng, 'pro1', new Set([next.team.id]), state.genre, OFFERS.count, leagueIdOf(next)).offers.slice(0, 2) }
   }
   next = { ...next, pendingOffers }
 
   const highlights = seasonHighlights(state, run, seasonEvents)
+  const intlPoints = intlPointsOf(state, run, seasonEvents)
   const record: SeasonRecord = {
     season: state.season,
     age: state.age,
@@ -283,6 +301,8 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
     events: results.map(({ id, name, placement, fieldSize }) => ({ id, name, placement, fieldSize })),
     highlights: { rating: highlights.rating, rank: highlights.ratingRank, players: highlights.players, awards: highlights.awards.map((a) => a.name) },
     teamId: state.team?.id ?? null,
+    league: leagueIdOf(state),
+    intlPoints,
     setback: state.injuredMonths > 0 || state.slumpMonths > 0,
     underdog: leagueUnderdog(run.runs),
   }
@@ -296,7 +316,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
 
   return {
     state: next,
-    report: { stageBefore, stageAfter: next.stage, events: results, rival, relegated, promoted, qualified: run.qualified, worldChampion, finished, pendingOffers: next.pendingOffers, tests, routeNotes, highlights },
+    report: { stageBefore, stageAfter: next.stage, events: results, rival, relegated, promoted, qualified: run.qualified, worldChampion, finished, pendingOffers: next.pendingOffers, tests, routeNotes, highlights, leagueRanking: leagueRanking(state, state.history, intlPoints) },
   }
 }
 
@@ -319,12 +339,23 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
   // 콜업이면 1부로 올라가고, 처음 올라가는 팀이 데뷔 팀이 된다. 팀을 옮기면 월급 협상은 새로 시작한다.
   const stage = pending.kind === 'callup' ? (pending.stage ?? 'pro1') : state.stage
   const moved = stage !== state.stage && !isSettled(state) ? enterStageMidSeason(state, stage) : { ...state, stage }
-  return {
+  // 다른 리그로 옮기면 적응도가 새로 시작하고(국내 복귀는 100), 시즌당 한 번만 옮길 수 있다
+  const league = offer.league ?? leagueIdOf(state)
+  const leagueMove = movesLeague(state, offer)
+  const joined: GameState = {
     ...moved,
+    league,
+    adaptation: leagueMove ? adaptationAfterMove(state.genre, league) : (state.adaptation ?? 100),
+    leagueMoveSeason: leagueMove ? state.season : (state.leagueMoveSeason ?? 0),
+  }
+  // 해외 이적은 계약금(월급 몇 턴분)을 받는다
+  const bonus = leagueMove && league !== domesticLeagueId(state.genre) ? Math.round(salaryOf({ ...joined, team: offer.team, salaryMult: 1 }) * OVERSEAS_RULES.signingBonusTurns) : 0
+  return {
+    ...joined,
     everPro: moved.everPro || stage === 'pro2' || stage === 'pro1',
     debutTeamId: stage === 'pro1' && state.debutTeamId === null ? offer.team.id : state.debutTeamId,
     team: offer.team,
-    money: state.money + (offer.perk === 'salary' ? OFFERS.salaryMoney * moneyScale(stage) : 0),
+    money: state.money + (offer.perk === 'salary' ? OFFERS.salaryMoney * moneyScale(stage) : 0) + bonus,
     fame: state.fame + (offer.perk === 'playtime' ? OFFERS.playtimeFame : 0),
     salaryMult: 1,
     negotiatedSeason: 0,

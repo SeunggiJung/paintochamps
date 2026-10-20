@@ -1,5 +1,6 @@
 import competitions from '../data/competitions.json'
 import type { NamePool } from './field.ts'
+import { leagueOfState } from './leagues.ts'
 import { mentalAdjusted } from './match.ts'
 import { genrePower } from './power.ts'
 import type { GameState, ModeId } from './state.ts'
@@ -55,9 +56,13 @@ export interface EventDef {
 const CALENDAR_OF: Record<GenreId, 'aos' | 'fps'> = { aos: 'aos', rts: 'aos', fps: 'fps', fighting: 'fps' }
 
 /** 이번 시즌에 치르는 대회 목록 (시간 순서) */
-export function eventsFor(state: Pick<GameState, 'stage' | 'genre' | 'mode'> & { season?: number }): EventDef[] {
+export function eventsFor(state: Pick<GameState, 'stage' | 'genre' | 'mode'> & { season?: number; league?: string }): EventDef[] {
   const all = (state.stage === 'pro1' ? competitions.stages.pro1[CALENDAR_OF[state.genre]] : competitions.stages[state.stage]) as EventDef[]
-  return all.filter((e) => (!e.modes || e.modes.includes(state.mode)) && (!e.everyNSeasons || (state.season !== undefined && state.season % e.everyNSeasons === 0)))
+  // 해외 리그의 일정은 국내 일정의 틀을 그대로 쓰고 이름만 소속 리그로 바꾼다
+  const league = leagueOfState(state).name
+  return all
+    .filter((e) => (!e.modes || e.modes.includes(state.mode)) && (!e.everyNSeasons || (state.season !== undefined && state.season % e.everyNSeasons === 0)))
+    .map((e) => (e.name.includes('{league}') ? { ...e, name: e.name.replace('{league}', league) } : e))
 }
 
 /** 공식 일정이 아닌 대회인지 (대회 id로 조회) */
