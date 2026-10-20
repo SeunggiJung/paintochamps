@@ -66,28 +66,4 @@
 
 ## 해외 리그 팀 로고 (2026-10-20 추가분)
 
-아래 21개는 원본 그대로 `.webp`/`.svg`로 들어 있다(앱은 png·svg·webp·jpg를 모두 읽는다). 크기와 비율이 제각각이라 위 권장값(256×256 투명 PNG)으로 맞추려면 https://anypictoanypic.com/ko/ 에서 '직접 지정 256×256, 여백 채우기(투명), PNG'로 일괄 변환해 같은 이름으로 바꿔 넣는다. 이미지 변환은 이 사이트로 한다(CLAUDE.md §9).
-
-| 슬러그 | 현재 파일 | 원본 크기 |
-|---|---|---|
-| `ag` | webp | 325×299 |
-| `dig` | svg | 400×400 |
-| `drg` | webp | 285×323 |
-| `dsg` | webp | 200×193 |
-| `ef` | svg | 450×239 |
-| `ig` | svg | 300×300 |
-| `lgd` | webp | 400×400 |
-| `nip` | webp | 253×299 |
-| `nova` | svg | 1000×451 |
-| `omg` | webp | 200×200 |
-| `pcific` | svg | 865×588 |
-| `shifters` | svg | 1000×978 |
-| `sk` | svg | 1057×1060 |
-| `titan` | svg | 800×800 |
-| `trace` | svg | 815×768 |
-| `tt` | webp | 245×245 |
-| `tyloo` | webp | 200×179 |
-| `up` | svg | 132×150 |
-| `we` | webp | 200×132 |
-| `wolves` | svg | 400×347 |
-| `xlg` | svg | 1000×728 |
+`ag` `dig` `drg` `dsg` `ef` `ig` `lgd` `nip` `nova` `omg` `pcific` `shifters` `sk` `titan` `trace` `tt` `tyloo` `up` `we` `wolves` `xlg` 21개는 https://anypictoanypic.com/ko/ 로 256×256 투명 PNG(여백 채우기)로 변환해 넣었다. 이미지 변환은 이 사이트로 한다(CLAUDE.md §9).
