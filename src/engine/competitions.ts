@@ -34,6 +34,8 @@ export interface EventDef {
   rank?: boolean
   /** 월드 챔피언십 */
   world?: boolean
+  /** 결승 중계 연출이 붙는 대회. 값은 중계 멘트 묶음(broadcast.json `finales`)의 이름 */
+  finale?: string
   rewards: Reward[]
   /** 순위가 min~top이면 진출권을 얻는다 (min이 없으면 1위부터) */
   qualifies?: { to: string; top: number; min?: number }[]

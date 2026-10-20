@@ -75,7 +75,7 @@
           "rewards": [{ "upTo": 2, "fame": 6, "money": 50 }, { "upTo": 99, "fame": 1, "money": 0 }]
         },
         {
-          "id": "msi", "span": [0.5, 0.6], "name": "MSI", "format": "elimination", "needs": "msi",
+          "id": "msi", "finale": "msi", "span": [0.5, 0.6], "name": "MSI", "format": "elimination", "needs": "msi",
           "field": { "names": "intl", "tier": "intl", "size": 12 }, "k": 2, "bestOf": 5, "big": true,
           "qualifies": [{ "to": "world", "top": 1 }],
           "points": [8, 5, 3, 2, 2, 1],
@@ -100,14 +100,14 @@
           "rewards": [{ "upTo": 2, "fame": 4, "money": 30 }, { "upTo": 99, "fame": 1, "money": 10 }]
         },
         {
-          "id": "playoffs", "span": [0.86, 0.93], "name": "LCK 시즌 플레이오프", "format": "elimination", "needs": "playoffs",
+          "id": "playoffs", "finale": "playoffs", "span": [0.86, 0.93], "name": "LCK 시즌 플레이오프", "format": "elimination", "needs": "playoffs",
           "field": { "names": "orgs", "tier": "pro1", "size": 6 }, "k": 2, "bestOf": 5, "big": true,
           "qualifies": [{ "to": "world", "top": 2 }],
           "points": [6, 4, 3, 2, 1, 1],
           "rewards": [{ "upTo": 1, "fame": 15, "money": 150 }, { "upTo": 3, "fame": 8, "money": 80 }, { "upTo": 99, "fame": 3, "money": 30 }]
         },
         {
-          "id": "world", "span": [0.93, 1], "name": "월드 챔피언십", "format": "elimination", "needs": "world", "world": true,
+          "id": "world", "span": [0.93, 1], "finale": "worlds", "name": "월드 챔피언십", "format": "elimination", "needs": "world", "world": true,
           "field": { "names": "intl", "tier": "intl", "size": 16 }, "k": 2, "bestOf": 5, "big": true,
           "rewards": [{ "upTo": 1, "fame": 50, "money": 500 }, { "upTo": 2, "fame": 30, "money": 250 }, { "upTo": 4, "fame": 20, "money": 120 }, { "upTo": 99, "fame": 8, "money": 50 }]
         },
@@ -126,7 +126,7 @@
           "rewards": [{ "upTo": 3, "fame": 5, "money": 50 }, { "upTo": 99, "fame": 1, "money": 20 }]
         },
         {
-          "id": "masters1", "span": [0.12, 0.22], "name": "VCT 마스터즈 산티아고", "format": "elimination", "needs": "masters1",
+          "id": "masters1", "finale": "masters", "span": [0.12, 0.22], "name": "VCT 마스터즈 산티아고", "format": "elimination", "needs": "masters1",
           "field": { "names": "intl", "tier": "intl", "size": 12 }, "k": 2, "bestOf": 3, "big": true,
           "points": [8, 5, 3, 2, 2, 1],
           "rewards": [{ "upTo": 1, "fame": 18, "money": 180 }, { "upTo": 4, "fame": 9, "money": 70 }, { "upTo": 99, "fame": 4, "money": 30 }]
@@ -137,14 +137,14 @@
           "rewards": [{ "upTo": 4, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
         },
         {
-          "id": "stage1_playoffs", "span": [0.45, 0.52], "name": "VCT 퍼시픽 스테이지 1 플레이오프", "format": "elimination",
+          "id": "stage1_playoffs", "finale": "vct_playoffs", "span": [0.45, 0.52], "name": "VCT 퍼시픽 스테이지 1 플레이오프", "format": "elimination",
           "from": { "event": "stage1", "top": 8 }, "k": 2, "bestOf": 3, "big": true,
           "qualifies": [{ "to": "masters2", "top": 3 }],
           "points": [6, 4, 3, 2, 1, 1],
           "rewards": [{ "upTo": 1, "fame": 12, "money": 120 }, { "upTo": 3, "fame": 6, "money": 60 }, { "upTo": 99, "fame": 2, "money": 30 }]
         },
         {
-          "id": "masters2", "span": [0.52, 0.62], "name": "VCT 마스터즈 런던", "format": "elimination", "needs": "masters2",
+          "id": "masters2", "finale": "masters", "span": [0.52, 0.62], "name": "VCT 마스터즈 런던", "format": "elimination", "needs": "masters2",
           "field": { "names": "intl", "tier": "intl", "size": 12 }, "k": 2, "bestOf": 3, "big": true,
           "points": [8, 5, 3, 2, 2, 1],
           "rewards": [{ "upTo": 1, "fame": 18, "money": 180 }, { "upTo": 4, "fame": 9, "money": 70 }, { "upTo": 99, "fame": 4, "money": 30 }]
@@ -155,7 +155,7 @@
           "rewards": [{ "upTo": 4, "fame": 3, "money": 40 }, { "upTo": 99, "fame": 1, "money": 20 }]
         },
         {
-          "id": "stage2_playoffs", "span": [0.85, 0.92], "name": "VCT 퍼시픽 스테이지 2 플레이오프", "format": "elimination",
+          "id": "stage2_playoffs", "finale": "vct_playoffs", "span": [0.85, 0.92], "name": "VCT 퍼시픽 스테이지 2 플레이오프", "format": "elimination",
           "from": { "event": "stage2", "top": 8 }, "k": 2, "bestOf": 3, "big": true,
           "qualifies": [{ "to": "world", "top": 2 }],
           "points": [6, 4, 3, 2, 1, 1],
@@ -163,7 +163,7 @@
           "rewards": [{ "upTo": 1, "fame": 15, "money": 150 }, { "upTo": 3, "fame": 8, "money": 80 }, { "upTo": 99, "fame": 3, "money": 30 }]
         },
         {
-          "id": "world", "span": [0.92, 1], "name": "VCT 챔피언스 상하이", "format": "elimination", "needs": "world", "world": true,
+          "id": "world", "span": [0.92, 1], "finale": "champions", "name": "VCT 챔피언스 상하이", "format": "elimination", "needs": "world", "world": true,
           "field": { "names": "intl", "tier": "intl", "size": 16 }, "k": 2, "bestOf": 5, "big": true,
           "rewards": [{ "upTo": 1, "fame": 50, "money": 500 }, { "upTo": 2, "fame": 30, "money": 250 }, { "upTo": 4, "fame": 20, "money": 120 }, { "upTo": 99, "fame": 8, "money": 50 }]
         },

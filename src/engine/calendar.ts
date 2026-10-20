@@ -3,6 +3,7 @@ import routes from '../data/routes.json'
 import { eventsFor, isInvited, midPhase, playerPower, type EventDef } from './competitions.ts'
 import { moneyScale } from './economy.ts'
 import { academyName, isPro2Team, makeOpponents } from './field.ts'
+import { finalSeries, type FinalSeries } from './broadcast.ts'
 import { createRng, mixSeed } from './rng.ts'
 import type { GameState, RunRecord, SeasonRun, StandingRow } from './state.ts'
 import { teamBoost } from './teams.ts'
@@ -32,6 +33,8 @@ export type CalendarBeat =
       advanced: string[]
       /** 월드 챔피언십 */
       world: boolean
+      /** 결승 중계 연출이 붙는 대회에서 결승에 올랐을 때의 결승 시리즈 */
+      final: FinalSeries | null
     }
 
 /** 이번 시간 구간에서 진행 중이던 대회 (연출용) */
@@ -196,6 +199,7 @@ export function advanceCalendar(state: GameState, toPhase: number): CalendarUpda
         top: rec.order.slice(0, 3).map((t) => t.name),
         advanced: advancedNotes,
         world: !!ev.world,
+        final: finalSeries(next, ev, rec),
       })
       rec = { ...rec, revealed: 'end' }
     }
