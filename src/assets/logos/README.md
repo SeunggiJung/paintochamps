@@ -63,3 +63,31 @@
 | `vit` | Team Vitality |
 | `wbg` | Weibo Gaming |
 | `zeta` | ZETA DIVISION |
+
+## 해외 리그 팀 중 로고가 아직 없는 곳 (2026-10-20)
+
+`src/data/leagues.json`의 해외 팀 중 아래 슬러그는 파일이 없어 도트 아이콘이 대신 나온다. 파일을 넣으면 자동으로 로고가 표시된다.
+
+| 슬러그(파일 이름) | 구단 | 리그 |
+|---|---|---|
+| `ig` | Invictus Gaming | LPL |
+| `nip` | Ninjas in Pyjamas | LPL |
+| `we` | Team WE | LPL |
+| `tt` | ThunderTalk Gaming | LPL |
+| `lgd` | LGD Gaming | LPL |
+| `omg` | Oh My God | LPL |
+| `up` | Ultra Prime | LPL |
+| `shifters` | Shifters | LEC |
+| `sk` | SK Gaming | LEC |
+| `dsg` | Disguised | LCS |
+| `dig` | Dignitas | LCS |
+| `ef` | Eternal Fire | VCT EMEA |
+| `pcific` | PCIFIC Esports | VCT EMEA |
+| `ag` | All Gamers | VCT 차이나 |
+| `tyloo` | TYLOO | VCT 차이나 |
+| `titan` | Titan Esports Club | VCT 차이나 |
+| `xlg` | XLG Esports | VCT 차이나 |
+| `drg` | Dragon Ranger Gaming | VCT 차이나 |
+| `trace` | Trace Esports | VCT 차이나 |
+| `wolves` | Wolves Esports | VCT 차이나 |
+| `nova` | Nova Esports | VCT 차이나 |

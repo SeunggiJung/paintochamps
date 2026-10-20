@@ -10,7 +10,7 @@
 |---|---|
 | 현재 단계 | 1단계(엔진·시뮬레이션) 완료, **2단계(웹 화면) 진행 중** — ①뽑기·캐릭터 생성, ②육성 메인·이벤트, ③시즌 결산, ④엔딩·도감 구현 완료(직접 플레이 확인 대기) |
 | 지금 화면 | 타이틀 → 캐릭터 생성 → 뽑기(등급별 폭죽) → 육성 메인(시즌 시작 '계획 시트'(방침·훈련·레슨·장비)를 정하면 '다음 턴 진행' 버튼으로 시즌 중 행동이 자동으로 흘러간다 · 이벤트 팝업 · 코치의 훈련 교체 제안, 첫 접속 말풍선 가이드). 시즌 마지막 턴 뒤 시즌 결산 화면(`seasonScreen.ts`: 총 성적·능력치 변동 → 대회·명성·제안)으로 이어지고 다음 시즌이 시작된다. 커리어가 끝나면 엔딩 화면(도트 일러스트·문구·커리어 요약·시즌별 기록·업적·다시 뽑기 횟수)과 엔딩·업적 도감으로 이어지고, 결산 화면의 '여기서 은퇴하기'로 자진 은퇴도 가능하다 |
-| 테스트 | 363개 통과 (`npm test`) |
+| 테스트 | 386개 통과 (`npm test`) |
 | 저장소 | `origin` = github.com/SeunggiJung/paintochamps.git, 브랜치 `master` |
 | 사용자 | 한국어 사용. 1인 개발, 기획·개발·밸런싱 담당 |
 
@@ -36,12 +36,12 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 1. **규칙·수치는 `src/data/*.json`에만 둔다.** 코드에 매직 넘버를 박지 않는다. (밸런스 수정과 이벤트 추가가 코드 수정 없이 되어야 한다.)
 2. **`src/engine`은 UI를 임포트하지 않는다.** 순수 함수이고, 상태는 불변이다(입력 `GameState`를 바꾸지 않고 새 객체를 돌려준다).
 3. **난수는 시드로 재현 가능해야 한다.** `createRng`/`mixSeed`를 쓰고 `Math.random()`은 쓰지 않는다. 같은 `seed`·같은 선택이면 항상 같은 결과다. 행동 결과의 난수는 `actionRng(state)`로 상태에서 정해지고, AI가 점수를 매길 때만 다른 rng를 넘겨 결과를 미리 훔쳐보지 못하게 한다.
-4. **구단·리그·대회는 실존 2026년 이름을 쓴다** (2026-10-20 사용자 결정: 애드센스를 포기하고 실제 이름을 쓰기로 했다. 이전의 "가상 이름만" 규칙을 대체). 풀은 장르가 따르는 리그별로 나뉜다(`teams.json` `leagues`): AOS·RTS는 **LCK**(1부 10팀: T1·Gen.G·Hanwha Life Esports·KT Rolster·Dplus KIA·Hanjin Brion·Nongshim RedForce·BNK FearX·KIWOOM DRX·DN SOOPers, 2부 = LCK Challengers League 10팀, 국제전 = LPL·LEC·LCS·LCP·CBLOL 팀 24곳), FPS·격투는 **VCT 퍼시픽**(1부 12팀, 2부 = 챌린저스 코리아 6팀, 국제전 = 아메리카·EMEA·중국 팀 24곳). 팀 id는 `<aos|fps>_<pro1|pro2|intl>_<slug>`이고 2군은 `parent`로 1군에 연결된다(`field.ts` `parentOrgOf`·`farmTeamOf`). 아마추어·PC방 팀은 계속 가상이다. **실존 선수 이름은 쓰지 않는다**. 장르는 일반 명칭만 쓴다. 로고는 저작권 때문에 저장소에 넣지 않았고, `src/assets/logos/<슬러그>.png`를 넣으면 도트 아이콘 대신 표시된다(`ui/teamLogo.ts`, 슬러그 목록은 그 폴더의 README). 옛 가상 구단 세이브는 불러올 때 같은 순서의 실존 팀으로 옮긴다(`storage.ts` `upgradeTeams`).
+4. **구단·리그·대회는 실존 2026년 이름을 쓴다** (2026-10-20 사용자 결정: 애드센스를 포기하고 실제 이름을 쓰기로 했다. 이전의 "가상 이름만" 규칙을 대체). 풀은 장르가 따르는 리그별로 나뉜다(`teams.json` `leagues`): AOS·RTS는 **LCK**(1부 10팀: T1·Gen.G·Hanwha Life Esports·KT Rolster·Dplus KIA·Hanjin Brion·Nongshim RedForce·BNK FearX·KIWOOM DRX·DN SOOPers, 2부 = LCK Challengers League 10팀, 해외 = LPL 14·LEC 10·LCS 8팀(이적 가능)·LCP·CBLOL(국제전 전용), `leagues.json`), FPS·격투는 **VCT 퍼시픽**(1부 12팀, 2부 = 챌린저스 코리아 6팀, 해외 = VCT 아메리카스·EMEA·차이나 각 12팀, `leagues.json`). 팀 id는 `<aos|fps>_<pro1|pro2|intl>_<slug>`(intl = 해외 리그 팀)이고 2군은 `parent`로 1군에 연결된다(`field.ts` `parentOrgOf`·`farmTeamOf`). 아마추어·PC방 팀은 계속 가상이다. **실존 선수 이름은 쓰지 않는다**. 장르는 일반 명칭만 쓴다. 로고는 저작권 때문에 저장소에 넣지 않았고, `src/assets/logos/<슬러그>.png`를 넣으면 도트 아이콘 대신 표시된다(`ui/teamLogo.ts`, 슬러그 목록은 그 폴더의 README). 옛 가상 구단 세이브는 불러올 때 같은 순서의 실존 팀으로 옮긴다(`storage.ts` `upgradeTeams`).
 5. 세이브는 `localStorage`, `saveVersion` 필드로 마이그레이션한다. `GameState`에 필드를 추가하면 `createInitialState`도 함께 고친다.
 
 ## 4. 코드 지도
 
-`src/data/` — 규칙 데이터: `genres`(장르별 가중치) `gacha`(뽑기·등급 경계·특성) `actions`(행동 효과·비용·부작용·모드 제한) `equipment` `modes`(턴 길이) `rules`(수치 상수) `stages`(승급 조건·제안) `competitions`(단계별 대회 구조·상대 실력치) `teams`(가상 팀 이름) `events`(이벤트 70종: 일상·초반 루트·프로 생활·라이벌·동료) `seasonLines`(시즌 결산 한 줄 요약 문장) `facilities`(시설 투자 4종) `minigame`(턴 끝 미니게임 기준·보너스) `endings`(엔딩 8종 조건·우선순위)
+`src/data/` — 규칙 데이터: `genres`(장르별 가중치) `gacha`(뽑기·등급 경계·특성) `actions`(행동 효과·비용·부작용·모드 제한) `equipment` `modes`(턴 길이) `rules`(수치 상수) `stages`(승급 조건·제안) `competitions`(단계별 대회 구조·상대 실력치) `teams`(가상 팀 이름) `events`(이벤트 79종: 일상·초반 루트·프로 생활·라이벌·동료·해외 생활) `leagues`(해외 리그 정의·해외 팀 목록·적응 규칙) `seasonLines`(시즌 결산 한 줄 요약 문장) `facilities`(시설 투자 4종) `minigame`(턴 끝 미니게임 기준·보너스) `endings`(엔딩 8종 조건·우선순위)
 
 `src/engine/` — 게임 엔진
 - `state.ts` GameState와 타입, `createInitialState`
@@ -51,6 +51,7 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 - `turn.ts` **한 턴 진행**(`applyTurn`), 행동 가능 여부(`checkSlot`), `startNextSeason`, `isCareerOver` / `plan.ts` **시즌 계획**(방침 4종, `planChoice`·`autoTurn`: 시즌 중 매 턴의 행동을 컨디션에 맞춰 자동으로 정해 진행)
 - `match.ts` 승률·시리즈 확률·멘탈 보정 / `tournament.ts` 리그전, k패 탈락 토너먼트 / `field.ts` 상대 팀 생성
 - `competitions.ts` 대회 정의(`EventDef`, 기간 `span`)·`eventsFor` / `calendar.ts` **시즌 일정**(`advanceCalendar`: 기간이 시작되면 결과를 정하고 절반·끝에 공개) / `teams.ts` 팀 정보·월급 / `routes.ts` 초반 루트·시험
+- `leagues.ts` 리그 모델·적응도·월드 개최지 / `overseas.ts` 해외 이적 제안 / `leagueRank.ts` 리그 파워 랭킹
 - `broadcast.ts` 결승 시리즈(세트별 승패)·`broadcastScript.ts` 중계 대본(멘트는 `data/broadcast.json`, 대회의 `finale` 값으로 묶음 선택), `seasonLine.ts` 시즌 한 줄 요약, `season.ts` **시즌 결산**(`settleSeason`), 스카우트·이적(`acceptOffer`), `retire`
 - `events.ts` 이벤트 발생·선택지·능력치 판정 / `endings.ts` 엔딩 판정 / `training.ts` 시즌 훈련 후보·선택, 코치의 교체 제안(`coachSwapOffer`) / `achievements.ts` 업적(골든로드 등) 판정 / `negotiation.ts` **연봉 협상** / `highlights.ts` **시즌 활약**(평점·수상) / `facilities.ts` **시설 투자**(숙소·개인 코치·재활 트레이너·홍보 에이전시, 돈 소비처) / `minigame.ts` 턴 끝 미니게임 등급·보너스(`applyWarmup`)
 
@@ -60,7 +61,7 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 
 `src/sim/` — 난이도 측정: `bot.ts`(봇 3종) `report.ts`(집계) `balance.test.ts`(회귀 테스트)
 
-`docs/` — `polish-plan.md` 플레이 감성 마무리 계획과 AI 이미지 도구 요청서, `design.md` 기획서 전문, `ending-images.md` 엔딩·도감 이미지 장면 목록, `feedback.md` 테스트 플레이 피드백·우선순위, `early-career-plan.md`·`career-pacing-plan.md`·`season-calendar-plan.md` 개편안, `overseas-league-plan.md` 해외 1부 리그·해외 이적 기획 초안(2026-10-20, 결정 대기), `images/` 게임 루프·로드맵 SVG
+`docs/` — `polish-plan.md` 플레이 감성 마무리 계획과 AI 이미지 도구 요청서, `design.md` 기획서 전문, `ending-images.md` 엔딩·도감 이미지 장면 목록, `feedback.md` 테스트 플레이 피드백·우선순위, `early-career-plan.md`·`career-pacing-plan.md`·`season-calendar-plan.md` 개편안, `overseas-league-plan.md` 해외 1부 리그·해외 이적 기획(2026-10-20, 구현 현황은 §12), `images/` 게임 루프·로드맵 SVG
 
 ## 5. 게임 진행 API (2단계 UI가 부를 순서)
 
@@ -123,6 +124,7 @@ saveGame(storage, s)                           // 매 턴 자동 저장
 - **시설 투자 = 후반 돈 소비처** (`facilities.ts`, `data/facilities.json`, 2026-10-16 테스트 피드백 "업글 다 하면 돈 쓸 데가 없다"): 숙소(턴당 컨디션 회복 +1/레벨)·개인 코치(훈련 효율 +1.5%/레벨)·재활 트레이너(부상·슬럼프 회복 +25%/레벨)·홍보 에이전시(턴당 명성 +0.3/레벨), 계획 시트에서 구매. **가격 = 기본가 × 소속 단계 돈 규모 × 2.5^단계**라 프로가 되어도 계속 비싸다. 봇은 시설을 사지 않는다(난이도 측정에는 영향 없음). 더 필요한 소비처(가족·집·구단 투자)는 계약 시스템과 묶어 설계.
 - **턴 끝 미니게임** (`miniGame.ts`, `engine/minigame.ts`, `data/minigame.json`, 사용자 요청): 시즌이 이어질 때 턴이 끝나면 **약 30% 확률로**(`minigame.json` `chance`, `rollMiniGame`, 시드 고정) 쉬는 시간 미니게임이 뜬다. 종류는 5종 중 무작위(사격·짝 맞추기·반응속도·숫자 순서 터치·패턴 기억). 처음엔 턴 번호 홀짝으로 골랐는데 튜토리얼은 마지막 턴에 안 떠서 퍼즐만 나오는 버그가 있었다. 잘하면 **다음 턴 훈련 효율 +4%(좋음)/+8%(최고)**, 건너뛰거나 못 해도 손해 없음(`GameState.warmup`, 턴이 지나면 0). 엔진은 점수 → 등급만 알고 게임 자체는 UI. 봇은 하지 않는다.
 - **구매 확인·업그레이드 연출** (`confirm.ts`, `upgradeSheet.ts`, `upgradeArt.ts`, 2026-10-16 피드백 16·17): 시험 준비(`testPrep`)를 안 고르고 시즌 결산으로 넘어가면 확인 팝업(`confirmSheet`). 장비·시설은 구매 전 '현재 그림 ➜ 다음 단계 그림' 팝업(`openUpgrade`)을 거치고 구매하면 그림이 바뀌는 연출이 나온다. 그림은 SVG 코드(에셋 파일 없음): 색 등급 5단계(회색·동·파랑·금·보라, `level/max`로 결정)와 부품 증가, 0단계는 흐린 자리표시. 계획 시트 목록에도 현재 단계 그림이 붙는다. 진행 연출·계약 연출에는 `스킵하기 ⏩` 버튼이 있다. 장비·시설 단계 수(`maxLevel`)를 바꿔도 그림은 자동으로 맞춰지지만 새 항목을 추가하면 `upgradeArt.ts`의 `DRAW`에 그림도 추가해야 한다.
+- **해외 리그·해외 이적** (2026-10-20, 기획 `docs/overseas-league-plan.md`, `leagues.json`·`leagues.ts`·`overseas.ts`·`leagueRank.ts`): `GameState.league`·`adaptation`·`leagueMoveSeason`(옛 세이브에는 없어 `leagueIdOf`·`adaptationOf`가 국내·100으로 본다). 팀 id `<aos|fps>_intl_<slug>`는 해외 리그 팀이고 `leagueOfTeam`으로 리그를 찾는다. 국제전 풀은 소속 리그를 뺀 모든 리그의 1부 팀이다. 프로 1부(명성 50·28세 이하)에게 시즌 결산 때 해외 제안(`kind: 'overseas'`)이 오고, 이적하면 적응도가 낮게 시작해 대회 전력·컨디션 회복이 깎이며 시즌마다 오른다(시설 '통역·언어 코치'는 해외 전용). 일정은 국내 틀에 이름만 `{league}`로 바꿔 쓴다. 월드 개최지는 리그 순환(내 리그 지역이면 전력 +10, 업적 도서관장). 국제전 성적으로 만든 리그 파워 랭킹은 결산 카드·제안 카드에 나온다. 봇은 `acceptOverseas`를 켜야 해외를 간다(기본 거절).
 - **소리·결과 카드·결승 중계** (2026-10-20): 효과음은 파일 없이 Web Audio로 합성(`sound.ts`)하고 **큰 순간에만** 난다(뽑기 등급·계약 도장·대회 결과·부상·업그레이드. 버튼·턴 진행 소리는 사용자 요청으로 뺐다). 오른쪽 위 🔊로 켜고 끈다. 엔딩 화면 '결과 카드 만들기'(`resultCard.ts`)는 엔딩 그림+기록을 캔버스 PNG로 저장·공유한다. **결승 중계**: `competitions.json`의 `finale` 값이 있는 대회(AOS 플레이오프·MSI·월드, FPS 스테이지 플레이오프·마스터즈·챔피언스)에서 플레이어가 1~2위일 때 결과 카드 앞에 중계가 나온다. 세트별 승패는 대회 결과를 정한 난수와 별도 시드로 만들어(`finalSeries`) 결과는 그대로이고, 멘트는 `data/broadcast.json`(장르별 세트 시작·교전·세트 결과·매치 포인트, 대회별 소개·우승·준우승)에서 `broadcastScript`가 고른다. 실존 해설가·커뮤니티 멘트는 쓰지 않고 새로 썼다(문장을 JSON에 추가하면 된다). 장면은 `broadcastScene.ts` 도트 SVG(임시, 이미지로 교체 가능).
 - **돈이 남는 것은 저축으로 허용.** 소비처는 레슨·스트레스 해소·기부·재활·상담·장비. 큰 목돈 소비(예: 부모님 집)는 3단계에서 검토.
 - 부상·슬럼프 **대처가 실력에 영향**: 멘탈이 슬럼프 기간을 바꾸고(0.6~1.4배), 능력치 판정(성공 확률 = 능력치÷1000), 선택지 조건(팀·돈), 부상을 참으면 능력치 영구 손실.
