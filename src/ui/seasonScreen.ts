@@ -7,6 +7,9 @@ import type { GameState } from '../engine/state.ts'
 import { startNextSeason } from '../engine/turn.ts'
 import { recordFinish, saveGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
+import { confirmSheet } from './confirm.ts'
+import { domesticLeagueId, isOverseas, leagueDef, leagueIdOf, OVERSEAS_RULES } from '../engine/leagues.ts'
+import { interestedLeagues, overseasBlocker } from '../engine/overseas.ts'
 import { h } from './dom.ts'
 import { formatMoney, formatMoneyDelta } from './format.ts'
 import { changeLine, statChangeBars } from './turnResult.ts'
@@ -97,6 +100,17 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
 
   const choose = async (index: number | null) => {
     const offer = index === null ? null : state.pendingOffers?.offers[index]
+    // 해외로 가는 이적은 적응이라는 대가를 알고 결정하도록 한 번 더 묻는다
+    if (offer?.league && offer.league !== domesticLeagueId(state.genre) && offer.league !== leagueIdOf(state)) {
+      const lg = leagueDef(offer.league)
+      const ok = await confirmSheet({
+        title: `${lg.name}(으)로 떠날까요?`,
+        message: `${offer.team.name}으로 이적하면 적응도 ${lg.adaptStart}에서 시작해요. 적응이 덜 된 첫 시즌은 대회 전력이 최대 ${Math.round((OVERSEAS_RULES.maxPenalty * (100 - lg.adaptStart)) / 100)} 깎이고, 시즌마다 적응도가 ${OVERSEAS_RULES.adaptGain}씩 올라요. 이번 시즌에는 다시 옮길 수 없어요.`,
+        ok: '이적한다',
+        cancel: '다시 생각한다',
+      })
+      if (!ok) return
+    }
     const pending = state
     state = acceptOffer(state, index)
     if (offer && pending.pendingOffers) {
@@ -105,7 +119,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
       // 새 계약을 맺었으니 월급을 협상할 수 있다
       state = await openNegotiation(state)
     }
-    joined = offer ? `${offer.team.name}에 합류했다.` : pending.pendingOffers?.kind === 'callup' ? '콜업을 거절하고 프로 2부에 남기로 했다.' : '제안을 거절했다.'
+    joined = offer ? `${offer.team.name}에 합류했다.` : pending.pendingOffers?.kind === 'overseas' ? '다른 리그의 제안을 거절했다.' : pending.pendingOffers?.kind === 'callup' ? '콜업을 거절하고 프로 2부에 남기로 했다.' : '제안을 거절했다.'
     render()
   }
 
@@ -124,6 +138,21 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
       h('h3', {}, '이적 요청'),
       h('p', { class: 'muted small' }, '다음 시즌을 앞두고 다른 팀의 제안을 받아 볼 수 있다. 마음에 안 들면 남아도 된다. (시즌당 한 번)'),
       h('button', { class: 'btn small', onclick: () => { const r = requestTransfer(state, 'settle'); if (r.ok) { state = r.state; joined = r.success ? '' : '이적을 요청했지만 관심을 보이는 팀이 없었다.'; render() } } }, '이적 요청하기'),
+      !overseasBlocker(state) && interestedLeagues(state).length > 0 && h('button', { class: 'btn small', onclick: () => { const r = requestTransfer(state, 'settle', 'overseas'); if (r.ok) { state = r.state; joined = r.success ? '' : '다른 리그에 문의했지만 관심을 보이는 팀이 없었다.'; render() } } }, isOverseas(state) ? '다른 리그로 알아보기' : '해외로 알아보기'),
+    )
+  }
+
+  /** 국제전 성적으로 본 리그 파워 랭킹 */
+  const leagueCard = () => {
+    const rows = report.leagueRanking.filter((r) => r.score !== null)
+    if (rows.length < 2) return null
+    const mine = leagueIdOf(before)
+    return h(
+      'section',
+      { class: 'card' },
+      h('h3', {}, '리그 파워 랭킹'),
+      h('p', { class: 'muted small' }, `최근 ${OVERSEAS_RULES.rankSeasons}시즌 국제전에서 각 리그 팀이 낸 평균 성적이에요.`),
+      ...rows.map((r) => h('div', { class: `event-row${r.id === mine ? ' mine' : ''}` }, h('div', { class: 'row' }, h('span', {}, `${r.rank}위 ${r.name}`), h('span', { class: 'muted small' }, `${r.region} · ${Math.round((r.score ?? 0) * 100)}점`)))),
     )
   }
 
@@ -160,13 +189,13 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     return h(
       'section',
       { class: 'card' },
-      h('h3', {}, pending.kind === 'scout' ? '입단 제안 (하나를 골라야 한다)' : pending.kind === 'callup' ? '1부 콜업 제안 (거절하면 2부에 남는다)' : '이적 제안 (거절할 수 있다)'),
+      h('h3', {}, pending.kind === 'scout' ? '입단 제안 (하나를 골라야 한다)' : pending.kind === 'callup' ? '1부 콜업 제안 (거절하면 2부에 남는다)' : pending.kind === 'overseas' ? (isOverseas(state) ? '다른 리그의 제안 (거절할 수 있다)' : '해외 이적 제안 (거절할 수 있다)') : '이적 제안 (거절할 수 있다)'),
       h(
         'div',
         { class: 'choices vertical' },
         ...pending.offers.map((o, i) => offerButton(state, o, () => choose(i))),
       ),
-      pending.kind !== 'scout' && h('button', { class: 'btn ghost small', onclick: () => choose(null) }, pending.kind === 'callup' ? '콜업을 거절하고 2부에 남는다' : '이적하지 않는다'),
+      pending.kind !== 'scout' && h('button', { class: 'btn ghost small', onclick: () => choose(null) }, pending.kind === 'callup' ? '콜업을 거절하고 2부에 남는다' : pending.kind === 'overseas' ? '지금 리그에 남는다' : '이적하지 않는다'),
     )
   }
 
@@ -236,6 +265,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
           ),
       ),
       highlightsCard(),
+      leagueCard(),
       h(
         'section',
         { class: 'card' },

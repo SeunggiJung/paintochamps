@@ -1,5 +1,7 @@
 import stageData from '../data/stages.json'
 import { moneyScale } from '../engine/economy.ts'
+import { leagueDef, OVERSEAS_RULES } from '../engine/leagues.ts'
+import { leagueRankOf } from '../engine/leagueRank.ts'
 import type { GameState, Offer, StageId } from '../engine/state.ts'
 import { offerTerms, seasonResultsOf, type Strength } from '../engine/teams.ts'
 import { h } from './dom.ts'
@@ -38,5 +40,14 @@ export function offerButton(state: GameState, offer: Offer, onPick: () => void, 
       h('span', { class: 'offer-line muted' }, `대회 전력 ${signed(boost)} · ${perkLabel(offer, stage)}`),
     )
   } else lines.push(h('span', { class: 'offer-line muted' }, perkLabel(offer, stage)))
+  // 다른 리그의 제안이면 리그 정보(지역·리그 순위·적응 난이도·계약금)를 앞세워 보여 준다
+  if (offer.league) {
+    const lg = leagueDef(offer.league)
+    const rank = leagueRankOf(state, lg.id)
+    lines.unshift(h('span', { class: 'offer-line' }, `${lg.name} · ${lg.region} · ${rank ? `리그 순위 ${rank.rank}위 / ${rank.size}개 리그` : '리그 순위 집계 전'}`))
+    if (!lg.domestic) {
+      lines.push(h('span', { class: 'offer-line muted' }, `적응 난이도 ${lg.adaptHard} (적응도 ${lg.adaptStart}에서 시작, 시즌마다 +${OVERSEAS_RULES.adaptGain}) · 이적 계약금 ${terms ? formatMoney(terms.profile.salary * OVERSEAS_RULES.signingBonusTurns) : '-'}`))
+    }
+  }
   return h('button', { class: 'choice offer', onclick: onPick }, teamIcon(offer.team.id, 44), h('span', { class: 'offer-body' }, h('b', {}, offer.team.name), ...lines))
 }

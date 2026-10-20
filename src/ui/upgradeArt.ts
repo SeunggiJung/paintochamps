@@ -129,7 +129,16 @@ function pr(l: number, t: Tier): string {
   return s
 }
 
-const DRAW: Record<UpgradeKind, (l: number, t: Tier) => string> = { keyboard, mouse, monitor, pc, housing, coach, medic, pr }
+function language(l: number, t: Tier): string {
+  let s = r(3, 5, 17, 11, t.main) + r(3, 5, 17, 2, t.light) + r(6, 16, 3, 4, t.main) + r(6, 9, 11, 1, '#fff') + r(6, 12, 7, 1, '#fff')
+  if (l >= 2) s += r(13, 15, 16, 9, t.dark) + r(14, 16, 14, 7, t.main) + r(24, 24, 3, 3, t.dark)
+  if (l >= 3) s += r(16, 18, 9, 1, '#fff') + r(16, 20, 6, 1, '#fff')
+  if (l >= 4) s += r(22, 1, 7, 7, '#4da3ff') + r(23, 2, 3, 4, '#7fe08a') + r(26, 4, 2, 3, '#7fe08a')
+  if (l >= 5) s += r(2, 22, 6, 2, '#ffd34d') + r(4, 20, 2, 6, '#ffd34d')
+  return s
+}
+
+const DRAW: Record<UpgradeKind, (l: number, t: Tier) => string> = { keyboard, mouse, monitor, pc, housing, coach, medic, pr, language }
 
 /** 단계별 그림(SVG 문자열). level 0이면 흐린 자리표시. 부모에서 크기를 CSS로 정한다. */
 export function upgradeArtSvg(kind: UpgradeKind, level: number, max: number): string {

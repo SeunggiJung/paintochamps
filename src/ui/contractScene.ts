@@ -57,7 +57,7 @@ export function sceneSvg(teamId: string): string {
 }
 
 /** 입단·이적 계약 연출. 확인을 누르면 닫힌다. */
-export async function showContract(state: GameState, offer: Offer, kind: 'join' | 'transfer' | 'callup', stage: StageId = state.stage): Promise<void> {
+export async function showContract(state: GameState, offer: Offer, kind: 'join' | 'transfer' | 'callup' | 'overseas', stage: StageId = state.stage): Promise<void> {
   const terms = offerTerms(state, offer, stage)
   await openSheet<void>((close) => {
     const root = h('div', { class: 'contract stack-tight' })
@@ -81,7 +81,7 @@ export async function showContract(state: GameState, offer: Offer, kind: 'join' 
       h(
         'div',
         { class: 'c-result' },
-        h('p', { class: 'eyebrow' }, kind === 'transfer' ? '이적 계약 체결' : kind === 'callup' ? (stage === 'pro1' ? '1부 콜업 계약 체결' : '프로 2부 입단 계약 체결') : '입단 계약 체결'),
+        h('p', { class: 'eyebrow' }, kind === 'overseas' ? '해외 이적 계약 체결' : kind === 'transfer' ? '이적 계약 체결' : kind === 'callup' ? (stage === 'pro1' ? '1부 콜업 계약 체결' : '프로 2부 입단 계약 체결') : '입단 계약 체결'),
         h('h2', {}, `${offer.team.name}`),
         terms && h('p', { class: 'muted' }, `월급 ${formatMoney(terms.profile.salary)} / 3개월 · ${perkLabel(offer, state.stage)}`),
       ),

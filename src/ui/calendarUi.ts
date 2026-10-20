@@ -64,7 +64,7 @@ export async function showBeat(beat: CalendarBeat, context?: { genre: GenreId; s
       { class: 'stack-tight beat' },
       h('p', { class: 'eyebrow' }, `${beat.name} 종료`),
       h('h2', { class: `beat-title ${tone}` }, beat.world && beat.placement === 1 ? '🏆 월드 챔피언!' : medal(beat.placement)),
-      h('p', { class: 'muted' }, `${beat.fieldSize}팀 중 ${beat.placement}위`),
+      h('p', { class: 'muted' }, `${beat.fieldSize}팀 중 ${beat.placement}위${beat.host ? ` · 개최지 ${beat.host}` : ''}`),
       beat.table ? tableView(beat.table) : h('p', { class: 'muted small' }, `1~3위: ${beat.top.join(' · ')}`),
       h('p', { class: 'small' }, `명성 ${beat.fame >= 0 ? '+' : ''}${Math.round(beat.fame)}${beat.money > 0 ? ` · 상금 +${formatMoney(beat.money)}` : ''}`),
       beat.advanced.length > 0 && h('div', { class: 'chips' }, ...beat.advanced.map((a) => h('span', { class: 'chip' }, a))),

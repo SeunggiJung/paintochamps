@@ -3,6 +3,7 @@ import genres from '../data/genres.json'
 import modes from '../data/modes.json'
 import rules from '../data/rules.json'
 import { rollEvent, turnRng } from '../engine/events.ts'
+import { adaptationOf, isOverseas, leagueOfState } from '../engine/leagues.ts'
 import { autoTurn, planChoice, planOf, presetDef } from '../engine/plan.ts'
 import { genrePower } from '../engine/power.ts'
 import { choosePrep, expectedScore, PREP, testItems, testName, upcomingTest } from '../engine/routes.ts'
@@ -254,6 +255,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
           state.team && teamIcon(state.team.id, 18),
           `${state.team?.name ?? '무소속'}`,
           state.team && salaryOf(state) > 0 ? ` · 월급 ${formatMoney(salaryOf(state))}/3개월` : null,
+          isOverseas(state) ? ` · ${leagueOfState(state).name} 적응 ${Math.round(adaptationOf(state))}%` : null,
         ),
         h(
           'div',

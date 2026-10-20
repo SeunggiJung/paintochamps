@@ -1,6 +1,7 @@
 import equipmentData from '../data/equipment.json'
 import rules from '../data/rules.json'
 import { equipmentCost } from '../engine/economy.ts'
+import { isOverseas } from '../engine/leagues.ts'
 import { buyFacility, checkFacility, FACILITIES, FACILITY_IDS, facilityCost, facilityLevel } from '../engine/facilities.ts'
 import { planOf, PRESETS, setSeasonPlan, type PresetId } from '../engine/plan.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
@@ -160,7 +161,7 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
         h(
           'div',
           { class: 'choices vertical' },
-          ...FACILITY_IDS.map((id) => {
+          ...FACILITY_IDS.filter((id) => !FACILITIES[id].onlyOverseas || isOverseas(state)).map((id) => {
             const def = FACILITIES[id]
             const level = facilityLevel(state, id)
             const reason = checkFacility(state, id)
