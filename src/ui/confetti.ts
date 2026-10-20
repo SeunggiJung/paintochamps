@@ -1,5 +1,6 @@
 import { createRng } from '../engine/rng.ts'
 import type { Grade } from '../engine/types.ts'
+import { playGradeSfx, vibrate } from './sound.ts'
 
 interface Particle {
   x: number
@@ -27,6 +28,8 @@ const FRAME_LIMIT_MS = 4000
 /** 화면 아래 양쪽에서 위로 쏘아 올리는 폭죽. 끝나면 스스로 캔버스를 지운다. */
 export function celebrate(grade: Grade): void {
   const preset = BURSTS[grade]
+  if (preset) vibrate(grade === 'UR' ? [60, 40, 60, 40, 120] : [40, 30, 40])
+  if (preset) playGradeSfx(grade)
   if (!preset || matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   const canvas = document.createElement('canvas')

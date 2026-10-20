@@ -1,3 +1,4 @@
+import { playSfx, vibrate } from './sound.ts'
 import { h } from './dom.ts'
 import { openSheet } from './sheet.ts'
 import { upgradeArt, type UpgradeKind } from './upgradeArt.ts'
@@ -39,6 +40,8 @@ export function openUpgrade(input: UpgradeInput): Promise<boolean> {
             onclick: () => {
               if (!input.buy()) return close(false)
               bought = true
+              playSfx('upgrade')
+              vibrate(30)
               doneView()
             },
           },

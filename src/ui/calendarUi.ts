@@ -8,6 +8,7 @@ import { celebrate } from './confetti.ts'
 import { formatMoney } from './format.ts'
 import { h } from './dom.ts'
 import { openSheet } from './sheet.ts'
+import { playSfx } from './sound.ts'
 
 /** 시즌은 봄(3월)에 시작해서 1년이다 */
 const START_MONTH = 3
@@ -39,6 +40,7 @@ function tableView(rows: StandingRow[], limit = 5): HTMLElement {
 export function showBeat(beat: CalendarBeat): Promise<void> {
   if (beat.kind === 'end' && beat.world && beat.placement === 1) celebrate('UR')
   else if (beat.kind === 'end' && beat.placement === 1) celebrate('SR')
+  else if (beat.kind === 'end') playSfx(beat.placement <= 3 ? 'statUp' : 'lose')
   return openSheet<void>((close) => {
     if (beat.kind === 'mid') {
       return h(

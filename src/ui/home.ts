@@ -35,6 +35,7 @@ import { salaryOf } from '../engine/teams.ts'
 import { formatMoney } from './format.ts'
 import { runGuide } from './guide.ts'
 import { turnChangeGraph } from './turnResult.ts'
+import { playSfx, vibrate } from './sound.ts'
 
 const BAR_MAX = gacha.statMax
 
@@ -169,8 +170,13 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     }
     render()
     let next = r.state
+    playSfx('turn')
     // 시간이 흘러가는 연출 (대회가 끝나는 시점마다 결과 카드)
     await playTimeline({ before, calendar: r.calendar, actions: choice.map((c) => ACTIONS[c.id].name) })
+    if (next.injuredMonths > before.injuredMonths) {
+      playSfx('hurt')
+      vibrate([120, 60, 120])
+    } else if (STAT_KEYS.some((k) => next.stats[k] > before.stats[k])) playSfx('statUp')
     await openSheet<void>((close) =>
       h(
         'div',

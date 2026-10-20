@@ -6,6 +6,7 @@ import { perkLabel } from './offerView.ts'
 import { OUTLINE, placeSprite, shade } from './sprite.ts'
 import { teamHue, teamIconMarkup } from './teamIcon.ts'
 import { openSheet } from './sheet.ts'
+import { playSfx, vibrate } from './sound.ts'
 
 /** hsl(0~359, %, %) → #rrggbb (스프라이트 셔츠 색은 16진수만 받는다) */
 function hslHex(hue: number, sat: number, light: number): string {
@@ -61,7 +62,20 @@ export async function showContract(state: GameState, offer: Offer, kind: 'join' 
   await openSheet<void>((close) => {
     const root = h('div', { class: 'contract stack-tight' })
     root.innerHTML = sceneSvg(offer.team.id)
-    const skip = () => root.classList.add('skip')
+    // 도장이 찍히는 순간(애니메이션 1.7초)에 맞춰 소리를 낸다. 스킵하면 바로 낸다.
+    let stamped = false
+    const stamp = () => {
+      if (stamped) return
+      stamped = true
+      clearTimeout(timer)
+      playSfx('stamp')
+      vibrate(50)
+    }
+    const timer = setTimeout(stamp, 1700)
+    const skip = () => {
+      root.classList.add('skip')
+      stamp()
+    }
     root.addEventListener('click', skip)
     root.append(
       h(
@@ -72,7 +86,7 @@ export async function showContract(state: GameState, offer: Offer, kind: 'join' 
         terms && h('p', { class: 'muted' }, `월급 ${formatMoney(terms.profile.salary)} / 3개월 · ${perkLabel(offer, state.stage)}`),
       ),
       h('button', { class: 'btn ghost small skip-btn', onclick: skip }, '스킵하기 ', h('span', { 'aria-hidden': 'true' }, '⏩')),
-      h('button', { class: 'btn primary c-ok', onclick: () => close() }, '확인'),
+      h('button', { class: 'btn primary c-ok', onclick: () => (clearTimeout(timer), close()) }, '확인'),
     )
     return root
   }, { center: true })

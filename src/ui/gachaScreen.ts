@@ -10,6 +10,7 @@ import { h } from './dom.ts'
 import { statName } from './statHelp.ts'
 import { GRADE_COMMENT, GRADE_LABEL, MODE_INFO, STAT_LABEL } from './labels.ts'
 import { celebrate } from './confetti.ts'
+import { playGradeSfx } from './sound.ts'
 import { rollAt } from './newGame.ts'
 
 const STEP_MS = 130
@@ -115,7 +116,11 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
       odds.classList.remove('hidden')
       stage.classList.add('glow', `glow-${result.grade}`)
       // 자동 뽑기 중에는 목표 등급이 나왔을 때만 폭죽을 터뜨린다
-      if (!autoRunning || isHit(result.grade)) celebrate(result.grade)
+      if (!autoRunning || isHit(result.grade)) {
+        celebrate(result.grade)
+        // 폭죽이 없는 낮은 등급도 공개 소리는 낸다 (SR 이상은 celebrate가 낸다)
+        if (result.grade === 'N' || result.grade === 'R') playGradeSfx(result.grade)
+      }
     }
 
     const finish = () => {
