@@ -1,0 +1,48 @@
+{
+  "slots": [
+    { "id": "room", "name": "방 배경" },
+    { "id": "desk", "name": "책상 소품" },
+    { "id": "outfit", "name": "의상" },
+    { "id": "badge", "name": "명찰" }
+  ],
+  "defaults": { "room": "room_basic", "desk": "desk_none", "outfit": "outfit_basic", "badge": "badge_none" },
+  "limitedPerSeason": 4,
+  "collectorCount": 12,
+  "limitedHunterCount": 3,
+  "items": [
+    { "id": "room_basic", "slot": "room", "name": "기본 방", "price": 0, "desc": "처음 쓰던 방.", "art": { "wall": "#2b3250", "wall2": "#232944", "floor": "#4a3b2c", "accent": "#5b8cff", "deco": "none" } },
+    { "id": "room_loft", "slot": "room", "name": "다락방 감성", "price": 1500, "desc": "경사진 천장과 따뜻한 전구가 있는 아늑한 다락방.", "art": { "wall": "#5a4636", "wall2": "#4a392b", "floor": "#7a5a3a", "accent": "#ffd34d", "deco": "string" } },
+    { "id": "room_neon", "slot": "room", "name": "네온 게이밍룸", "price": 5000, "desc": "벽 가득 네온이 번쩍이는 게이밍룸.", "art": { "wall": "#171a33", "wall2": "#10122a", "floor": "#23274a", "accent": "#ff4dd2", "deco": "neon" } },
+    { "id": "room_wood", "slot": "room", "name": "우드톤 서재", "price": 8000, "desc": "책장과 우드 패널로 꾸민 차분한 서재.", "art": { "wall": "#6b4a2e", "wall2": "#5a3d25", "floor": "#8a6038", "accent": "#e6c27a", "deco": "shelf" } },
+    { "id": "room_space", "slot": "room", "name": "우주 테마룸", "price": 15000, "limited": true, "desc": "창밖으로 별과 행성이 보이는 한정 테마룸.", "art": { "wall": "#0e1330", "wall2": "#0a0e26", "floor": "#1d2146", "accent": "#9ad1ff", "deco": "stars" } },
+    { "id": "room_penthouse", "slot": "room", "name": "펜트하우스", "price": 30000, "desc": "도시 야경이 한눈에 보이는 꼭대기 층 집.", "art": { "wall": "#1b2036", "wall2": "#141829", "floor": "#3a3f5e", "accent": "#ffd34d", "deco": "city" } },
+
+    { "id": "desk_none", "slot": "desk", "name": "아무것도 없음", "price": 0, "desc": "깔끔한 책상.", "art": { "kind": "none" } },
+    { "id": "desk_plant", "slot": "desk", "name": "작은 화분", "price": 500, "desc": "책상에 초록이 하나.", "art": { "kind": "plant" } },
+    { "id": "desk_cactus", "slot": "desk", "name": "선인장", "price": 600, "desc": "물을 안 줘도 되는 든든한 친구.", "art": { "kind": "cactus" } },
+    { "id": "desk_lamp", "slot": "desk", "name": "스탠드 조명", "price": 800, "desc": "밤샘 연습에 어울리는 따뜻한 조명.", "art": { "kind": "lamp" } },
+    { "id": "desk_cat", "slot": "desk", "name": "고양이 인형", "price": 1200, "desc": "모니터 옆을 지켜 주는 고양이.", "art": { "kind": "cat" } },
+    { "id": "desk_figure", "slot": "desk", "name": "한정판 피규어", "price": 2500, "desc": "좋아하는 캐릭터의 피규어.", "art": { "kind": "figure" } },
+    { "id": "desk_rgb", "slot": "desk", "name": "RGB 라이트 바", "price": 3000, "desc": "무지갯빛으로 흐르는 라이트 바.", "art": { "kind": "rgb" } },
+    { "id": "desk_trophy", "slot": "desk", "name": "미니 트로피", "price": 4000, "desc": "첫 우승 기념 미니 트로피.", "art": { "kind": "trophy" } },
+    { "id": "desk_neon", "slot": "desk", "name": "네온 사인", "price": 6000, "limited": true, "desc": "'GG' 글자가 켜지는 한정 네온 사인.", "art": { "kind": "neon" } },
+    { "id": "desk_collab", "slot": "desk", "name": "콜라보 굿즈 진열대", "price": 0, "collab": true, "desc": "브랜드 팝업스토어 콜라보로만 받을 수 있는 굿즈 진열대.", "art": { "kind": "goods" } },
+
+    { "id": "outfit_basic", "slot": "outfit", "name": "기본 유니폼", "price": 0, "desc": "처음 입던 파란 셔츠.", "art": { "shirt": "#3b5bdb", "pants": "#3a4a8a", "headset": "#444a6a" } },
+    { "id": "outfit_pastel", "slot": "outfit", "name": "파스텔 후드", "price": 800, "desc": "부드러운 색감의 후드.", "art": { "shirt": "#c9b8ff", "pants": "#6b6f99", "headset": "#8d8fb8" } },
+    { "id": "outfit_red", "slot": "outfit", "name": "레드 저지", "price": 1000, "desc": "열정적인 붉은 저지.", "art": { "shirt": "#e84a4a", "pants": "#3a2f3a", "headset": "#2b2b3a" } },
+    { "id": "outfit_black", "slot": "outfit", "name": "블랙 후디", "price": 1500, "desc": "프로의 느낌이 나는 올 블랙.", "art": { "shirt": "#2a2d3a", "pants": "#1d2030", "headset": "#9aa1bd" } },
+    { "id": "outfit_white", "slot": "outfit", "name": "화이트 슈트", "price": 5000, "limited": true, "desc": "시상식에 어울리는 한정 슈트.", "art": { "shirt": "#f1f3ff", "pants": "#c9cde6", "headset": "#9aa1bd" } },
+    { "id": "outfit_gold", "slot": "outfit", "name": "골드 에디션", "price": 8000, "limited": true, "desc": "금빛으로 빛나는 한정 에디션.", "art": { "shirt": "#e6b422", "pants": "#7a5a1a", "headset": "#fff3b0" } },
+    { "id": "outfit_champion", "slot": "outfit", "name": "챔피언 재킷", "price": 20000, "desc": "월드 챔피언만 입는 것 같은 화려한 재킷.", "art": { "shirt": "#ffd34d", "pants": "#1d2038", "headset": "#e84a4a" } },
+    { "id": "outfit_collab", "slot": "outfit", "name": "콜라보 스킨", "price": 0, "collab": true, "desc": "게임사 콜라보로만 받을 수 있는 스킨 의상.", "art": { "shirt": "#7fe0d0", "pants": "#2f6a8a", "headset": "#ff4dd2" } },
+
+    { "id": "badge_none", "slot": "badge", "name": "명찰 없음", "price": 0, "desc": "", "art": { "text": "", "color": "#3b5bdb" } },
+    { "id": "badge_rookie", "slot": "badge", "name": "루키", "price": 300, "desc": "이제 막 시작한 선수의 명찰.", "art": { "text": "루키", "color": "#5ab26a" } },
+    { "id": "badge_ace", "slot": "badge", "name": "에이스", "price": 3000, "desc": "팀의 에이스를 뜻하는 명찰.", "art": { "text": "에이스", "color": "#e84a4a" } },
+    { "id": "badge_champ", "slot": "badge", "name": "챔피언", "price": 12000, "limited": true, "desc": "한정 입고 챔피언 명찰.", "art": { "text": "챔피언", "color": "#e6b422" } },
+    { "id": "badge_rich", "slot": "badge", "name": "재벌", "price": 30000, "desc": "가장 비싼 명찰.", "art": { "text": "재벌", "color": "#7a54d6" } },
+    { "id": "badge_fan", "slot": "badge", "name": "팬 1호", "price": 0, "collab": true, "desc": "팬미팅 콜라보로만 받을 수 있는 명찰.", "art": { "text": "팬 1호", "color": "#ff7aa8" } },
+    { "id": "badge_collab", "slot": "badge", "name": "콜라보 모델", "price": 0, "collab": true, "desc": "굿즈 콜라보로만 받을 수 있는 명찰.", "art": { "text": "모델", "color": "#2f9d8f" } }
+  ]
+}

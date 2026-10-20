@@ -6,7 +6,8 @@ import { rollEvent, turnRng } from '../engine/events.ts'
 import { adsOf, adTypeName, dueShoots, performShoot, shootTurn } from '../engine/ads.ts'
 import { facilityEffectLines } from '../engine/facilities.ts'
 import { playAdShoot } from './adShoot.ts'
-import { playerLook } from './look.ts'
+import { outfitLook, roomSceneSvg } from './roomScene.ts'
+import { openShop } from './shopSheet.ts'
 import { AD_TYPES, type AdType } from '../engine/ads.ts'
 import { adaptationOf, isOverseas, leagueOfState } from '../engine/leagues.ts'
 import { autoTurn, planChoice, planOf, presetDef } from '../engine/plan.ts'
@@ -223,10 +224,31 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     let cur = s
     for (const due of dueShoots(s)) {
       const result = performShoot(cur, due.contract.id)
-      await playAdShoot({ brand: due.contract.brand, category: due.contract.category, type: due.contract.type, index: due.index, shoots: AD_SHOOTS[due.contract.type], paid: result.paid, look: playerLook(cur) })
+      await playAdShoot({ brand: due.contract.brand, category: due.contract.category, type: due.contract.type, index: due.index, shoots: AD_SHOOTS[due.contract.type], paid: result.paid, look: outfitLook(cur) })
       cur = result.state
     }
     return cur
+  }
+
+  /** 내 방: 꾸민 모습과 상점 버튼 */
+  const roomCard = (): HTMLElement => {
+    const preview = h('div', { class: 'room-preview' })
+    preview.innerHTML = roomSceneSvg(state)
+    return h(
+      'section',
+      { class: 'card' },
+      h('div', { class: 'row' }, h('h3', {}, '내 방'), h('button', { class: 'btn small', disabled: busy, onclick: () => void openShopFlow() }, '상점·꾸미기')),
+      preview,
+    )
+  }
+
+  const openShopFlow = async () => {
+    if (busy) return
+    busy = true
+    state = await openShop(state)
+    busy = false
+    saveGame(ctx.storage, state)
+    render()
   }
 
   /** 계약 중인 광고와 다음 촬영 일정 */
@@ -307,6 +329,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       scheduleBar(state),
       planCard(),
       adCard(),
+      roomCard(),
       h(
         'section',
         { class: 'card', 'data-guide': 'stats' },

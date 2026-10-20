@@ -51,7 +51,7 @@ function sceneSvg(brand: string, category: string, look: SpriteLook): string {
   const chair = r(143, 70, 12, 3, '#5a3b22') + r(144, 73, 2, 14, '#3a2818') + r(152, 73, 2, 14, '#3a2818') + r(143, 62, 3, 10, '#3a2818')
   const player = `<g class="ad-pose-a">${placeSprite(look, 'stand', 80, 92, 46)}</g><g class="ad-pose-b">${placeSprite(look, 'cheer', 80, 92, 46)}</g>`
   const flash = ['ad-flash f1', 'ad-flash f2', 'ad-flash f3'].map((c) => r(0, 0, 160, 100, '#ffffff', `class="${c}"`)).join('')
-  const cut = `<g class="ad-cut"><rect x="46" y="38" width="68" height="20" fill="#10162a" stroke="#ffd34d" stroke-width="1"/><text x="80" y="52" font-size="12" fill="#ffd34d" font-weight="900" text-anchor="middle" font-family="sans-serif" shape-rendering="auto">컷! OK</text></g>`
+  const cut = `<g class="ad-cut"><rect x="52" y="32" width="56" height="13" fill="#10162a" stroke="#ffd34d" stroke-width="1"/><text x="80" y="42" font-size="9" fill="#ffd34d" font-weight="900" text-anchor="middle" font-family="sans-serif" shape-rendering="auto">컷! OK</text></g>`
   return (
     `<svg class="ad-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100" shape-rendering="crispEdges" role="img" aria-label="광고 촬영장">` +
     r(0, 0, 160, 100, '#12162a') +

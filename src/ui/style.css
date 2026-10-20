@@ -492,3 +492,15 @@ input[type='text'] {
 .ad-shoot.skip .ad-cut { opacity: 1; }
 .ad-shoot.skip .ad-flash { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .ad-shoot *, .ad-shoot { animation: none !important; } .ad-cut { opacity: 1; } }
+
+/* 내 방·상점 */
+.room-preview { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+.room-svg, .item-svg { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.shop-sheet h3 { margin: 8px 0 2px; }
+.item-card { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--card, #1a1d29); }
+.item-card.on { border-color: var(--accent); }
+.item-card.limited { border-color: #e6b422; }
+.item-art { width: 64px; border-radius: 8px; overflow: hidden; background: #232944; }
+.item-art.room .item-svg { width: 64px; }
+.item-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.item-text .chip { margin-left: 6px; }

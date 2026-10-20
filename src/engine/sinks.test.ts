@@ -8,6 +8,7 @@ import { earnedAchievements } from './achievements.ts'
 import { isEligible, EVENTS } from './events.ts'
 import { endingDef, evaluateEnding } from './endings.ts'
 import { adOffersFor, adSlots, adsOf, dueShoots, finishAdOffers, performShoot, settleAds, shootTurn, signAd } from './ads.ts'
+import { buyCosmetic, CATALOG, equipCosmetic, equippedOf, grantCosmetic, limitedStock, ownedCount, ownedIds, shopBlocker } from './cosmetics.ts'
 import type { GenreId, Stats } from './types.ts'
 
 const stats = (power: number): Stats => ({ reaction: power, accuracy: power, focus: power, judgment: power, mental: power, teamwork: power })
@@ -177,5 +178,69 @@ describe('광고 계약', () => {
     expect(good.state.adEarned).toBeGreaterThan(good.paid)
     expect(good.notes.some((n) => n.includes('성과 보너스'))).toBe(true)
     expect(settleAds(s, { worldPlace: 1, placeRatio: 0.3 }).paid).toBe(0)
+  })
+})
+
+describe('꾸미기와 상점', () => {
+  it('기본 상품은 늘 가지고 있고, 상품은 칸마다 있으며 가격은 0.05~3억이다', () => {
+    const s = proState()
+    expect(ownedIds(s)).toEqual(expect.arrayContaining(['room_basic', 'desk_none', 'outfit_basic', 'badge_none']))
+    expect(equippedOf(s).room).toBe('room_basic')
+    for (const slot of ['room', 'desk', 'outfit', 'badge'] as const) expect(CATALOG.filter((c) => c.slot === slot).length).toBeGreaterThanOrEqual(5)
+    const priced = CATALOG.filter((c) => c.price > 0)
+    expect(Math.min(...priced.map((c) => c.price))).toBeGreaterThanOrEqual(300)
+    expect(Math.max(...priced.map((c) => c.price))).toBeLessThanOrEqual(30_000)
+    expect(new Set(CATALOG.map((c) => c.id)).size).toBe(CATALOG.length)
+  })
+
+  it('상점에서 사면 돈이 줄고 장착할 수 있다. 돈 부족·보유·콜라보 상품은 살 수 없다', () => {
+    const s = proState('fps', { money: 10_000 })
+    expect(shopBlocker(s, 'desk_plant')).toBeNull()
+    const r = buyCosmetic(s, 'desk_plant')
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.state.money).toBe(10_000 - 500)
+    expect(shopBlocker(r.state, 'desk_plant')).toBe('이미 가지고 있다')
+    expect(equippedOf(equipCosmetic(r.state, 'desk_plant')).desk).toBe('desk_plant')
+    expect(equippedOf(equipCosmetic(s, 'desk_plant')).desk).toBe('desk_none') // 없는 것은 장착되지 않는다
+    expect(shopBlocker(proState('fps', { money: 100 }), 'desk_lamp')).toBe('돈이 부족하다')
+    expect(shopBlocker(s, 'badge_fan')).toContain('콜라보')
+  })
+
+  it('한정 상품은 시즌마다 정해진 4개 안에서만 살 수 있고 시즌이 바뀌면 입고가 바뀐다', () => {
+    const s = proState('fps', { money: 10_000_000, season: 3 })
+    const stock = limitedStock(s)
+    expect(stock).toHaveLength(4)
+    expect(limitedStock(s).map((c) => c.id)).toEqual(stock.map((c) => c.id))
+    const all = CATALOG.filter((c) => c.limited)
+    const out = all.find((c) => !stock.some((x) => x.id === c.id))
+    expect(out).toBeDefined()
+    expect(shopBlocker(s, out!.id)).toContain('입고')
+    expect(shopBlocker(s, stock[0].id)).toBeNull()
+    const seasons = Array.from({ length: 6 }, (_, i) => limitedStock({ ...s, season: i + 1 }).map((c) => c.id).join())
+    expect(new Set(seasons).size).toBeGreaterThan(1)
+  })
+
+  it('콜라보 이벤트가 상품을 지급하고 중복 지급은 없다', () => {
+    const base = proState()
+    const fx = applyEffects(base, { money: 100, grant: 'badge_fan' })
+    expect(ownedIds(fx)).toContain('badge_fan')
+    expect(ownedIds(applyEffects(fx, { grant: 'badge_fan' })).filter((id) => id === 'badge_fan')).toHaveLength(1)
+    expect(grantCosmetic(base, 'nope')).toBe(base)
+    const collabEvents = EVENTS.filter((e) => e.id.startsWith('collab_'))
+    expect(collabEvents.length).toBeGreaterThanOrEqual(6)
+    const granted = collabEvents.flatMap((e) => e.choices.map((c) => c.effects?.grant)).filter(Boolean)
+    expect(granted.length).toBeGreaterThanOrEqual(4)
+    for (const id of granted) expect(CATALOG.find((c) => c.id === id)?.collab).toBe(true)
+  })
+
+  it('상품을 모으면 업적이 쌓인다', () => {
+    const limited = CATALOG.filter((c) => c.limited).slice(0, 3).map((c) => c.id)
+    const many = CATALOG.filter((c) => c.price > 0 && !c.limited && !c.collab).slice(0, 12).map((c) => c.id)
+    const done = { ...proState(), finished: 'legend' as const, history: [] }
+    expect(earnedAchievements(done)).not.toContain('collector')
+    const full = { ...done, owned: [...many, ...limited] }
+    expect(ownedCount(full)).toBeGreaterThanOrEqual(12)
+    expect(earnedAchievements(full)).toEqual(expect.arrayContaining(['collector', 'limited_hunter']))
   })
 })

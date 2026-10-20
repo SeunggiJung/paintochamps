@@ -1,6 +1,7 @@
 import gacha from '../data/gacha.json'
 import rules from '../data/rules.json'
 import { moneyScale } from './economy.ts'
+import { grantCosmetic } from './cosmetics.ts'
 import { homeSlumpFactor } from './life.ts'
 import type { GameState } from './state.ts'
 import { STAT_KEYS, type Stats } from './types.ts'
@@ -18,6 +19,8 @@ export interface Effects {
   injuredMonths?: number
   /** 방탕 게이지 증감 */
   vice?: number
+  /** 콜라보로 받는 꾸미기 상품 id */
+  grant?: string
   /** 해외 적응도 증감 (해외 리그에 있을 때만 의미가 있다) */
   adaptation?: number
 }
@@ -50,8 +53,10 @@ export function applyEffects(state: GameState, fx: Effects, scale = 1): GameStat
     injured = fx.injuredMonths > 0 ? Math.max(injured, fx.injuredMonths) : Math.max(0, injured + fx.injuredMonths * scale)
   }
 
+  const granted = fx.grant ? grantCosmetic(state, fx.grant) : state
   return {
     ...state,
+    owned: granted.owned,
     stats,
     condition: clamp(state.condition + (fx.condition ?? 0) * scale, 0, 100),
     // 돈은 소속 단계의 규모(moneyScale)를 곱한다: 프로가 될수록 쓰고 버는 금액이 커진다

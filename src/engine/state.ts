@@ -232,6 +232,10 @@ export interface GameState {
   adOfferSeason: number
   /** 광고로 번 돈(만 원) 누적 (업적용) */
   adEarned: number
+  /** 가진 꾸미기 상품 id (기본 상품은 늘 가진 것으로 본다). 옛 세이브에는 없을 수 있다 — ownedIds */
+  owned: string[]
+  /** 칸마다 장착한 꾸미기 상품. 옛 세이브에는 없을 수 있다 — equippedOf */
+  equipped: Partial<Record<'room' | 'desk' | 'outfit' | 'badge', string>>
   /** 구단을 인수했는지 (구단주 엔딩) */
   owner: boolean
   /** 마지막으로 리그를 옮긴(해외 이적·복귀) 시즌. 시즌당 한 번만 옮길 수 있다 */
@@ -317,6 +321,8 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     ads: [],
     adOfferSeason: 0,
     adEarned: 0,
+    owned: [],
+    equipped: {},
     owner: false,
     stage: 'basement',
     team: null,

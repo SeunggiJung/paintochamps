@@ -1,6 +1,7 @@
 import achievementData from '../data/achievements.json'
 import { isUnofficial, isWorldEvent } from './competitions.ts'
 import { domesticLeagueId, worldHost } from './leagues.ts'
+import { COLLECTOR_COUNT, LIMITED_HUNTER_COUNT, limitedOwned, ownedCount } from './cosmetics.ts'
 import { homeLevel } from './life.ts'
 import type { GameState, SeasonRecord } from './state.ts'
 
@@ -92,6 +93,9 @@ export function earnedAchievements(state: GameState): AchievementId[] {
   const titleLeagues = new Set(h.filter((r) => r.events.some((e) => LEAGUE_TITLE_EVENTS.includes(e.id) && e.placement === 1)).map(leagueOf))
   if (titleLeagues.size >= 2) out.add('worldwide')
   if (new Set(h.map(leagueOf)).size >= 3) out.add('mercenary_king')
+  // 꾸미기 수집
+  if (ownedCount(state) >= COLLECTOR_COUNT) out.add('collector')
+  if (limitedOwned(state) >= LIMITED_HUNTER_COUNT) out.add('limited_hunter')
   // 광고로 번 돈이 누적 10억 이상
   if ((state.adEarned ?? 0) >= 100_000) out.add('star_model')
   // 마지막까지 내 집을 마련했다
