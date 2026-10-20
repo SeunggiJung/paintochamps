@@ -3,6 +3,7 @@ import genres from '../data/genres.json'
 import modes from '../data/modes.json'
 import rules from '../data/rules.json'
 import { rollEvent, turnRng } from '../engine/events.ts'
+import { facilityEffectLines } from '../engine/facilities.ts'
 import { adaptationOf, isOverseas, leagueOfState } from '../engine/leagues.ts'
 import { autoTurn, planChoice, planOf, presetDef } from '../engine/plan.ts'
 import { genrePower } from '../engine/power.ts'
@@ -187,6 +188,8 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         h('p', { class: 'eyebrow' }, `${modes[before.mode].turnMonths}개월이 지났다`),
         ...r.notes.map((n) => h('p', { class: 'risk' }, `⚠ ${n}`)),
         turnChangeGraph(before, next, { ageShift: ageShiftPerTurn(before) }),
+        facilityEffectLines(next).length > 0 &&
+          h('div', { class: 'stack-tight facility-effects' }, h('p', { class: 'eyebrow' }, '시설 덕분에'), ...facilityEffectLines(next).map((line) => h('p', { class: 'muted small' }, line))),
         h('button', { class: 'btn primary', onclick: () => close() }, '다음'),
       ),
     )

@@ -40,7 +40,7 @@ export type ActionId =
   | 'rehab'
   | 'counseling'
 export type EquipmentId = 'keyboard' | 'mouse' | 'monitor' | 'pc'
-export type FacilityId = 'housing' | 'coach' | 'medic' | 'pr' | 'language'
+export type FacilityId = 'housing' | 'coach' | 'medic' | 'pr' | 'language' | 'analyst' | 'mental' | 'trainer' | 'studio'
 /** 초반 루트: rookie 아직 갈림길 전, academy 정석(아카데미 출신), open 우회(공개 테스트·스카우트) */
 export type PathId = 'rookie' | 'academy' | 'open'
 export type StageId = 'basement' | 'local_cup' | 'amateur_team' | 'pro2' | 'pro1'

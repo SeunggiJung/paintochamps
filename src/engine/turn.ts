@@ -7,7 +7,7 @@ import routes from '../data/routes.json'
 import rules from '../data/rules.json'
 import { advanceCalendar, type CalendarUpdate } from './calendar.ts'
 import { applyEffects, type Effects } from './effects.ts'
-import { coachEfficiency, housingRecovery, languageGain, medicSpeed, prFame } from './facilities.ts'
+import { coachEfficiency, housingRecovery, languageGain, medicSpeed, mentalGuard, prFame, studioBoost, trainerGuard, trainerRecovery } from './facilities.ts'
 import { ageGrowthFactor, equipmentEfficiency, growthDelta } from './growth.ts'
 import { adaptationOf, adaptationRecoveryPenalty, isOverseas, OVERSEAS_RULES } from './leagues.ts'
 import { warmupBonus } from './minigame.ts'
@@ -203,7 +203,7 @@ function applySlot(state: GameState, slot: Slot, scale: number, rng: Rng, notes:
 
   let next = applyEffects(
     { ...state, stats },
-    { condition: action.condition, money: action.money, fame: action.fame, vice: action.vice, injuredMonths: action.injuredMonths, slumpMonths: action.slumpMonths },
+    { condition: action.condition, money: slot.id === 'broadcast' && action.money ? action.money * studioBoost(state) : action.money, fame: action.fame, vice: action.vice, injuredMonths: action.injuredMonths, slumpMonths: action.slumpMonths },
     scale,
   )
 
@@ -213,6 +213,13 @@ function applySlot(state: GameState, slot: Slot, scale: number, rng: Rng, notes:
     for (const o of action.outcomes) {
       acc += Math.min(0.95, o.chance + (o.viceRisk ? rules.vice.riskPerPoint * state.vice : 0))
       if (roll < acc) {
+        // 멘탈 코치·트레이너가 슬럼프·부상을 막아 주는 경우 (시설이 없으면 난수를 더 쓰지 않아 기존 결과 그대로다)
+        const slump = (o.effects.slumpMonths ?? 0) > 0 && mentalGuard(state) > 0 && rng() < mentalGuard(state)
+        const hurt = (o.effects.injuredMonths ?? 0) > 0 && trainerGuard(state) > 0 && rng() < trainerGuard(state)
+        if (slump || hurt) {
+          notes.push(`${o.label} — 시설 덕분에 피했다`)
+          break
+        }
         next = applyEffects(next, o.effects, scale)
         notes.push(o.label)
         break
@@ -308,7 +315,7 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
   if (next.team) next = { ...next, money: next.money + salaryOf(next) * scale }
 
   // 턴이 지나면 컨디션이 조금씩 저절로 회복된다 (3개월 기준 금액에 턴 길이 배율)
-  next = { ...next, condition: clamp(next.condition + (rules.conditionRecoveryPerBase + housingRecovery(next) - adaptationRecoveryPenalty(next)) * scale, 0, 100) }
+  next = { ...next, condition: clamp(next.condition + (rules.conditionRecoveryPerBase + housingRecovery(next) + trainerRecovery(next) - adaptationRecoveryPenalty(next)) * scale, 0, 100) }
   // 홍보 에이전시: 턴마다 명성이 조금씩 오른다
   if (prFame(next) > 0) next = { ...next, fame: next.fame + prFame(next) * scale }
 

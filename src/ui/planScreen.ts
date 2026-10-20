@@ -2,7 +2,7 @@ import equipmentData from '../data/equipment.json'
 import rules from '../data/rules.json'
 import { equipmentCost } from '../engine/economy.ts'
 import { isOverseas } from '../engine/leagues.ts'
-import { buyFacility, checkFacility, FACILITIES, FACILITY_IDS, facilityCost, facilityLevel } from '../engine/facilities.ts'
+import { buyFacility, checkFacility, facilityEffectText, FACILITIES, FACILITY_IDS, facilityCost, facilityLevel } from '../engine/facilities.ts'
 import { planOf, PRESETS, setSeasonPlan, type PresetId } from '../engine/plan.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
 import { canRerollTraining, chooseSeasonTraining, bestTraining, rerollTrainingMenu, TRAINING_POOL, trainingMenuOf } from '../engine/training.ts'
@@ -178,7 +178,7 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
                     max: def.maxLevel,
                     costText: formatMoney(facilityCost(state, id)),
                     moneyText: formatMoney(state.money),
-                    effectText: `${def.desc} (${def.unit})`,
+                    effectText: `${def.desc} (${def.unit}) 현재: ${facilityEffectText(id, level)} → 다음: ${facilityEffectText(id, level + 1)}`,
                     buy: () => {
                       const r = buyFacility(state, id)
                       if (r.ok) state = r.state
@@ -190,7 +190,7 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
               },
               upgradeArt(id, level, def.maxLevel, 'mini'),
               h('div', { class: 'choice-text' }, h('strong', {}, level >= def.maxLevel ? `${def.name} (최고)` : `${def.name} Lv${level} → Lv${level + 1} · ${formatMoney(facilityCost(state, id))}`),
-              h('span', { class: 'muted small' }, `${def.desc} (${def.unit})${reason && level < def.maxLevel ? ` — ${reason}` : ''}`)),
+              h('span', { class: 'muted small' }, `${def.desc} (${def.unit}) · 지금 ${facilityEffectText(id, level)}${level < def.maxLevel ? ` → ${facilityEffectText(id, level + 1)}` : ''}${reason && level < def.maxLevel ? ` — ${reason}` : ''}`)),
             )
           }),
         ),

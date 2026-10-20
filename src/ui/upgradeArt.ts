@@ -138,7 +138,49 @@ function language(l: number, t: Tier): string {
   return s
 }
 
-const DRAW: Record<UpgradeKind, (l: number, t: Tier) => string> = { keyboard, mouse, monitor, pc, housing, coach, medic, pr, language }
+/** 전술 분석관: 노트북 화면에 차트가 늘어난다 */
+function analyst(l: number, t: Tier): string {
+  let s = r(5, 8, 22, 14, t.dark) + r(6, 9, 20, 12, '#10162a') + r(3, 22, 26, 3, t.main) + r(13, 25, 6, 1, t.light)
+  s += r(8, 17, 3, 3, t.main)
+  if (l >= 2) s += r(12, 14, 3, 6, t.light)
+  if (l >= 3) s += r(16, 12, 3, 8, t.main)
+  if (l >= 4) s += r(20, 10, 3, 10, t.light) + r(8, 11, 14, 1, '#ffd34d')
+  if (l >= 5) s += r(23, 3, 6, 6, '#ffd34d') + r(25, 5, 2, 2, t.dark)
+  return s
+}
+
+/** 멘탈 코치: 하트와 마음 */
+function mental(l: number, t: Tier): string {
+  let s = r(9, 8, 6, 5, t.main) + r(17, 8, 6, 5, t.main) + r(8, 11, 16, 6, t.main) + r(10, 17, 12, 3, t.main) + r(13, 20, 6, 2, t.main) + r(15, 22, 2, 2, t.main)
+  s += r(10, 9, 3, 2, t.light)
+  if (l >= 2) s += r(4, 5, 2, 2, '#fff') + r(26, 6, 2, 2, '#fff')
+  if (l >= 3) s += r(3, 14, 3, 1, t.light) + r(26, 14, 3, 1, t.light)
+  if (l >= 4) s += r(14, 2, 4, 3, '#ffd34d')
+  if (l >= 5) s += r(2, 24, 28, 1, '#ffd34d')
+  return s
+}
+
+/** 영양·컨디션 트레이너: 덤벨과 사과 */
+function trainer(l: number, t: Tier): string {
+  let s = r(8, 15, 16, 3, t.dark) + r(5, 11, 3, 11, t.main) + r(24, 11, 3, 11, t.main) + r(3, 13, 2, 7, t.light) + r(27, 13, 2, 7, t.light)
+  if (l >= 2) s += r(14, 5, 5, 5, '#e84a4a') + r(16, 3, 2, 3, '#3a9d4a')
+  if (l >= 3) s += r(8, 24, 16, 2, t.light)
+  if (l >= 4) s += r(2, 8, 2, 2, '#fff') + r(28, 8, 2, 2, '#fff')
+  if (l >= 5) s += r(11, 1, 10, 2, '#ffd34d')
+  return s
+}
+
+/** 스트리밍 스튜디오: 마이크와 조명, 카메라 */
+function studio(l: number, t: Tier): string {
+  let s = r(13, 4, 6, 9, t.main) + r(12, 13, 8, 2, t.dark) + r(15, 15, 2, 9, t.dark) + r(10, 24, 12, 2, t.dark) + r(14, 5, 2, 3, t.light)
+  if (l >= 2) s += r(4, 8, 6, 5, '#10162a') + r(5, 9, 3, 3, t.light)
+  if (l >= 3) s += r(23, 6, 5, 7, t.main) + r(24, 4, 3, 2, t.light)
+  if (l >= 4) s += r(2, 18, 3, 3, '#ff4d4d') + r(7, 4, 1, 1, '#ffd34d') + r(25, 2, 1, 1, '#ffd34d')
+  if (l >= 5) s += r(24, 18, 6, 4, '#ffd34d')
+  return s
+}
+
+const DRAW: Record<UpgradeKind, (l: number, t: Tier) => string> = { keyboard, mouse, monitor, pc, housing, coach, medic, pr, language, analyst, mental, trainer, studio }
 
 /** 단계별 그림(SVG 문자열). level 0이면 흐린 자리표시. 부모에서 크기를 CSS로 정한다. */
 export function upgradeArtSvg(kind: UpgradeKind, level: number, max: number): string {

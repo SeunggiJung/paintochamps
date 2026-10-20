@@ -74,3 +74,58 @@ export function prFame(state: GameState): number {
 export function languageGain(state: GameState): number {
   return facilityLevel(state, 'language') * FACILITIES.language.perLevel
 }
+
+/** 전술 분석관이 큰 경기(플레이오프·국제전)에서 더하는 대회 전력 */
+export function analystBonus(state: GameState): number {
+  return facilityLevel(state, 'analyst') * FACILITIES.analyst.perLevel
+}
+
+/** 멘탈 코치가 슬럼프 발생을 막아 줄 확률 (0~1) */
+export function mentalGuard(state: GameState): number {
+  return facilityLevel(state, 'mental') * FACILITIES.mental.perLevel
+}
+
+/** 트레이너가 부상 발생을 막아 줄 확률 (0~1) */
+export function trainerGuard(state: GameState): number {
+  return facilityLevel(state, 'trainer') * FACILITIES.trainer.perLevel
+}
+
+/** 트레이너가 더하는 턴당 컨디션 회복 (3개월 기준) */
+export function trainerRecovery(state: GameState): number {
+  return facilityLevel(state, 'trainer') * 0.5
+}
+
+/** 스튜디오가 방송 수입에 곱하는 배율 (1이면 평소) */
+export function studioBoost(state: GameState): number {
+  return 1 + facilityLevel(state, 'studio') * FACILITIES.studio.perLevel
+}
+
+/** 스튜디오가 광고 해금 명성을 낮추는 값 */
+export function studioFameCut(state: GameState): number {
+  return facilityLevel(state, 'studio') * 5
+}
+
+/** 한 시설의 level단계 효과 문구 (0단계는 '효과 없음') */
+export function facilityEffectText(id: FacilityId, level: number): string {
+  const def = FACILITIES[id]
+  if (level <= 0) return '효과 없음'
+  const v = def.perLevel * level
+  switch (id) {
+    case 'housing': return `턴마다 컨디션 회복 +${v}`
+    case 'coach': return `훈련 효율 +${(v * 100).toFixed(1)}%`
+    case 'medic': return `부상·슬럼프 회복 +${Math.round(v * 100)}%`
+    case 'pr': return `턴마다 명성 +${v.toFixed(1)}`
+    case 'language': return `시즌마다 적응도 +${v}`
+    case 'analyst': return `큰 경기 대회 전력 +${v}`
+    case 'mental': return `슬럼프 발생 -${Math.round(v * 100)}%`
+    case 'trainer': return `부상 발생 -${Math.round(v * 100)}%, 컨디션 회복 +${(level * 0.5).toFixed(1)}`
+    case 'studio': return `방송 수입 +${Math.round(v * 100)}%, 광고 해금 명성 -${level * 5}`
+  }
+}
+
+/** 지금 시설들이 주고 있는 효과를 한 줄씩 (턴 결과 창에 '시설 덕분에'로 보여 준다). 시설이 없으면 빈 목록. */
+export function facilityEffectLines(state: GameState): string[] {
+  return FACILITY_IDS.filter((id) => facilityLevel(state, id) > 0 && (!FACILITIES[id].onlyOverseas || isOverseas(state))).map(
+    (id) => `${FACILITIES[id].name} Lv${facilityLevel(state, id)}: ${facilityEffectText(id, facilityLevel(state, id))}`,
+  )
+}

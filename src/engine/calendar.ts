@@ -2,6 +2,7 @@ import modes from '../data/modes.json'
 import routes from '../data/routes.json'
 import { eventsFor, isInvited, midPhase, playerPower, type EventDef } from './competitions.ts'
 import { moneyScale } from './economy.ts'
+import { analystBonus } from './facilities.ts'
 import { academyName, isPro2Team, makeOpponents } from './field.ts'
 import { adaptationPenalty, isOverseas, leagueIdOf, leagueOfState, OVERSEAS_RULES, worldHost } from './leagues.ts'
 import { finalSeries, type FinalSeries } from './broadcast.ts'
@@ -79,7 +80,7 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
   // 소속 팀이 리그 평균보다 강하면 전력이 오르고 약하면 내려간다 (PC방 대회처럼 팀 없이 나가는 대회는 제외)
   // 해외에서 적응이 덜 됐으면 전력이 깎이고, 월드가 내 리그 지역에서 열리면 홈 이점을 받는다
   const home = ev.world && worldHost(state.genre, state.season).id === leagueIdOf(state) ? OVERSEAS_RULES.homeAdvantage : 0
-  const power = playerPower(state, ev.big ?? false) + (ev.field?.names === 'cafe' ? 0 : teamBoost(state)) + (ev.world ? worldBonus(state.mode) + home : 0) - adaptationPenalty(state)
+  const power = playerPower(state, ev.big ?? false) + (ev.field?.names === 'cafe' ? 0 : teamBoost(state)) + (ev.world ? worldBonus(state.mode) + home : 0) + (ev.big ? analystBonus(state) : 0) - adaptationPenalty(state)
 
   const fieldTeams = (): Team[] => {
     const f = ev.field!

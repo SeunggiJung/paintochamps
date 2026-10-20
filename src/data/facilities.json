@@ -3,5 +3,9 @@
   "coach": { "name": "개인 코치", "desc": "전담 코치가 훈련을 봐 줘서 훈련 효율이 오릅니다.", "base": 40, "factor": 2.5, "maxLevel": 5, "perLevel": 0.015, "unit": "훈련 효율 +1.5%/레벨" },
   "medic": { "name": "재활 트레이너", "desc": "부상과 슬럼프에서 더 빨리 돌아옵니다.", "base": 30, "factor": 2.5, "maxLevel": 3, "perLevel": 0.25, "unit": "회복 속도 +25%/레벨" },
   "pr": { "name": "홍보 에이전시", "desc": "활약이 널리 알려져 턴마다 명성이 조금씩 오릅니다.", "base": 50, "factor": 2.5, "maxLevel": 5, "perLevel": 0.3, "unit": "턴마다 명성 +0.3/레벨" },
-  "language": { "name": "통역·언어 코치", "desc": "현지 말과 문화를 빨리 익혀 해외 리그에 적응하는 속도가 오릅니다. 해외 리그에서만 쓸 수 있어요.", "base": 40, "factor": 2.5, "maxLevel": 5, "perLevel": 6, "unit": "시즌마다 적응도 +6/레벨", "onlyOverseas": true }
+  "language": { "name": "통역·언어 코치", "desc": "현지 말과 문화를 빨리 익혀 해외 리그에 적응하는 속도가 오릅니다. 해외 리그에서만 쓸 수 있어요.", "base": 40, "factor": 2.5, "maxLevel": 5, "perLevel": 6, "unit": "시즌마다 적응도 +6/레벨", "onlyOverseas": true },
+  "analyst": { "name": "전술 분석관", "desc": "상대를 분석해 큰 경기(플레이오프·국제전)에서 대회 전력이 오릅니다.", "base": 40, "factor": 2.5, "maxLevel": 5, "perLevel": 4, "unit": "큰 경기 전력 +4/레벨" },
+  "mental": { "name": "멘탈 코치", "desc": "압박과 실패를 다루는 법을 알려 줘서 슬럼프에 덜 빠집니다.", "base": 25, "factor": 2.5, "maxLevel": 5, "perLevel": 0.15, "unit": "슬럼프 발생 -15%/레벨" },
+  "trainer": { "name": "영양·컨디션 트레이너", "desc": "식단과 스트레칭을 챙겨 줘서 부상이 줄고 컨디션이 조금 더 회복됩니다.", "base": 20, "factor": 2.5, "maxLevel": 5, "perLevel": 0.12, "unit": "부상 발생 -12%·컨디션 회복 +0.5/레벨" },
+  "studio": { "name": "스트리밍 스튜디오", "desc": "방송 장비와 연출이 좋아져 방송 수입이 늘고, 광고 제안이 더 일찍 옵니다.", "base": 50, "factor": 2.5, "maxLevel": 5, "perLevel": 0.2, "unit": "방송 수입 +20%·광고 해금 명성 -5/레벨" }
 }
