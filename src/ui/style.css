@@ -467,3 +467,28 @@ input[type='text'] {
 .bc-caption .who { font-size: 0.75rem; color: var(--accent); font-weight: 800; margin: 0 0 2px; }
 .bc-caption .say { margin: 0; line-height: 1.5; }
 @media (prefers-reduced-motion: reduce) { .bs *, .bs { animation: none !important; } }
+
+/* 광고 촬영 연출 */
+.ad-shoot { text-align: center; }
+.ad-svg { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); image-rendering: pixelated; cursor: pointer; background: #12162a; }
+.ad-caption { min-height: 1.4em; margin: 0; }
+.ad-beam { opacity: 0.22; animation: adBeam 1.6s ease-in-out infinite; }
+@keyframes adBeam { 0%, 100% { opacity: 0.16; } 50% { opacity: 0.36; } }
+.ad-rec { animation: adRec 1s steps(1) infinite; }
+@keyframes adRec { 0% { opacity: 1; } 50% { opacity: 0.15; } }
+.ad-flash { opacity: 0; }
+.ad-flash.f1 { animation: adFlash 0.45s ease-out 2.1s 1; }
+.ad-flash.f2 { animation: adFlash 0.45s ease-out 2.6s 1; }
+.ad-flash.f3 { animation: adFlash 0.45s ease-out 3.1s 1; }
+@keyframes adFlash { 0% { opacity: 0.85; } 100% { opacity: 0; } }
+.ad-pose-b { opacity: 0; animation: adPoseB 1.4s steps(1) 2.1s 1; }
+.ad-pose-a { animation: adPoseA 1.4s steps(1) 2.1s 1; }
+@keyframes adPoseB { 0%, 100% { opacity: 1; } }
+@keyframes adPoseA { 0%, 100% { opacity: 0; } }
+.ad-cut { opacity: 0; animation: adCut 0.35s ease-out 3.5s 1 forwards; }
+@keyframes adCut { from { opacity: 0; } to { opacity: 1; } }
+.ad-result { animation: fadeUp 0.4s ease-out 3.6s backwards; }
+.ad-shoot.skip *, .ad-shoot.skip { animation: none !important; }
+.ad-shoot.skip .ad-cut { opacity: 1; }
+.ad-shoot.skip .ad-flash { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .ad-shoot *, .ad-shoot { animation: none !important; } .ad-cut { opacity: 1; } }

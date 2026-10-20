@@ -2,6 +2,7 @@ import equipmentData from '../data/equipment.json'
 import rules from '../data/rules.json'
 import { equipmentCost } from '../engine/economy.ts'
 import { isOverseas } from '../engine/leagues.ts'
+import { adOffersFor, adsOf, adTypeName, AD_TYPES, finishAdOffers, shootTurn, signAd, type AdOffer } from '../engine/ads.ts'
 import { assetGrade, buyHome, HOMES, homeBlocker, homeLevel, netWorth } from '../engine/life.ts'
 import { confirmSheet } from './confirm.ts'
 import { buyFacility, checkFacility, facilityEffectText, FACILITIES, FACILITY_IDS, facilityCost, facilityLevel } from '../engine/facilities.ts'
@@ -59,6 +60,40 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
 
   return openSheet<GameState>((close) => {
     const root = h('div', { class: 'stack-tight plan-sheet' })
+
+    /** 광고 제안: 시즌 시작에 계약하면 시즌 중 촬영 일정에 따라 돈을 번다 */
+    const adSection = (): HTMLElement | null => {
+      const offers = adOffersFor(state)
+      const signed = adsOf(state)
+      if (offers.length === 0 && signed.length === 0) return null
+      const expected = (o: AdOffer): string => {
+        if (o.type === 'world') return `기본 ${formatMoney(o.base)} + 월드 4강 이상이면 보너스 ${formatMoney(o.bonus)}`
+        if (o.type === 'season') return `촬영 2번에 ${formatMoney(Math.round(o.base * 0.75))} + 잔금 ${formatMoney(Math.round(o.base * 0.25))} (시즌 성적이 상위 60% 이내일 때)`
+        return formatMoney(o.base)
+      }
+      const when = (o: AdOffer) => AD_TYPES[o.type].shootAt.map((_, i) => `${shootTurn(o.type, i, state.mode)}턴 뒤`).join(', ')
+      return h(
+        'div',
+        { class: 'stack-tight' },
+        h('h3', {}, '광고 제안'),
+        h('p', { class: 'muted small' }, '명성이 높아 브랜드들이 광고 모델 제안을 보냈습니다. 촬영 한 번마다 컨디션이 조금 줄어들어요. 브랜드는 모두 가상입니다.'),
+        ...signed.map((c) => h('p', { class: 'notice' }, `계약 완료: ${adTypeName(c.type)} · ${c.brand}(${c.category})`)),
+        ...offers.map((o) =>
+          h(
+            'button',
+            {
+              class: 'choice',
+              onclick: () => {
+                state = signAd(state, o)
+                draw()
+              },
+            },
+            h('strong', {}, `${adTypeName(o.type)} · ${o.brand} (${o.category})`),
+            h('span', { class: 'muted small' }, `${AD_TYPES[o.type].desc} 수입: ${expected(o)} · 촬영: ${when(o)}`),
+          ),
+        ),
+      )
+    }
 
     /** 집과 가족: 다음 단계 집을 마련하면 슬럼프가 짧아지고 가족 이벤트가 열린다 */
     const homeSection = (): HTMLElement | null => {
@@ -229,6 +264,7 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
           }),
         ),
 
+        adSection() ?? '',
         homeSection() ?? '',
 
         h(
@@ -236,7 +272,7 @@ export function openPlanSheet(initial: GameState): Promise<GameState> {
           {
             class: 'btn primary',
             disabled: training === null,
-            onclick: () => close(chooseSeasonTraining(setSeasonPlan(state, { preset, lesson }), training!)),
+            onclick: () => close(finishAdOffers(chooseSeasonTraining(setSeasonPlan(state, { preset, lesson }), training!))),
           },
           training === null ? '이번 시즌 훈련을 골라 주세요' : '이 계획으로 시즌 시작',
         ),

@@ -98,3 +98,41 @@ describe('광고 수입 모델', () => {
     writeFileSync(process.env.ADS_OUT, lines.join('\n') + '\n')
   })
 })
+
+describe('광고 계약을 실제 흐름으로 치른 숙련 봇', () => {
+  const REAL_RUNS = Math.min(RUNS, 60)
+  const measure = (genre: GenreId) => {
+    let titlesBase = 0
+    let titlesAds = 0
+    let moneyBase = 0
+    let moneyAds = 0
+    let earned = 0
+    for (let seed = 1; seed <= REAL_RUNS; seed++) {
+      const base = playCareer(genre, 'standard', seed, { policy: 'skilled' })
+      const ads = playCareer(genre, 'standard', seed, { policy: 'skilled', signAds: true })
+      titlesBase += base.worldTitles
+      titlesAds += ads.worldTitles
+      moneyBase += base.money
+      moneyAds += ads.money
+      earned += ads.adEarned
+    }
+    return { genre, titlesBase: titlesBase / REAL_RUNS, titlesAds: titlesAds / REAL_RUNS, moneyBase: moneyBase / REAL_RUNS, moneyAds: moneyAds / REAL_RUNS, earned: earned / REAL_RUNS }
+  }
+  const real = (['fps', 'aos'] as const).map(measure)
+
+  it('광고로 돈은 더 벌지만 월드 우승 횟수는 거의 그대로다 (촬영 컨디션 비용만 든다)', () => {
+    for (const r of real) {
+      expect(r.earned).toBeGreaterThan(0)
+      expect(r.moneyAds).toBeGreaterThan(r.moneyBase)
+      expect(Math.abs(r.titlesAds - r.titlesBase)).toBeLessThan(0.4)
+    }
+  })
+
+  it('실제 흐름 결과를 파일로 내보낸다 (ADS_OUT이 있을 때만)', () => {
+    if (!process.env.ADS_OUT) return
+    const text = real
+      .map((r) => `${r.genre} 실제 흐름(${REAL_RUNS}판): 광고 수입 평균 ${(r.earned / 10000).toFixed(1)}억, 30세 보유금 ${(r.moneyBase / 10000).toFixed(1)}억 → ${(r.moneyAds / 10000).toFixed(1)}억, 판당 월드 우승 ${r.titlesBase.toFixed(2)} → ${r.titlesAds.toFixed(2)}`)
+      .join('\n')
+    writeFileSync(process.env.ADS_OUT + '.real', text + '\n')
+  })
+})

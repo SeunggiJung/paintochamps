@@ -92,6 +92,8 @@ export function earnedAchievements(state: GameState): AchievementId[] {
   const titleLeagues = new Set(h.filter((r) => r.events.some((e) => LEAGUE_TITLE_EVENTS.includes(e.id) && e.placement === 1)).map(leagueOf))
   if (titleLeagues.size >= 2) out.add('worldwide')
   if (new Set(h.map(leagueOf)).size >= 3) out.add('mercenary_king')
+  // 광고로 번 돈이 누적 10억 이상
+  if ((state.adEarned ?? 0) >= 100_000) out.add('star_model')
   // 마지막까지 내 집을 마련했다
   if (homeLevel(state) >= 3) out.add('filial')
   // 백지수표를 거절하고 국내에 남았다

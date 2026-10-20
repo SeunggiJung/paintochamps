@@ -153,6 +153,18 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     )
   }
 
+  /** 광고 계약 정산 결과 */
+  const adReportCard = () =>
+    report.ads.notes.length === 0
+      ? null
+      : h(
+          'section',
+          { class: 'card' },
+          h('h3', {}, '광고 정산'),
+          ...report.ads.notes.map((n) => h('p', { class: 'muted small' }, n)),
+          report.ads.paid > 0 && h('p', {}, h('b', {}, `+${formatMoney(report.ads.paid)}`)),
+        )
+
   /** 국제전 성적으로 본 리그 파워 랭킹 */
   const leagueCard = () => {
     const rows = report.leagueRanking.filter((r) => r.score !== null)
@@ -277,6 +289,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
       ),
       highlightsCard(),
       leagueCard(),
+      adReportCard(),
       h(
         'section',
         { class: 'card' },

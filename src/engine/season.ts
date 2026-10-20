@@ -9,6 +9,7 @@ import { playSeries } from './match.ts'
 import { seasonHighlights, type Highlights } from './highlights.ts'
 import { domesticLeagueId, isOverseas, leagueIdOf, OVERSEAS_RULES } from './leagues.ts'
 import { intlPointsOf, leagueRanking, type LeagueStanding } from './leagueRank.ts'
+import { settleAds } from './ads.ts'
 import { adaptationAfterMove, makeBlankCheckOffer, makeOverseasOffers, movesLeague, overseasBlocker } from './overseas.ts'
 import { genrePower } from './power.ts'
 import { salaryOf, teamProfile } from './teams.ts'
@@ -56,6 +57,8 @@ export interface SeasonReport {
   routeNotes: string[]
   /** 시즌 활약: 리그 성적·평점·리그 내 수준·수상 기록 */
   highlights: Highlights
+  /** 이번 시즌 광고 정산: 결산 때 받은 돈(만 원)과 문구 */
+  ads: { paid: number; notes: string[] }
   /** 국제전 성적으로 본 리그 파워 랭킹 (최근 몇 시즌, 이번 시즌 포함) */
   leagueRanking: LeagueStanding[]
 }
@@ -236,6 +239,10 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
     }
   }
 
+  // 광고 계약 정산 (시즌 모델 잔금·월드 특약 보너스)
+  const adResult = settleAds(next, { worldPlace: worldRec(run, seasonEvents), placeRatio: rank ? rank.placement / rank.size : null })
+  next = adResult.state
+
   // 라이벌전: 같은 라이벌과 시즌마다 맞대결, 이기면 명성이 오른다
   let rival: SeasonReport['rival'] = null
   if (state.stage !== 'basement') {
@@ -322,8 +329,14 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
 
   return {
     state: next,
-    report: { stageBefore, stageAfter: next.stage, events: results, rival, relegated, promoted, qualified: run.qualified, worldChampion, finished, pendingOffers: next.pendingOffers, tests, routeNotes, highlights, leagueRanking: leagueRanking(state, state.history, intlPoints) },
+    report: { stageBefore, stageAfter: next.stage, events: results, rival, relegated, promoted, qualified: run.qualified, worldChampion, finished, pendingOffers: next.pendingOffers, tests, routeNotes, highlights, ads: { paid: adResult.paid, notes: adResult.notes }, leagueRanking: leagueRanking(state, state.history, intlPoints) },
   }
+}
+
+/** 이번 시즌 월드 순위 (월드에 나가지 않았으면 null) */
+function worldRec(run: { runs: { id: string; placement: number }[] }, events: readonly EventDef[]): number | null {
+  const world = events.find((e) => e.world)
+  return world ? (run.runs.find((r) => r.id === world.id)?.placement ?? null) : null
 }
 
 /** 이번 시즌 마지막 리그의 기대 순위가 하위 절반이었는가 (기대 순위가 없으면 false) */

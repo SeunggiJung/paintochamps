@@ -7,10 +7,18 @@
   "perfSpan": 0.5,
   "perf": { "title": 1, "finalist": 0.8, "world": 0.55, "playoffs": 0.3, "other": 0.1 },
   "types": {
-    "single": { "name": "단발 촬영", "base": 2000, "shoots": 1 },
-    "season": { "name": "시즌 모델", "base": 8000, "shoots": 2 },
-    "world": { "name": "월드 특약", "base": 1000, "bonus": 8000, "bonusTop": 4, "shoots": 1 }
+    "single": { "name": "단발 촬영", "desc": "하루 촬영으로 끝나는 광고. 촬영 때 일시금을 받아요.", "base": 2000, "shoots": 1, "shootAt": [0.5], "payRatio": [1] },
+    "season": { "name": "시즌 모델", "desc": "시즌 내내 얼굴이 되는 계약. 촬영 두 번에 나눠 받고, 시즌 성적이 괜찮으면 잔금을 받아요.", "base": 8000, "shoots": 2, "shootAt": [0.25, 0.75], "payRatio": [0.375, 0.375], "settleRatio": 0.25, "settleMaxPlace": 0.6 },
+    "world": { "name": "월드 특약", "desc": "촬영 한 번에 기본금, 월드 4강 이상이면 성과 보너스를 받아요.", "base": 1000, "bonus": 8000, "bonusTop": 4, "shoots": 1, "shootAt": [1], "payRatio": [1] }
   },
   "order": ["season", "single", "world"],
-  "brands": ["식음료", "주변기기", "의류", "금융·통신", "모바일 게임", "자동차"]
+  "shoot": { "condition": -5, "fame": 1 },
+  "brands": [
+    { "name": "달빛 사이다", "category": "식음료" },
+    { "name": "하이퍼노바 기어", "category": "주변기기" },
+    { "name": "오로라 스포츠웨어", "category": "의류" },
+    { "name": "새벽뱅크", "category": "금융·통신" },
+    { "name": "퀘스트러시", "category": "모바일 게임" },
+    { "name": "비트모터스", "category": "자동차" }
+  ]
 }

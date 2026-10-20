@@ -6,6 +6,7 @@ import { autoTurn, PRESETS, setSeasonPlan, type SeasonPlan } from '../engine/pla
 import { genrePower } from '../engine/power.ts'
 import { createRng, mixSeed, type Rng } from '../engine/rng.ts'
 import { choosePrep, PREP, upcomingTest } from '../engine/routes.ts'
+import { adOffersFor, dueShoots, finishAdOffers, performShoot, signAd } from '../engine/ads.ts'
 import { acceptOffer, rollMidSeasonOffer, rollMidSeasonPromotion, settleSeason } from '../engine/season.ts'
 import { createInitialState, type ActionId, type EquipmentId, type GameState, type ModeId } from '../engine/state.ts'
 import { chooseSeasonTraining, trainingMenuOf } from '../engine/training.ts'
@@ -24,6 +25,8 @@ export interface BotOptions {
   policy: BotPolicy
   /** 1부 이적 제안을 받아들일지 (히든 엔딩은 데뷔 팀에 남아야 한다) */
   acceptTransfers?: boolean
+  /** 광고 제안을 모두 계약하고 촬영을 치를지 (기본은 하지 않아 기존 난이도 측정을 지킨다) */
+  signAds?: boolean
   /** 해외 이적 제안을 받아들일지 (기본은 거절해서 국내 기준 난이도 측정을 지킨다) */
   acceptOverseas?: boolean
   /** 매 턴이 끝날 때마다 불린다 (성장 속도 같은 측정용) */
@@ -143,6 +146,10 @@ export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: Bot
     if (!s.seasonTraining) {
       s = shop(s, opts.policy, botRng)
       s = planSeason(s, opts.policy, botRng)
+      if (opts.signAds) {
+        for (const offer of adOffersFor(s)) s = signAd(s, offer)
+        s = finishAdOffers(s)
+      }
     }
     const { result: r } = autoTurn(s)
     if (!r.ok) throw new Error(`${genre}/${mode}/${seed} turn ${turn}: ${r.error}`)
@@ -151,6 +158,7 @@ export function playCareer(genre: GenreId, mode: ModeId, seed: number, opts: Bot
 
     const event = rollEvent(s, turnRng(s))
     if (event) s = applyEventChoice(s, event, pickEventChoice(s, event, opts.policy, botRng))
+    if (opts.signAds) for (const due of dueShoots(s)) s = performShoot(s, due.contract.id).state
     // 시즌 도중 승급 제안은 모두 받아들인다
     s = rollMidSeasonPromotion(s)
     if (s.pendingOffers) s = acceptOffer(s, 0)

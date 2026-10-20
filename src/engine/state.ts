@@ -1,4 +1,5 @@
 import rules from '../data/rules.json'
+import type { AdContract } from './ads.ts'
 import { domesticLeagueId } from './leagues.ts'
 import type { SeasonPlan } from './plan.ts'
 import { drawTrainingMenu } from './training.ts'
@@ -225,6 +226,12 @@ export interface GameState {
   blankCheckDeclined: boolean
   /** 마련한 집 단계 (0~3). 옛 세이브에는 없을 수 있다 — homeLevel */
   home: number
+  /** 이번 시즌 광고 계약 (결산 때 정산되어 비워진다). 옛 세이브에는 없을 수 있다 — adsOf */
+  ads: AdContract[]
+  /** 광고 제안을 정한 마지막 시즌 (시즌당 한 번만 제안한다) */
+  adOfferSeason: number
+  /** 광고로 번 돈(만 원) 누적 (업적용) */
+  adEarned: number
   /** 구단을 인수했는지 (구단주 엔딩) */
   owner: boolean
   /** 마지막으로 리그를 옮긴(해외 이적·복귀) 시즌. 시즌당 한 번만 옮길 수 있다 */
@@ -307,6 +314,9 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     leagueMoveSeason: 0,
     blankCheckDeclined: false,
     home: 0,
+    ads: [],
+    adOfferSeason: 0,
+    adEarned: 0,
     owner: false,
     stage: 'basement',
     team: null,

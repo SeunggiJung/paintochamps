@@ -3,7 +3,11 @@ import genres from '../data/genres.json'
 import modes from '../data/modes.json'
 import rules from '../data/rules.json'
 import { rollEvent, turnRng } from '../engine/events.ts'
+import { adsOf, adTypeName, dueShoots, performShoot, shootTurn } from '../engine/ads.ts'
 import { facilityEffectLines } from '../engine/facilities.ts'
+import { playAdShoot } from './adShoot.ts'
+import { playerLook } from './look.ts'
+import { AD_TYPES, type AdType } from '../engine/ads.ts'
 import { adaptationOf, isOverseas, leagueOfState } from '../engine/leagues.ts'
 import { autoTurn, planChoice, planOf, presetDef } from '../engine/plan.ts'
 import { genrePower } from '../engine/power.ts'
@@ -41,6 +45,9 @@ import { playSfx, vibrate } from './sound.ts'
 import { countUp } from './countUp.ts'
 
 const BAR_MAX = gacha.statMax
+
+/** 계약 유형별 촬영 횟수 */
+const AD_SHOOTS = Object.fromEntries(Object.entries(AD_TYPES).map(([k, v]) => [k, v.shoots])) as Record<AdType, number>
 
 export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
   let state = initial
@@ -197,6 +204,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     if (coach) next = await askCoachSwap(next, coach)
     const event = rollEvent(next, turnRng(next))
     if (event) next = await runEvent(next, event)
+    next = await runAdShoots(next)
     next = await askPromotion(rollMidSeasonPromotion(next))
     next = await askMidSeasonOffer(rollMidSeasonOffer(next))
     // 시즌이 이어질 때 가끔(약 30%): 쉬는 시간 미니게임(건너뛰어도 되고, 잘하면 다음 턴 훈련 효율이 조금 오른다)
@@ -207,6 +215,33 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     saveGame(ctx.storage, state)
     render()
     scrollTo(0, 0)
+  }
+
+  /** 일정이 된 광고 촬영을 연출과 함께 치른다 */
+  const runAdShoots = async (s: GameState): Promise<GameState> => {
+    if (s.finished || s.pendingOffers) return s
+    let cur = s
+    for (const due of dueShoots(s)) {
+      const result = performShoot(cur, due.contract.id)
+      await playAdShoot({ brand: due.contract.brand, category: due.contract.category, type: due.contract.type, index: due.index, shoots: AD_SHOOTS[due.contract.type], paid: result.paid, look: playerLook(cur) })
+      cur = result.state
+    }
+    return cur
+  }
+
+  /** 계약 중인 광고와 다음 촬영 일정 */
+  const adCard = (): HTMLElement | null => {
+    const contracts = adsOf(state)
+    if (contracts.length === 0) return null
+    return h(
+      'section',
+      { class: 'card' },
+      h('h3', {}, '광고 계약'),
+      ...contracts.map((c) => {
+        const remaining = AD_SHOOTS[c.type] - c.done
+        return h('p', { class: 'small' }, h('b', {}, `${adTypeName(c.type)} · ${c.brand}`), h('span', { class: 'muted' }, remaining > 0 ? ` — 다음 촬영 ${shootTurn(c.type, c.done, state.mode)}턴째 뒤` : ' — 촬영 완료, 결산 때 정산'))
+      }),
+    )
   }
 
   /** 이번 시즌 계획 카드: 방침·훈련·레슨과, 지금 컨디션에서 이번 턴에 자동으로 할 행동 */
@@ -271,6 +306,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       ),
       scheduleBar(state),
       planCard(),
+      adCard(),
       h(
         'section',
         { class: 'card', 'data-guide': 'stats' },

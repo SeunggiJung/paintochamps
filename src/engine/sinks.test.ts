@@ -7,6 +7,7 @@ import { applyEffects } from './effects.ts'
 import { earnedAchievements } from './achievements.ts'
 import { isEligible, EVENTS } from './events.ts'
 import { endingDef, evaluateEnding } from './endings.ts'
+import { adOffersFor, adSlots, adsOf, dueShoots, finishAdOffers, performShoot, settleAds, shootTurn, signAd } from './ads.ts'
 import type { GenreId, Stats } from './types.ts'
 
 const stats = (power: number): Stats => ({ reaction: power, accuracy: power, focus: power, judgment: power, mental: power, teamwork: power })
@@ -111,5 +112,70 @@ describe('집과 자산', () => {
     expect(ownerBlocker(proState('fps', { money: 600_000, finished: null }))).not.toBeNull()
     expect(ownerBlocker({ ...over, money: 250_000 })).not.toBeNull()
     expect(evaluateEnding(proState('fps', { money: 600_000 }))).not.toBe('owner')
+  })
+})
+
+describe('광고 계약', () => {
+  const star = (over: Partial<GameState> = {}) => proState('fps', { fame: 130, ...over })
+
+  it('프로 1부 소속에 명성이 해금 기준을 넘으면 슬롯 수만큼 제안이 오고, 스튜디오가 해금 명성을 낮춘다', () => {
+    expect(adOffersFor(proState('fps', { fame: 40 }))).toEqual([])
+    expect(adOffersFor(star({ fame: 130 })).map((o) => o.type)).toEqual(['season', 'single'])
+    expect(adOffersFor(star({ fame: 250 })).map((o) => o.type)).toEqual(['season', 'single', 'world'])
+    expect(adOffersFor(proState('fps', { stage: 'pro2', fame: 130 }))).toEqual([])
+    expect(adSlots(55)).toBe(0)
+    expect(adSlots(55, 5)).toBe(1)
+    expect(adOffersFor(proState('fps', { fame: 55, facilities: { studio: 1 } }))).toHaveLength(1)
+    // 같은 판·같은 시즌이면 같은 제안이고, 정한 시즌에는 다시 오지 않는다
+    expect(adOffersFor(star())).toEqual(adOffersFor(star()))
+    expect(adOffersFor(finishAdOffers(star()))).toEqual([])
+  })
+
+  it('가상 브랜드가 붙고 수입이 시즌 모델 > 단발 순이다', () => {
+    const [season, single] = adOffersFor(star())
+    expect(season.brand.length).toBeGreaterThan(0)
+    expect(season.category.length).toBeGreaterThan(0)
+    expect(season.base).toBeGreaterThan(single.base)
+  })
+
+  it('계약하면 일정에 맞춰 촬영하고 돈·명성을 받고 컨디션이 준다', () => {
+    let s = star({ turnInSeason: 0 })
+    const [season, single] = adOffersFor(s)
+    s = signAd(signAd(s, season), single)
+    expect(adsOf(s)).toHaveLength(2)
+    expect(dueShoots(s)).toHaveLength(0)
+    // 표준 모드 4턴: 시즌 모델은 1·3턴째, 단발은 2턴째
+    expect(shootTurn('season', 0, 'standard')).toBe(1)
+    expect(shootTurn('season', 1, 'standard')).toBe(3)
+    expect(shootTurn('single', 0, 'standard')).toBe(2)
+    s = { ...s, turnInSeason: 1, condition: 80 }
+    const due = dueShoots(s)
+    expect(due.map((d) => d.contract.type)).toEqual(['season'])
+    const r = performShoot(s, due[0].contract.id)
+    expect(r.paid).toBe(Math.round(season.base * 0.375))
+    expect(r.state.money).toBe(s.money + r.paid)
+    expect(r.state.condition).toBe(75)
+    expect(r.state.fame).toBe(s.fame + 1)
+    expect(dueShoots(r.state)).toHaveLength(0)
+    expect(performShoot({ ...r.state, turnInSeason: 3 }, due[0].contract.id).paid).toBe(r.paid)
+  })
+
+  it('결산 때 시즌 모델은 성적이 괜찮고 촬영을 다 마쳤을 때만 잔금, 월드 특약은 4강 이상일 때 보너스를 받는다', () => {
+    let s = star({ fame: 250, turnInSeason: 0 })
+    for (const o of adOffersFor(s)) s = signAd(s, o)
+    const shootAll = (st: GameState) => {
+      let cur = { ...st, turnInSeason: 4 }
+      for (let i = 0; i < 3; i++) for (const d of dueShoots(cur)) cur = performShoot(cur, d.contract.id).state
+      return cur
+    }
+    const done = shootAll(s)
+    const good = settleAds(done, { worldPlace: 1, placeRatio: 0.3 })
+    const bad = settleAds(done, { worldPlace: 9, placeRatio: 0.9 })
+    expect(good.paid).toBeGreaterThan(bad.paid)
+    expect(bad.paid).toBe(0)
+    expect(good.state.ads).toEqual([])
+    expect(good.state.adEarned).toBeGreaterThan(good.paid)
+    expect(good.notes.some((n) => n.includes('성과 보너스'))).toBe(true)
+    expect(settleAds(s, { worldPlace: 1, placeRatio: 0.3 }).paid).toBe(0)
   })
 })
