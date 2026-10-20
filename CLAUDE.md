@@ -10,7 +10,7 @@
 |---|---|
 | 현재 단계 | 1단계(엔진·시뮬레이션) 완료, **2단계(웹 화면) 진행 중** — ①뽑기·캐릭터 생성, ②육성 메인·이벤트, ③시즌 결산, ④엔딩·도감 구현 완료(직접 플레이 확인 대기) |
 | 지금 화면 | 타이틀 → 캐릭터 생성 → 뽑기(등급별 폭죽) → 육성 메인(시즌 시작 '계획 시트'(방침·훈련·레슨·장비)를 정하면 '다음 턴 진행' 버튼으로 시즌 중 행동이 자동으로 흘러간다 · 이벤트 팝업 · 코치의 훈련 교체 제안, 첫 접속 말풍선 가이드). 시즌 마지막 턴 뒤 시즌 결산 화면(`seasonScreen.ts`: 총 성적·능력치 변동 → 대회·명성·제안)으로 이어지고 다음 시즌이 시작된다. 커리어가 끝나면 엔딩 화면(도트 일러스트·문구·커리어 요약·시즌별 기록·업적·다시 뽑기 횟수)과 엔딩·업적 도감으로 이어지고, 결산 화면의 '여기서 은퇴하기'로 자진 은퇴도 가능하다 |
-| 테스트 | 352개 통과 (`npm test`) |
+| 테스트 | 357개 통과 (`npm test`) |
 | 저장소 | `origin` = github.com/SeunggiJung/paintochamps.git, 브랜치 `master` |
 | 사용자 | 한국어 사용. 1인 개발, 기획·개발·밸런싱 담당 |
 
@@ -41,7 +41,7 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 
 ## 4. 코드 지도
 
-`src/data/` — 규칙 데이터: `genres`(장르별 가중치) `gacha`(뽑기·등급 경계·특성) `actions`(행동 효과·비용·부작용·모드 제한) `equipment` `modes`(턴 길이) `rules`(수치 상수) `stages`(승급 조건·제안) `competitions`(단계별 대회 구조·상대 실력치) `teams`(가상 팀 이름) `events`(이벤트 63종: 일상·초반 루트·프로 생활) `facilities`(시설 투자 4종) `minigame`(턴 끝 미니게임 기준·보너스) `endings`(엔딩 8종 조건·우선순위)
+`src/data/` — 규칙 데이터: `genres`(장르별 가중치) `gacha`(뽑기·등급 경계·특성) `actions`(행동 효과·비용·부작용·모드 제한) `equipment` `modes`(턴 길이) `rules`(수치 상수) `stages`(승급 조건·제안) `competitions`(단계별 대회 구조·상대 실력치) `teams`(가상 팀 이름) `events`(이벤트 70종: 일상·초반 루트·프로 생활·라이벌·동료) `seasonLines`(시즌 결산 한 줄 요약 문장) `facilities`(시설 투자 4종) `minigame`(턴 끝 미니게임 기준·보너스) `endings`(엔딩 8종 조건·우선순위)
 
 `src/engine/` — 게임 엔진
 - `state.ts` GameState와 타입, `createInitialState`
@@ -51,10 +51,10 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 - `turn.ts` **한 턴 진행**(`applyTurn`), 행동 가능 여부(`checkSlot`), `startNextSeason`, `isCareerOver` / `plan.ts` **시즌 계획**(방침 4종, `planChoice`·`autoTurn`: 시즌 중 매 턴의 행동을 컨디션에 맞춰 자동으로 정해 진행)
 - `match.ts` 승률·시리즈 확률·멘탈 보정 / `tournament.ts` 리그전, k패 탈락 토너먼트 / `field.ts` 상대 팀 생성
 - `competitions.ts` 대회 정의(`EventDef`, 기간 `span`)·`eventsFor` / `calendar.ts` **시즌 일정**(`advanceCalendar`: 기간이 시작되면 결과를 정하고 절반·끝에 공개) / `teams.ts` 팀 정보·월급 / `routes.ts` 초반 루트·시험
-- `season.ts` **시즌 결산**(`settleSeason`), 스카우트·이적(`acceptOffer`), `retire`
+- `seasonLine.ts` 시즌 한 줄 요약, `season.ts` **시즌 결산**(`settleSeason`), 스카우트·이적(`acceptOffer`), `retire`
 - `events.ts` 이벤트 발생·선택지·능력치 판정 / `endings.ts` 엔딩 판정 / `training.ts` 시즌 훈련 후보·선택, 코치의 교체 제안(`coachSwapOffer`) / `achievements.ts` 업적(골든로드 등) 판정 / `negotiation.ts` **연봉 협상** / `highlights.ts` **시즌 활약**(평점·수상) / `facilities.ts` **시설 투자**(숙소·개인 코치·재활 트레이너·홍보 에이전시, 돈 소비처) / `minigame.ts` 턴 끝 미니게임 등급·보너스(`applyWarmup`)
 
-`src/ui/` — 웹 화면(바닐라 TS, 프레임워크 없음). `app.ts` 화면 전환, `title/create/gachaScreen/home.ts` 화면, `planScreen.ts` 시즌 시작 계획 시트(방침·훈련·레슨·장비 구매), `eventFlow.ts` 이벤트 팝업, `sheet.ts` 팝업, `preview.ts` 행동 태그·비용·변화 문구(턴 미리보기는 없다), `guide.ts` 첫 접속 말풍선 가이드, `turnResult.ts` 기존·증가·감소 색 변화 그래프(턴 결과·이벤트 결과·시즌 결산), `ending.ts` 엔딩 화면, `codex.ts` 엔딩·업적 도감, `endingScenes.ts` 엔딩 일러스트 8장(SVG 도트 임시 그림), `updateLog.ts` 업데이트 로그 팝업(`data/updates.json`, 사용자에게 보이는 변경마다 항목 추가), `negotiationView.ts` 월급 협상 팝업, `confirm.ts` 확인 팝업, `upgradeSheet.ts`·`upgradeArt.ts` 장비·시설 업그레이드 팝업과 단계별 도트 그림, `miniGame.ts` 턴 끝 미니게임 5종(사격·짝 맞추기·반응속도·숫자 순서·패턴 기억), `confetti.ts` 폭죽, `newGame.ts` 시드·뽑기 로직
+`src/ui/` — 웹 화면(바닐라 TS, 프레임워크 없음). `app.ts` 화면 전환, `title/create/gachaScreen/home.ts` 화면, `planScreen.ts` 시즌 시작 계획 시트(방침·훈련·레슨·장비 구매), `eventFlow.ts` 이벤트 팝업, `sheet.ts` 팝업, `preview.ts` 행동 태그·비용·변화 문구(턴 미리보기는 없다), `guide.ts` 첫 접속 말풍선 가이드, `turnResult.ts` 기존·증가·감소 색 변화 그래프(턴 결과·이벤트 결과·시즌 결산), `ending.ts` 엔딩 화면, `codex.ts` 엔딩·업적 도감, `endingScenes.ts` 엔딩 일러스트 8장(SVG 도트 임시 그림), `updateLog.ts` 업데이트 로그 팝업(`data/updates.json`, 사용자에게 보이는 변경마다 항목 추가), `negotiationView.ts` 월급 협상 팝업, `confirm.ts` 확인 팝업, `upgradeSheet.ts`·`upgradeArt.ts` 장비·시설 업그레이드 팝업과 단계별 도트 그림, `miniGame.ts` 턴 끝 미니게임 5종(사격·짝 맞추기·반응속도·숫자 순서·패턴 기억), `confetti.ts` 폭죽, `sound.ts` 합성 효과음·음소거 버튼·진동(파일 없이 Web Audio), `resultCard.ts` 엔딩 결과 카드(캔버스 PNG 저장·공유), `countUp.ts` 숫자 카운트업, `newGame.ts` 시드·뽑기 로직
 
 `src/save/storage.ts` — 저장·불러오기, 엔딩 도감(`MetaSave`: 엔딩별 횟수와 최근 판 요약 `FinishSummary`), 판 종료 기록(`recordFinish`)
 

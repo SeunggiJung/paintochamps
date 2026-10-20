@@ -716,5 +716,76 @@
       },
       { "label": "팀원들과 웃고 떠들며 긴장을 푼다", "effects": { "stats": { "teamwork": 30, "mental": 15 }, "condition": 4 } }
     ]
+  },
+  {
+    "id": "rival_provocation",
+    "when": { "stages": ["pro2", "pro1"], "team": true, "fame": { "min": 15 } },
+    "weight": 2,
+    "text": "라이벌 팀의 신예 한도윤이 인터뷰에서 \"요즘 이름 오르내리는 선수? 직접 붙어 보면 알겠죠\"라며 도발했다.",
+    "choices": [
+      { "label": "SNS에 맞받아친다", "effects": { "fame": 3, "stats": { "mental": -10 }, "condition": -3 } },
+      { "label": "대꾸하지 않고 연습에 집중한다", "effects": { "stats": { "focus": 25, "mental": 15 } } }
+    ]
+  },
+  {
+    "id": "rival_handshake",
+    "when": { "stages": ["pro2", "pro1"], "team": true, "fame": { "min": 30 } },
+    "weight": 1,
+    "text": "경기가 끝난 뒤 한도윤이 먼저 다가와 손을 내밀었다. \"다음엔 안 집니다.\"",
+    "choices": [
+      { "label": "웃으며 악수한다", "effects": { "fame": 2, "stats": { "mental": 30 }, "condition": 3 } },
+      { "label": "\"언제든 와라\"라고 받아친다", "effects": { "stats": { "mental": 15, "judgment": 15 } } }
+    ]
+  },
+  {
+    "id": "teammate_slump",
+    "when": { "stages": ["amateur_team", "pro2", "pro1"], "team": true },
+    "weight": 2,
+    "text": "팀 동료 서지후가 요즘 연습 때 말수가 줄고 실수가 잦다. 슬럼프가 온 모양이다.",
+    "choices": [
+      { "label": "밥을 사 주며 이야기를 들어 준다", "requires": { "minMoney": 3 }, "effects": { "money": -3, "stats": { "teamwork": 40 }, "condition": 2 } },
+      { "label": "연습 상대를 자청해 같이 영상을 돌려 본다", "effects": { "stats": { "teamwork": 20, "judgment": 25 }, "condition": -3 } },
+      { "label": "내 컨디션부터 챙긴다", "effects": { "condition": 5 } }
+    ]
+  },
+  {
+    "id": "teammate_minjae_birthday",
+    "when": { "stages": ["amateur_team", "pro2", "pro1"], "team": true },
+    "weight": 2,
+    "text": "오늘은 팀 동료 박민재의 생일이다. 숙소 거실에 다들 어색하게 모여 있다.",
+    "choices": [
+      { "label": "케이크를 사 와서 같이 축하한다", "requires": { "minMoney": 2 }, "effects": { "money": -2, "stats": { "teamwork": 35 }, "condition": 4 } },
+      { "label": "손편지만 건넨다", "effects": { "stats": { "teamwork": 15 } } }
+    ]
+  },
+  {
+    "id": "veteran_advice",
+    "when": { "stages": ["pro2", "pro1"], "team": true, "ageMin": 20 },
+    "weight": 2,
+    "text": "팀의 베테랑 오태식이 연습이 끝난 뒤 말을 건다. \"피지컬은 금방 지나가. 결국 오래 남는 건 머리랑 마음이야.\"",
+    "choices": [
+      { "label": "노트를 꺼내 하나하나 받아 적는다", "effects": { "stats": { "judgment": 40, "mental": 15 } } },
+      { "label": "\"전 아직 손이 더 빨라요\"라며 웃어넘긴다", "effects": { "stats": { "reaction": 15, "accuracy": 15 }, "condition": 2 } }
+    ]
+  },
+  {
+    "id": "rookie_fan_letter",
+    "when": { "fame": { "min": 20 } },
+    "weight": 2,
+    "text": "팬 카페에 어린 팬이 손편지를 남겼다. \"형처럼 되고 싶어서 오늘도 방에서 연습해요!\"",
+    "choices": [
+      { "label": "정성껏 답장을 써 준다", "effects": { "fame": 2, "stats": { "mental": 30 }, "condition": 2 } },
+      { "label": "방송에서 응원 메시지를 읽어 준다", "effects": { "fame": 3, "money": 3, "condition": -3 } }
+    ]
+  },
+  {
+    "id": "scrim_ace",
+    "when": { "stages": ["pro2", "pro1"], "team": true },
+    "weight": 2,
+    "text": "스크림 상대 팀의 에이스 윤서아가 연습 경기에서 우리 팀을 압도했다. 어떻게 저런 판단이 나오는지 신기할 정도다.",
+    "choices": [
+      { "label": "경기 영상을 밤새 돌려 본다", "effects": { "stats": { "judgment": 40 }, "condition": -8 } },
+      { "label": "끝나고 직접 찾아가 비결을 묻는다", "effects": { "stats": { "judgment": 20, "mental": 15 }, "fame": 1 } }
+    ]
   }
 ]
