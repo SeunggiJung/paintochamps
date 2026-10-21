@@ -4,8 +4,20 @@
     "financeSalary": [0.75, 0.88, 1.0, 1.15, 1.35],
     "financeBid": [0.95, 1.0, 1.05, 1.12, 1.25],
     "financeCap": [1.25, 1.6, 2.1, 2.8, 4.0],
-    "popularityFame": [0, 0.1, 0.2, 0.4, 0.6],
-    "prestigeFame": [0, 2, 4, 7, 10]
+    "popularityFame": [0, 0.05, 0.1, 0.2, 0.3],
+    "prestigeFame": [0, 1, 2, 3.5, 5]
+  },
+  "drift": {
+    "_note": "시즌마다 구단 등급이 변하는 규칙. perf(-1.5~1.5) = 같은 리그 전력 순위(-1~1) + 운 + 플레이어가 그 구단에서 낸 성적 보너스. 등급 += 계수 × perf",
+    "finance": 0.3,
+    "popularity": 0.22,
+    "prestige": 0.12,
+    "luck": 0.45,
+    "title": 0.7,
+    "worldTitle": 1.4,
+    "podium": 0.2,
+    "maxBonus": 2,
+    "trendBand": 0.25
   },
   "teams": {
     "t1": { "finance": 5, "popularity": 5, "prestige": 5 },

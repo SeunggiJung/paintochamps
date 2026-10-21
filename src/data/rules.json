@@ -7,7 +7,7 @@
     "fame": 0
   },
   "baseMonths": 3,
-  "growthRate": 0.29,
+  "growthRate": 0.285,
   "growthExponent": 0.30,
   "trainingMenuSize": 4,
   "coachSwap": { "options": 3, "minGap": 2, "gapRatio": 0.25 },

@@ -65,7 +65,7 @@ export function makeBlankCheckOffer(state: GameState, rng: Rng, mvp: boolean): P
   const league = CHECK.leagues.find((id) => leaguesOf(state.genre).some((l) => l.id === id))
   if (!league) return null
   const wanting = leagueTeams(league).filter((team) => {
-    const p = teamProfile(state.seed, state.season, team, 'pro1', state.fame, state.genre)
+    const p = teamProfile(state.seed, state.season, team, 'pro1', state.fame, state.genre, state.history)
     return !!p && strengthOf('pro1', p.power, league) !== 'weak' && p.lastRank > 3
   })
   if (wanting.length === 0) return null

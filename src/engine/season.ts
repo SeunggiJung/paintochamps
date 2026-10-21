@@ -3,7 +3,7 @@ import stageData from '../data/stages.json'
 import { evaluateEnding } from './endings.ts'
 import { advanceCalendar, replayOngoing } from './calendar.ts'
 import { changeTeam } from './career.ts'
-import { prestigeFame } from './teamMarket.ts'
+import { marketContext, prestigeFame } from './teamMarket.ts'
 import { moneyScale } from './economy.ts'
 import { eventsFor, playerPower, type EventDef } from './competitions.ts'
 import { farmTeamOf, parentOrgOf, pickTeams } from './field.ts'
@@ -375,8 +375,8 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
   // 백지수표는 새 월급이 지금 월급의 checkMult배가 되도록 협상 배율을 정한다
   const terms = offerTerms(state, offer, stage)
   // 입단 때 받는 명성(구단 후광)까지 반영한 명성으로 새 구단의 기준 월급을 본다 (월급 배율이 이후에도 같은 월급을 만든다)
-  const fameAfter = state.fame + (offer.perk === 'playtime' ? OFFERS.playtimeFame : 0) + prestigeFame(offer.team)
-  const baseSalary = teamProfile(state.seed, state.season, offer.team, stage, fameAfter, state.genre)?.salary ?? 0
+  const fameAfter = state.fame + (offer.perk === 'playtime' ? OFFERS.playtimeFame : 0) + prestigeFame(offer.team, marketContext(state))
+  const baseSalary = teamProfile(state.seed, state.season, offer.team, stage, fameAfter, state.genre, state.history)?.salary ?? 0
   const checkSalary = offer.checkMult !== undefined ? salaryOf(state) * offer.checkMult : 0
   // 이적하면 지금 월급과 새 구단의 재정을 함께 본 제안 월급을 그대로 이어받는다 (협상으로 올려 둔 월급이 초기화되지 않는다)
   const salaryMult = baseSalary > 0 ? (offer.checkMult !== undefined ? checkSalary : terms!.offerSalary) / baseSalary : 1

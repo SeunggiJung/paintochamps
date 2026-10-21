@@ -5,7 +5,7 @@ import { salaryFameMultiplier } from './economy.ts'
 import { genrePower } from './power.ts'
 import { pathOf } from './routes.ts'
 import { financeSalary, marketOf, offerSalary, type TeamMarket } from './teamMarket.ts'
-import type { GameState, Offer, StageId, TeamRef } from './state.ts'
+import type { GameState, Offer, SeasonRecord, StageId, TeamRef } from './state.ts'
 import type { GenreId } from './types.ts'
 
 /** 팀이 속한 리그의 실력 등급 (competitions.json의 tiers 키) */
@@ -48,7 +48,7 @@ function salaryFor(stage: Contracted, power: number): number {
 }
 
 /** 팀의 이번 시즌 정보: 전력, 지난 시즌 순위, 제시하는 월급. 시드로 정해져서 어느 화면에서 봐도 같다. */
-export function teamProfile(seed: number, season: number, team: TeamRef, stage: StageId, fame = 0, genre: GenreId = 'fps'): TeamProfile | null {
+export function teamProfile(seed: number, season: number, team: TeamRef, stage: StageId, fame = 0, genre: GenreId = 'fps', history: readonly SeasonRecord[] = []): TeamProfile | null {
   const tier = TIER_OF_STAGE[stage]
   if (!tier) return null
   const contracted = stage as Contracted
@@ -63,7 +63,7 @@ export function teamProfile(seed: number, season: number, team: TeamRef, stage: 
   const leagueSize = league && league !== domesticLeagueId(genre) ? pool.length : LEAGUE_SIZE[contracted]
   // 월급은 같은 리그 안에서의 팀 강도로 정하고(리그 전력 보정은 빼고), 리그 월급 배율을 곱한다
   const mult = league ? leagueDef(league).salaryMult : 1
-  const market = marketOf(team)
+  const market = marketOf(team, { seed, season, genre, history })
   const salary = Math.round(salaryFor(contracted, power - leagueStrength(team.id)) * financeSalary(market) * mult * salaryFameMultiplier(fame))
   return { team, stage, power, lastRank: 1 + Math.floor((index * leagueSize) / order.length), leagueSize, salary, league, market }
 }
@@ -77,7 +77,7 @@ function isTrainee(state: Pick<GameState, 'stage' | 'path'>): boolean {
 export function salaryOf(state: GameState): number {
   if (!state.team) return 0
   if (isTrainee(state)) return contracts.traineeSalary
-  const profile = teamProfile(state.seed, state.season, state.team, state.stage, state.fame, state.genre)
+  const profile = teamProfile(state.seed, state.season, state.team, state.stage, state.fame, state.genre, state.history)
   return Math.round((profile?.salary ?? 0) * (state.salaryMult ?? 1))
 }
 
@@ -155,7 +155,7 @@ export interface OfferTerms {
 
 /** 제안을 받은 팀의 조건 요약. 이적·입단 결정에 쓰는 정보다. */
 export function offerTerms(state: GameState, offer: Offer, stage: StageId = state.stage): OfferTerms | null {
-  const profile = teamProfile(state.seed, state.season, offer.team, stage, state.fame, state.genre)
+  const profile = teamProfile(state.seed, state.season, offer.team, stage, state.fame, state.genre, state.history)
   if (!profile) return null
   const myPower = genrePower(state.stats, state.genre)
   const gap = profile.power - myPower
