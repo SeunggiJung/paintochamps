@@ -1,0 +1,91 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  .pxw { display:flex; gap:26px; justify-content:center; flex-wrap:wrap; align-items:flex-start; }
+  .box { width:330px; background:#f2f4f6; border-radius:22px; padding:16px; font-family:'Pretendard',sans-serif; color:#191f28; box-shadow:0 6px 22px rgba(0,0,0,.14); }
+  .win { background:linear-gradient(135deg,#fff7e0,#ffe9a8); border-radius:18px; padding:16px 10px 12px; text-align:center; }
+  .win h4 { margin:4px 0 0; font-size:20px; font-weight:800; } .win p { margin:2px 0 0; font-size:12.5px; color:#8a6a1f; }
+  .icons { display:flex; gap:14px; justify-content:center; margin-top:12px; background:#fff; border-radius:16px; padding:12px; }
+  .icons div { text-align:center; font-size:11.5px; color:#8b95a1; }
+  svg.px { image-rendering:pixelated; shape-rendering:crispEdges; display:block; margin:0 auto; }
+  .cap { text-align:center; margin:10px 0 2px; font-weight:700; } .dsc { text-align:center; font-size:12.5px; color:var(--text-secondary); max-width:330px; margin:0 auto; }
+
+  .set { position:relative; height:640px; overflow:hidden; border-radius:22px; background:#f2f4f6; font-family:'Pretendard',sans-serif; color:#191f28; box-shadow:0 6px 22px rgba(0,0,0,.14); width:330px; }
+  .set .hdr { display:flex; justify-content:space-between; align-items:center; padding:16px 16px 6px; } .set .hdr b { font-size:19px; font-weight:800; }
+  .gear { width:34px; height:34px; border-radius:50%; background:#fff; display:grid; place-items:center; font-size:18px; box-shadow:0 0 0 3px #dbeaff; }
+  .set .card { background:#fff; border-radius:18px; margin:10px 16px; padding:14px; font-size:13.5px; }
+  .dim { position:absolute; inset:0; background:rgba(15,20,30,.42); }
+  .sh { position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:24px 24px 0 0; padding:14px 18px 20px; box-shadow:0 -10px 30px rgba(0,0,0,.2); }
+  .sh .grab { width:40px; height:4px; background:#d5d9de; border-radius:9px; margin:0 auto 10px; }
+  .sh h3 { margin:0 0 6px; font-size:19px; font-weight:800; }
+  .grp { padding:9px 0; border-top:1px solid #f0f2f4; } .grp:first-of-type { border-top:0; }
+  .grp .lb { font-size:12.5px; color:#8b95a1; font-weight:600; margin-bottom:6px; }
+  .seg { display:flex; gap:6px; } .seg span { flex:1; text-align:center; padding:8px 0; border-radius:12px; background:#f2f4f6; font-size:12.5px; font-weight:700; color:#4e5968; cursor:pointer; } .seg span.on { background:#3182f6; color:#fff; }
+  .lk { display:flex; justify-content:space-between; padding:9px 0; border-top:1px solid #f0f2f4; font-size:14px; }
+</style>
+
+<h2>도트 그림 시험 + 설정(톱니바퀴)</h2>
+<p class="subtitle">왼쪽은 제가 코드로 그린 도트 그림 시험(임시)이고, 오른쪽은 톱니바퀴를 눌러 설정 시트가 열린 모습이에요.</p>
+
+<div class="pxw">
+  <div>
+    <div class="box">
+      <div class="win"><svg id="trophy" class="px" width="288" height="240"></svg><h4>🏆 월드 챔피언십 우승!</h4><p>통산 3번째 우승 · 커리어는 계속돼요</p></div>
+      <div class="icons"><div><svg id="ic-coin" class="px" width="48" height="48"></svg>토큰</div><div><svg id="ic-star" class="px" width="48" height="48"></svg>명성</div><div><svg id="ic-heart" class="px" width="48" height="48"></svg>컨디션</div><div><svg id="ic-medal" class="px" width="48" height="48"></svg>메달</div></div>
+    </div>
+    <div class="cap">도트 그림 시험</div><div class="dsc">트로피(3프레임 반짝임 + 살짝 들썩임)와 아이콘 4개를 격자 코드로 직접 찍었어요. 임시 시험이라 게임에 쓰려면 다시 정해야 해요.</div>
+  </div>
+
+  <div data-choice="settings" onclick="toggleSelect(this)">
+    <div class="set">
+      <div class="hdr"><b>봇 · 23세</b><div class="gear">⚙️</div></div>
+      <div class="card">KIWOOM DRX · 프로 1부<br><span style="color:#8b95a1">컨디션 80 · 돈 4억 3,230만</span></div>
+      <div class="card">이번 시즌 · MSI 진행 중</div>
+      <div class="dim"></div>
+      <div class="sh"><div class="grab"></div><h3>설정</h3>
+        <div class="grp"><div class="lb">테마</div><div class="seg" data-g="theme"><span class="on">자동</span><span>밝은 카드</span><span>크림</span><span>다크</span></div></div>
+        <div class="grp"><div class="lb">글자</div><div class="seg" data-g="font"><span class="on">Pretendard</span><span>주아</span><span>갈무리</span></div></div>
+        <div class="grp"><div class="lb">움직임</div><div class="seg" data-g="motion"><span>차분</span><span class="on">보통</span><span>화려</span></div></div>
+        <div class="grp"><div class="lb">소리</div><div class="seg" data-g="sound"><span class="on">켜짐</span><span>꺼짐</span></div></div>
+        <div class="lk"><span>업데이트 로그</span><span>›</span></div><div class="lk"><span>게임 가이드 · 문의</span><span>›</span></div>
+      </div>
+    </div>
+    <div class="cap">설정 시트</div><div class="dsc">모든 화면 오른쪽 위 톱니바퀴로 열려요. 칸을 눌러 보세요(시안이라 저장은 안 돼요).</div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.seg').forEach(g => g.addEventListener('click', e => { const s = e.target.closest('span'); if (!s) return; e.stopPropagation(); g.querySelectorAll('span').forEach(x => x.classList.remove('on')); s.classList.add('on'); }));
+
+  const PAL = { o:'#7a4a12', g:'#ffcf33', h:'#fff3a0', s:'#e09a1a', b:'#8a5a2b', r:'#f04452', w:'#ffffff', y:'#ffe27a', k:'#c98a14', p:'#ff8fa3', u:'#3182f6' };
+  function mirror(rows) { return rows.map(r => r + [...r].reverse().map(c => (c === 'h' ? 's' : c)).join('')); }
+  function draw(svg, rows, cell, ox = 0, oy = 0, w = 0, h = 0) {
+    let out = '';
+    rows.forEach((row, y) => [...row].forEach((c, x) => { if (c !== '.' && PAL[c]) out += `<rect x="${(x + ox) * cell}" y="${(y + oy) * cell}" width="${cell}" height="${cell}" fill="${PAL[c]}"/>`; }));
+    return out;
+  }
+  const CUP = mirror(['........','..oooooo','.ohhgggg','oohhgggg','o.ohgggg','o.oggggg','oo.ogggg','..oogggg','...ooggg','....oogg','......og','......og','....obbb','...obbbb','...ooooo','........']);
+  const sparkle = (x, y, c) => `<g fill="${c}"><rect x="${x * 12}" y="${y * 12 - 12}" width="12" height="12"/><rect x="${x * 12}" y="${y * 12 + 12}" width="12" height="12"/><rect x="${x * 12 - 12}" y="${y * 12}" width="12" height="12"/><rect x="${x * 12 + 12}" y="${y * 12}" width="12" height="12"/><rect x="${x * 12}" y="${y * 12}" width="12" height="12" fill="#fff"/></g>`;
+  const confetti = [[2,3,'r'],[21,5,'u'],[4,14,'u'],[19,13,'r'],[1,9,'y'],[22,10,'p'],[7,1,'p'],[17,2,'y']];
+  const frames = [
+    { dy: 0, sp: [[4,5],[19,9]] },
+    { dy: -1, sp: [[19,4],[5,12]] },
+    { dy: 0, sp: [[3,10],[20,14]] },
+  ];
+  let f = 0;
+  function tick() {
+    const fr = frames[f % 3];
+    let s = '';
+    confetti.forEach(([x, y, c], i) => { const yy = y + ((f + i) % 3 === 0 ? 1 : 0); s += `<rect x="${x * 12}" y="${yy * 12}" width="12" height="12" fill="${PAL[c]}"/>`; });
+    s += draw(null, CUP, 12, 4, 2 + fr.dy);
+    fr.sp.forEach(([x, y]) => s += sparkle(x, y, '#ffe27a'));
+    const svg = document.getElementById('trophy'); svg.setAttribute('viewBox', '0 0 288 240'); svg.innerHTML = s;
+    f++;
+  }
+  tick(); setInterval(tick, 320);
+
+  const set = (id, rows) => { const el = document.getElementById(id); el.setAttribute('viewBox', '0 0 ' + rows[0].length * 4 + ' ' + rows.length * 4); el.innerHTML = draw(null, rows, 4); };
+  set('ic-coin', mirror(['..oooo..'.slice(0,4),'.oyyyy'.slice(0,4),'oyywwy'.slice(0,4),'oywkkk'.slice(0,4),'oywkkk'.slice(0,4),'oyywwy'.slice(0,4),'.oyyyy'.slice(0,4),'..oooo..'.slice(0,4)]));
+  set('ic-star', mirror(['....g','....g','...gg','ggggg','.gggg','..ggg','..ggg','.gg.g','.g...']));
+  set('ic-heart', mirror(['.rrr.','rwrrr','rrrrr','rrrrr','.rrrr','..rrr','...rr','....r']));
+  set('ic-medal', mirror(['..uu','..uu','..uu','...u','.ooo','oyyy','oygg','.oyy']).map(r => r.replace(/g/g, 'k')));
+</script>

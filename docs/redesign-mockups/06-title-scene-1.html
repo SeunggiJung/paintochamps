@@ -1,0 +1,94 @@
+<style>
+  .cmp { display:flex; gap:26px; justify-content:center; flex-wrap:wrap; align-items:flex-start; }
+  .cmp .col { text-align:center; }
+  .frame { width:480px; border:4px solid #3b2418; border-radius:16px; overflow:hidden; background:#0c0f1a; box-shadow:0 8px 26px rgba(0,0,0,.3); }
+  .frame svg { display:block; width:100%; height:auto; image-rendering:pixelated; }
+  .cap { margin:10px 0 2px; font-weight:700; } .dsc { font-size:12.5px; color:var(--text-secondary); max-width:480px; margin:0 auto; }
+  /* 현재 장면만 고정해서 보여 주기 */
+  #cur .hero { max-width:none; margin:0; } #cur .hero-frame { border:0; border-radius:0; box-shadow:none; }
+  #cur .hero .s2, #cur .hero .s3, #cur .hero .s4, #cur .hero-captions { display:none; }
+  #cur .hero .s1 { animation:none !important; opacity:1 !important; }
+
+  /* 새 장면 애니메이션 */
+  .n .led { animation:led 6s steps(6) infinite; } @keyframes led { 0%{fill:#ff5ac8} 17%{fill:#ff9f43} 33%{fill:#ffe27a} 50%{fill:#4cf0c8} 67%{fill:#4fa3ff} 83%{fill:#b980ff} }
+  .n .scr { animation:scr 2.4s steps(2) infinite; } @keyframes scr { 50% { fill:#86e0ff } }
+  .n .glow { animation:glow 2.4s ease-in-out infinite alternate; } @keyframes glow { from{opacity:.16} to{opacity:.3} }
+  .n .hit1 { animation:hit 0.8s steps(2) infinite; } .n .hit2 { animation:hit 0.8s steps(2) infinite reverse; } @keyframes hit { 50% { transform:translateY(-3px) } }
+  .n .key1 { animation:key .35s steps(2) infinite; } .n .key2 { animation:key .35s steps(2) infinite reverse; } @keyframes key { 50% { transform:translateY(1px) } }
+  .n .tw { animation:tw 1.6s steps(2) infinite; } .n .tw2 { animation:tw 1.6s steps(2) infinite reverse; } @keyframes tw { 50% { opacity:0 } }
+  .n .steam { animation:steam 2.2s linear infinite; opacity:0; } .n .steam.b { animation-delay:.7s } .n .steam.c { animation-delay:1.4s }
+  @keyframes steam { 0%{opacity:0;transform:translateY(0)} 20%{opacity:.85} 100%{opacity:0;transform:translateY(-10px)} }
+  .n .tail { transform-box:fill-box; transform-origin:0% 100%; animation:tail 2s ease-in-out infinite alternate; } @keyframes tail { from{transform:rotate(-14deg)} to{transform:rotate(14deg)} }
+  .n .zz { animation:zz 3s linear infinite; opacity:0; } .n .zz.b { animation-delay:1.5s }
+  @keyframes zz { 0%{opacity:0;transform:translate(0,0)} 25%{opacity:1} 100%{opacity:0;transform:translate(5px,-9px)} }
+  .n .cloud { animation:cld 9s linear infinite alternate; } @keyframes cld { from{transform:translateX(0)} to{transform:translateX(-10px)} }
+  .n .sunb { animation:sunb 4s steps(2) infinite; } @keyframes sunb { 50% { fill:#fff1b0 } }
+  .n .chest { animation:ch 1.6s ease-in-out infinite; } @keyframes ch { 50% { transform:translateY(-0.6px) } }
+</style>
+
+<h2>타이틀 첫 장면을 다시 그려 봤어요</h2>
+<p class="subtitle">왼쪽이 지금 게임의 첫 장면이고, 오른쪽이 새로 그린 장면이에요. 둘 다 실제 게임의 스프라이트·도트 코드를 그대로 써서 만들었어요. 새 장면은 움직여요.</p>
+
+<div class="cmp">
+  <div class="col"><div class="frame" id="cur"></div><div class="cap">지금</div><div class="dsc">낮의 방. 줄무늬 벽지, 창문, 포스터, 침대, 모니터.</div></div>
+  <div class="col" data-choice="new" onclick="toggleSelect(this)"><div class="frame n" id="neu"></div><div class="cap">새로 그린 것 — 노을 지는 방구석</div><div class="dsc">창밖 노을과 별, 모니터 불빛, 침대 위 고양이, 김 나는 컵라면, 색이 바뀌는 LED, 빈 트로피 자리.</div></div>
+</div>
+
+<script type="module">
+  const BASE = 'http://localhost:5173/src/ui/';
+  const { OUTLINE, placeSprite, shade } = await import(BASE + 'sprite.ts');
+  const { titleHero } = await import(BASE + 'titleScene.ts');
+  document.getElementById('cur').append(titleHero());
+
+  const W = 160, H = 100;
+  const box = (x, y, w, h, c, cls = '') => `<rect x="${x-1}" y="${y-1}" width="${w+2}" height="${h+2}" fill="${OUTLINE}"/><rect class="${cls}" x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/><rect x="${x}" y="${y}" width="${w}" height="1" fill="${shade(c,1.28)}"/><rect x="${x}" y="${y+h-1}" width="${w}" height="1" fill="${shade(c,0.78)}"/>`;
+  const r = (x, y, w, h, c, cls = '') => `<rect class="${cls}" x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+
+  // 벽지 / 바닥
+  const stripes = Array.from({length:10},(_,i)=>r(i*16,5,8,55,'#6b5a9c','')).join('').replace(/fill="#6b5a9c"/g,'fill="#6b5a9c" opacity=".5"');
+  const planks = Array.from({length:14},(_,i)=>r((i*23)%160,64+(i%3)*10,1,10,'#5e3a2b')).join('');
+  const wall = r(0,0,W,H,'#594a8a') + stripes + r(0,5,W,2,'#7a68b0') + r(0,58,W,5,'#3b2d62') + r(0,58,W,1,'#9a86d0') + r(0,63,W,37,'#7d513c') + planks + r(0,63,W,1,'#9b6a50');
+  const led = r(0,1,W,3,'#ff5ac8','led') + r(0,4,W,1,'#2a1f4a');
+
+  // 창문: 노을 그라데이션
+  const win = box(8,9,42,34,'#ff9fb0') + r(9,10,40,9,'#7a63d8') + r(9,19,40,7,'#c077d8') + r(9,26,40,8,'#ff8fa3') + r(9,34,40,8,'#ffb27a')
+    + r(30,34,12,8,'#ffe27a','sunb') + r(33,32,6,2,'#ffe27a','sunb') + r(9,40,40,2,'#3a2a5c')
+    + `<g class="tw" fill="#fff6c8"><rect x="14" y="13" width="2" height="2"/><rect x="40" y="15" width="2" height="2"/></g><g class="tw2" fill="#fff6c8"><rect x="24" y="12" width="2" height="2"/><rect x="45" y="22" width="1" height="1"/></g>`
+    + `<g class="cloud">${r(14,24,10,3,'#ffd0d8')}${r(17,22,6,3,'#ffd0d8')}</g>`
+    + r(28,9,2,34,OUTLINE) + r(8,25,42,2,OUTLINE) + box(5,41,48,3,'#c98f55')
+    + r(4,9,5,33,'#ff7fa8') + r(4,9,1,33,'#ffb0c8') + r(9,9,1,33,'#d05a86') + r(49,9,5,33,'#ff7fa8') + r(53,9,1,33,'#d05a86');
+
+  // 포스터 + 선반
+  const poster = box(110,10,26,32,'#2a3a7a') + r(113,13,20,3,'#ffd34d') + r(114,18,18,1,'#fff') + r(114,20,12,1,'#8fb8ff')
+    + r(119,24,8,8,'#ffd34d') + r(121,32,4,3,'#e0a500') + r(117,26,3,3,'#ffd34d') + r(126,26,3,3,'#ffd34d') + r(120,35,6,2,'#e0a500') + r(115,38,16,1,'#fff') ;
+  const shelf = box(60,24,40,3,'#c98f55') + box(63,15,5,9,'#4fa3ff') + box(69,17,4,7,'#ff7a5a') + box(74,14,4,10,'#58c05a')
+    + `<g opacity=".7"><rect x="85" y="14" width="10" height="2" fill="#3b2d62"/><rect x="86" y="16" width="8" height="1" fill="#3b2d62"/><rect x="88" y="17" width="4" height="4" fill="#3b2d62"/><rect x="87" y="21" width="6" height="2" fill="#3b2d62"/></g>`
+    + r(85,12,10,1,'#9a86d0') ;
+
+  // 침대 + 고양이
+  const bed = box(2,66,48,14,'#9b6a3c') + box(6,56,40,12,'#6f9bf0') + r(6,60,40,2,'#8fb8ff') + r(6,64,40,2,'#5b86d6') + box(8,51,15,6,'#ffffff')
+    + `<g class="chest">${box(30,50,12,7,'#ffa34d')}${r(31,48,3,3,'#ffa34d')}${r(39,48,3,3,'#ffa34d')}${r(33,52,2,5,'#e0821e')}${r(37,52,2,5,'#e0821e')}${r(35,53,1,1,OUTLINE)}${r(39,53,1,1,OUTLINE)}</g>`
+    + `<g class="tail">${r(42,52,6,2,'#ffa34d')}${r(46,50,2,3,'#ffa34d')}</g>`
+    + `<g class="zz"><text x="36" y="46" font-size="5" fill="#fff6c8" font-family="monospace" font-weight="bold">z</text></g><g class="zz b"><text x="40" y="43" font-size="4" fill="#fff6c8" font-family="monospace" font-weight="bold">z</text></g>`;
+
+  // 책상 + 모니터 + 소품
+  const glow = r(86,36,56,34,'#5fd1ff','glow');
+  const desk = box(56,66,98,5,'#b9793c') + box(60,71,5,20,'#8a5a30') + box(145,71,5,20,'#8a5a30') + r(56,70,98,1,'#8a5a30');
+  const monitor = box(92,38,44,26,'#2b3250') + r(95,41,38,20,'#5fd1ff','scr')
+    + r(98,56,32,2,'#2e7fd8') + r(100,46,5,5,'#ffd34d','hit1') + r(116,44,5,5,'#ff6b7a','hit2') + r(124,50,4,4,'#4cc38a','hit1')
+    + r(98,43,16,2,'#ff5a7a') + r(98,43,10,2,'#58e08a') + box(108,64,8,3,'#222a48');
+  const items = box(80,62,14,3,'#ffffff') + `<rect class="key1" x="82" y="59" width="4" height="3" fill="#ffd9b3"/><rect class="key2" x="88" y="59" width="4" height="3" fill="#ffd9b3"/>`
+    + box(98,62,6,3,'#e8e8f0') + box(140,56,10,9,'#ff9f43') + r(139,54,12,2,'#fff') + r(142,58,6,1,'#fff3a0') + r(142,60,6,1,'#fff3a0')
+    + `<g fill="#ffffff"><rect class="steam" x="143" y="50" width="1.5" height="3"/><rect class="steam b" x="146" y="49" width="1.5" height="3"/><rect class="steam c" x="144.5" y="51" width="1.5" height="3"/></g>`
+    + box(128,58,5,8,'#4cf0c8') + r(129,56,3,2,'#c8f0e8') ;
+
+  // 의자 + 사람
+  const chair = box(62,42,16,28,'#e0503c') + r(62,42,16,2,'#ff7a5a') + r(68,44,4,24,'#b83a2a') + box(66,70,8,4,'#2b2b3a');
+  const person = placeSprite({ shirt:'#3a86ff', hair:'#7a4426', headset:'#ff5a3c' }, 'stand', 74, 78, 44, '');
+  const rug = r(40,86,82,10,'#3b2d62') + r(42,87,78,8,'#e0507a') + r(46,89,70,4,'#ffd34d') + r(50,90,62,2,'#e0507a');
+  const slip = box(24,88,7,3,'#ff9fb0') + box(33,89,7,3,'#ff9fb0');
+  const plant = box(148,76,9,12,'#d9503a') + r(150,68,5,8,'#58c05a') + r(147,71,4,4,'#58c05a') + r(154,70,4,4,'#58c05a');
+  const tint = `<rect width="${W}" height="${H}" fill="#2a1f5a" opacity=".12"/>`;
+
+  document.getElementById('neu').innerHTML = `<svg viewBox="0 0 ${W} ${H}" shape-rendering="crispEdges">${wall}${led}${win}${poster}${shelf}${bed}${rug}${glow}${chair}${person}${desk}${monitor}${items}${plant}${tint}</svg>`;
+</script>

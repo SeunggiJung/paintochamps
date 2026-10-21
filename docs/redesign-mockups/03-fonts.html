@@ -1,0 +1,56 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.0/dist/galmuri.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gaegu:wght@700&display=swap">
+<style>
+  .row { display:flex; gap:20px; justify-content:center; flex-wrap:wrap; }
+  .fp { width:360px; background:#f2f4f6; border-radius:24px; padding:16px; color:#191f28; box-shadow:0 6px 22px rgba(0,0,0,.14); text-align:left; zoom:.9; }
+  .fp .card { background:#fff; border-radius:20px; padding:16px; margin-bottom:12px; }
+  .fp .tag { font-size:12px; color:#8b95a1; margin-bottom:6px; }
+  .fp .num { font-size:26px; }
+  .fp .kv { display:flex; justify-content:space-between; align-items:baseline; padding:5px 0; font-size:14px; }
+  .fp .btn { background:#3182f6; color:#fff; text-align:center; border-radius:16px; padding:15px; font-size:17px; margin-top:6px; }
+  .fp .win { background:linear-gradient(135deg,#fff7e0,#ffe9a8); border-radius:16px; padding:14px; text-align:center; }
+  .fp .win .t { font-size:20px; } .fp .win .s { font-size:12.5px; color:#8a6a1f; margin-top:2px; }
+  .name { text-align:center; margin:10px 0 2px; font-weight:700; } .desc { text-align:center; color:var(--text-secondary); font-size:13px; max-width:340px; margin:0 auto 12px; }
+  /* 시안 1: Pretendard만 */
+  .f1 { font-family:'Pretendard',sans-serif; } .f1 .h { font-weight:800; font-size:22px; } .f1 .num { font-weight:800; }
+  /* 시안 2: Pretendard 본문 + Jua 제목·숫자 */
+  .f2 { font-family:'Pretendard',sans-serif; } .f2 .h, .f2 .num, .f2 .win .t, .f2 .btn { font-family:'Jua','Pretendard',sans-serif; font-weight:400; } .f2 .h { font-size:25px; } .f2 .num { font-size:28px; } .f2 .btn { font-size:20px; }
+  /* 시안 3: Pretendard 본문 + 갈무리(도트 한글) 제목·숫자·버튼 */
+  .f3 { font-family:'Pretendard',sans-serif; } .f3 .h, .f3 .num, .f3 .win .t, .f3 .btn { font-family:'Galmuri11','Pretendard',sans-serif; font-weight:700; } .f3 .h { font-size:20px; } .f3 .num { font-size:22px; } .f3 .btn { font-size:16px; } .f3 .win .t { font-size:17px; }
+</style>
+
+<h2>글자는 어느 쪽이 마음에 들어요?</h2>
+<p class="subtitle">같은 화면에 글자만 바꿨어요. 색은 밝은 테마(A)로 맞췄지만 글자 조합은 어느 테마에서도 같이 쓸 수 있어요. 본문은 셋 다 Pretendard예요.</p>
+
+<div class="row">
+  <div data-choice="font1" onclick="toggleSelect(this)">
+    <div class="fp f1">
+      <div class="card"><div class="h">봇 · 23세</div><div class="tag">8시즌 3/4턴 · KIWOOM DRX · 프로 1부</div>
+        <div class="kv"><span>돈</span><span class="num">4억 3,230만</span></div><div class="kv"><span>명성</span><span class="num">90</span></div></div>
+      <div class="win"><div class="t" style="font-weight:800">🏆 우승 · LCK컵 조별 대항전</div><div class="s">10팀 중 1위 · 월드 챔피언십 진출</div></div>
+      <div class="btn" style="margin-top:12px;font-weight:800">다음 턴 진행</div>
+    </div>
+    <div class="name">1. Pretendard만</div><div class="desc">가장 깔끔하고 읽기 편해요. 킥루와 같은 계열이에요. 도트 그림 쪽이 귀여움을 맡아요.</div>
+  </div>
+
+  <div data-choice="font2" onclick="toggleSelect(this)">
+    <div class="fp f2">
+      <div class="card"><div class="h">봇 · 23세</div><div class="tag">8시즌 3/4턴 · KIWOOM DRX · 프로 1부</div>
+        <div class="kv"><span>돈</span><span class="num">4억 3,230만</span></div><div class="kv"><span>명성</span><span class="num">90</span></div></div>
+      <div class="win"><div class="t">🏆 우승 · LCK컵 조별 대항전</div><div class="s">10팀 중 1위 · 월드 챔피언십 진출</div></div>
+      <div class="btn" style="margin-top:12px">다음 턴 진행</div>
+    </div>
+    <div class="name">2. Pretendard + 주아(Jua)</div><div class="desc">제목·숫자·버튼만 통통하고 둥근 글자예요. 가볍고 귀여운 느낌이 나요.</div>
+  </div>
+
+  <div data-choice="font3" onclick="toggleSelect(this)">
+    <div class="fp f3">
+      <div class="card"><div class="h">봇 · 23세</div><div class="tag">8시즌 3/4턴 · KIWOOM DRX · 프로 1부</div>
+        <div class="kv"><span>돈</span><span class="num">4억 3,230만</span></div><div class="kv"><span>명성</span><span class="num">90</span></div></div>
+      <div class="win"><div class="t">🏆 우승 · LCK컵 조별 대항전</div><div class="s">10팀 중 1위 · 월드 챔피언십 진출</div></div>
+      <div class="btn" style="margin-top:12px">다음 턴 진행</div>
+    </div>
+    <div class="name">3. Pretendard + 갈무리(Galmuri)</div><div class="desc">제목·숫자·버튼이 도트 한글이에요. 도트 그림과 가장 잘 어울리고 게임 느낌이 커요.</div>
+  </div>
+</div>

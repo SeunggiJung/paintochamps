@@ -1,0 +1,135 @@
+<style>
+  .T { font-family:'Pretendard','Noto Sans KR','Malgun Gothic',system-ui,sans-serif; color:#191f28; }
+  .row-phones { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  .pwrap { text-align:center; }
+  .pwrap h3 { margin:8px 0 2px; font-size:15px; }
+  .pwrap p { margin:0; font-size:12px; color:var(--text-secondary); max-width:230px; }
+  .ph { width:360px; height:700px; zoom:.64; border-radius:26px; overflow:hidden; position:relative; background:#f2f4f6; box-shadow:0 6px 22px rgba(0,0,0,.16); text-align:left; }
+  .ph .body { height:100%; overflow:hidden; padding:14px 14px 130px; }
+  .top { display:flex; justify-content:space-between; align-items:center; margin:2px 2px 10px; }
+  .top b { font-size:20px; font-weight:800; }
+  .top span { font-size:12px; color:#8b95a1; }
+  .c { background:#fff; border-radius:20px; padding:14px 16px; margin-bottom:12px; }
+  .c h4 { margin:0 0 8px; font-size:15px; font-weight:800; }
+  .sub { font-size:12.5px; color:#8b95a1; }
+  .bar { height:10px; background:#e9ecef; border-radius:99px; overflow:hidden; margin:7px 0 4px; } .bar i { display:block; height:100%; background:#3182f6; }
+  .kv { display:flex; justify-content:space-between; padding:6px 0; font-size:14px; }
+  .chip { display:inline-block; font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:99px; background:#e8f3ff; color:#1b64da; margin-right:4px; }
+  .chip.r { background:#ffe8ea; color:#d6293a; } .chip.g { background:#e6f8ee; color:#16a34a; } .chip.n { background:#eceff2; color:#6b7684; }
+  .todo { display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px solid #f0f2f4; }
+  .todo:first-of-type { border-top:0; }
+  .ic { width:38px; height:38px; border-radius:50%; background:#e8f3ff; display:grid; place-items:center; font-size:17px; }
+  .todo .t { flex:1; font-size:14.5px; font-weight:700; } .todo .t small { display:block; font-weight:400; font-size:12px; color:#8b95a1; }
+  .dot { width:7px; height:7px; border-radius:50%; background:#f04452; display:inline-block; margin-left:5px; vertical-align:middle; }
+  .room { height:150px; border-radius:14px; background:url(/files/room.png) -16px -205px / 345px auto no-repeat; image-rendering:pixelated; }
+  .cta { position:absolute; left:14px; right:14px; bottom:84px; background:#3182f6; color:#fff; text-align:center; font-weight:800; font-size:17px; padding:15px; border-radius:16px; }
+  .tabs { position:absolute; left:0; right:0; bottom:0; height:72px; background:#fff; border-radius:22px 22px 0 0; display:flex; box-shadow:0 -4px 16px rgba(0,0,0,.06); }
+  .tabs div { flex:1; text-align:center; padding-top:10px; font-size:11.5px; color:#8b95a1; font-weight:600; } .tabs div i { display:block; font-style:normal; font-size:21px; margin-bottom:2px; filter:grayscale(1); opacity:.55; }
+  .tabs div.on { color:#191f28; } .tabs div.on i { filter:none; opacity:1; }
+  .stat { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:14px; } .stat span:first-child { width:56px; } .stat .bar { flex:1; margin:0; } .stat b { width:34px; text-align:right; }
+  .tl { position:relative; padding-left:18px; } .tl .e { position:relative; padding:7px 0; font-size:14px; display:flex; justify-content:space-between; }
+  .tl .e::before { content:''; position:absolute; left:-18px; top:13px; width:9px; height:9px; border-radius:50%; background:#cbd1d8; } .tl .e.on::before { background:#3182f6; box-shadow:0 0 0 4px #dbeaff; } .tl .e.done::before { background:#16a34a; }
+  .tl::after { content:''; position:absolute; left:4px; top:14px; bottom:14px; width:2px; background:#e5e8eb; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; } .tile { background:#f7f8fa; border-radius:14px; padding:12px; font-size:13px; } .tile b { display:block; font-size:18px; margin-top:2px; }
+
+  /* PC */
+  .pc { width:1000px; zoom:.9; margin:0 auto; background:#e9edf1; border-radius:14px; padding:22px 0; box-shadow:0 8px 28px rgba(0,0,0,.14); }
+  .pc .panel { width:560px; margin:0 auto; background:#f2f4f6; border-radius:24px; padding:16px; box-shadow:0 8px 40px rgba(20,30,60,.16); position:relative; height:520px; overflow:hidden; }
+  .pc .tabs { border-radius:0 0 24px 24px; }
+  .note { text-align:center; font-size:12px; color:var(--text-secondary); margin-top:8px; }
+</style>
+
+<h2>하단 탭으로 나눈 구조</h2>
+<p class="subtitle">화면 하나에 몰려 있던 내용을 4개 탭으로 나눴어요. 밝은 테마(A) 기준이고, 테마를 바꿔도 구조는 같아요. 탭 이름과 나눈 기준은 제 안이에요.</p>
+
+<div class="row-phones T">
+
+  <div class="pwrap" data-choice="home" onclick="toggleSelect(this)">
+    <div class="ph"><div class="body">
+      <div class="top"><b>봇 · 23세</b><span>8시즌 3/4턴</span></div>
+      <div class="c"><div class="kv" style="padding-top:0"><span class="sub">KIWOOM DRX · 프로 1부</span><span class="chip g">▲ 상승세</span></div>
+        <div class="kv"><span class="sub">컨디션 · 좋음</span><b>80</b></div><div class="bar"><i style="width:80%"></i></div>
+        <div class="kv" style="padding-bottom:0"><span><span class="sub">돈</span> <b>4억 3,230만</b></span><span><span class="sub">명성</span> <b>90</b></span></div></div>
+      <div class="c"><h4>확인할 일</h4>
+        <div class="todo"><div class="ic">📝</div><div class="t">연봉 협상할 수 있어요<small>이번 시즌 한 번</small></div><span class="dot"></span></div>
+        <div class="todo"><div class="ic">🎬</div><div class="t">광고 촬영이 다가와요<small>3턴 뒤</small></div></div></div>
+      <div class="c"><div class="room"></div></div>
+    </div>
+    <div class="cta">다음 턴 진행</div>
+    <div class="tabs"><div class="on"><i>🏠</i>홈</div><div><i>📅</i>시즌</div><div><i>🧑</i>선수</div><div><i>🏆</i>기록</div></div></div>
+    <h3>홈</h3><p>지금 상태와 해야 할 일, 다음 턴 버튼. 가장 자주 보는 화면이라 짧게 유지해요.</p>
+  </div>
+
+  <div class="pwrap" data-choice="season" onclick="toggleSelect(this)">
+    <div class="ph"><div class="body">
+      <div class="top"><b>시즌</b><span>8시즌 · 23세</span></div>
+      <div class="c"><h4>이번 시즌 일정</h4><div class="tl">
+        <div class="e done"><span>LCK 라운드 1~2</span><b style="color:#f04452">1위 / 10팀</b></div>
+        <div class="e done"><span>로드 투 MSI</span><b style="color:#f04452">3위 / 6팀</b></div>
+        <div class="e on"><span>MSI</span><b style="color:#3182f6">진행 중</b></div>
+        <div class="e"><span class="sub">레전드 그룹</span><span class="sub">2턴 뒤</span></div>
+        <div class="e"><span class="sub">월드 챔피언십</span><span class="sub">2턴 뒤</span></div></div></div>
+      <div class="c"><h4>시즌 계획</h4><span class="chip">균형</span><span class="chip">영상 분석</span><span class="chip n">레슨 켬</span>
+        <div class="sub" style="margin:8px 0">이번 턴 예정 · 영상 분석, 개인 레슨</div>
+        <div class="kv" style="color:#3182f6;font-weight:700;padding-bottom:0"><span>계획 바꾸기</span><span>›</span></div></div>
+      <div class="c"><div class="kv" style="padding:0"><b>다른 팀 성적 보기</b><span>›</span></div></div>
+    </div>
+    <div class="tabs"><div><i>🏠</i>홈</div><div class="on"><i>📅</i>시즌</div><div><i>🧑</i>선수</div><div><i>🏆</i>기록</div></div></div>
+    <h3>시즌</h3><p>일정을 타임라인으로, 계획 요약과 변경, 다른 팀 성적. 3,893px짜리 계획 시트는 여기서 단계별로 나눠 열려요.</p>
+  </div>
+
+  <div class="pwrap" data-choice="player" onclick="toggleSelect(this)">
+    <div class="ph"><div class="body">
+      <div class="top"><b>선수</b><span>AOS 실력치 668</span></div>
+      <div class="c"><h4>능력치</h4>
+        <div class="stat"><span>반응속도</span><div class="bar"><i style="width:51%"></i></div><b>514</b></div>
+        <div class="stat"><span>정확도</span><div class="bar"><i style="width:54%"></i></div><b>536</b></div>
+        <div class="stat"><span>집중력</span><div class="bar"><i style="width:52%"></i></div><b>518</b></div>
+        <div class="stat"><span>판단력 ★</span><div class="bar"><i style="width:94%"></i></div><b>937</b></div>
+        <div class="stat"><span>멘탈</span><div class="bar"><i style="width:53%"></i></div><b>527</b></div>
+        <div class="stat"><span>팀워크 ★</span><div class="bar"><i style="width:83%"></i></div><b>833</b></div></div>
+      <div class="c"><h4>장비·시설</h4><div class="grid2"><div class="tile">장비<b>Lv 9</b></div><div class="tile">시설<b>6종</b></div></div>
+        <div class="kv" style="color:#3182f6;font-weight:700;padding:10px 0 0"><span>업그레이드 하기</span><span>›</span></div></div>
+      <div class="c"><div class="kv" style="padding:0"><b>내 경력</b><span class="sub">구단 7곳 ›</span></div></div>
+    </div>
+    <div class="tabs"><div><i>🏠</i>홈</div><div><i>📅</i>시즌</div><div class="on"><i>🧑</i>선수</div><div><i>🏆</i>기록</div></div></div>
+    <h3>선수</h3><p>능력치, 장비·시설 업그레이드, 내 경력. 돈 쓰는 일은 모두 여기로 모아요.</p>
+  </div>
+
+  <div class="pwrap" data-choice="records" onclick="toggleSelect(this)">
+    <div class="ph"><div class="body">
+      <div class="top"><b>기록</b><span>완주 4회</span></div>
+      <div class="c"><div class="kv" style="padding-top:0"><b>엔딩 도감</b><span class="chip">1 / 12</span></div>
+        <div class="kv"><b>업적</b><span class="chip">9 / 27</span></div>
+        <div class="kv" style="padding-bottom:0"><b>명예의 전당</b><span class="chip n">4판</span></div></div>
+      <div class="c"><div class="kv" style="padding-top:0"><b>업적 상점</b><span class="chip g">🪙 45</span></div>
+        <div class="sub">SR 보장권 1장 · 협상 노하우 1단계</div></div>
+      <div class="c"><h4>설정</h4>
+        <div class="kv"><span>테마</span><span><span class="chip">자동</span><span class="chip n">A</span><span class="chip n">B</span><span class="chip n">C</span></span></div>
+        <div class="kv"><span>소리</span><span>켜짐</span></div>
+        <div class="kv"><span>업데이트 로그</span><span>›</span></div>
+        <div class="kv" style="padding-bottom:0"><span>게임 가이드 · 문의</span><span>›</span></div></div>
+    </div>
+    <div class="tabs"><div><i>🏠</i>홈</div><div><i>📅</i>시즌</div><div><i>🧑</i>선수</div><div class="on"><i>🏆</i>기록</div></div></div>
+    <h3>기록</h3><p>도감·업적·상점·명예의 전당, 설정(테마 선택 포함). 4,775px짜리 도감은 탭 안에서 접어서 보여줘요.</p>
+  </div>
+
+</div>
+
+<h2 style="margin-top:34px">PC에서는 이렇게 보여요</h2>
+<p class="subtitle">가운데 패널에만 게임이 있고 양옆은 배경만 비어요. 모바일 구조 그대로이고 폭만 넓어져요(폭 값은 제 추측이에요).</p>
+<div class="T"><div class="pc"><div class="panel">
+  <div class="top"><b>봇 · 23세</b><span>8시즌 3/4턴</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="c" style="margin:0"><div class="kv" style="padding-top:0"><span class="sub">KIWOOM DRX · 프로 1부</span><span class="chip g">▲ 상승세</span></div>
+      <div class="kv"><span class="sub">컨디션 · 좋음</span><b>80</b></div><div class="bar"><i style="width:80%"></i></div>
+      <div class="kv" style="padding-bottom:0"><span><span class="sub">돈</span> <b>4억 3,230만</b></span><span><span class="sub">명성</span> <b>90</b></span></div></div>
+    <div class="c" style="margin:0"><div class="room" style="height:118px"></div></div>
+  </div>
+  <div class="c" style="margin-top:12px"><h4>확인할 일</h4>
+    <div class="todo"><div class="ic">📝</div><div class="t">연봉 협상할 수 있어요<small>이번 시즌 한 번</small></div><span class="dot"></span></div>
+    <div class="todo"><div class="ic">🎬</div><div class="t">광고 촬영이 다가와요<small>3턴 뒤</small></div></div></div>
+  <div class="cta" style="left:16px;right:16px;bottom:84px">다음 턴 진행</div>
+  <div class="tabs"><div class="on"><i>🏠</i>홈</div><div><i>📅</i>시즌</div><div><i>🧑</i>선수</div><div><i>🏆</i>기록</div></div>
+</div></div>
+<div class="note">PC 폭 약 1000px 화면 기준 축소 이미지예요. 패널 폭이 넓은 만큼 홈은 카드 두 개를 나란히 놓았어요.</div></div>

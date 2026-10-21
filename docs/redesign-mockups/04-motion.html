@@ -1,0 +1,82 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  .mrow { display:flex; gap:22px; justify-content:center; flex-wrap:wrap; }
+  .mb { width:300px; text-align:left; }
+  .stage { width:300px; height:420px; background:#f2f4f6; border-radius:22px; overflow:hidden; position:relative; font-family:'Pretendard',sans-serif; color:#191f28; box-shadow:0 6px 22px rgba(0,0,0,.14); padding:14px; }
+  .mc { background:#fff; border-radius:18px; padding:12px 14px; margin-bottom:10px; font-size:13.5px; }
+  .mc b { font-weight:800; }
+  .mbar { height:9px; background:#e9ecef; border-radius:99px; overflow:hidden; margin-top:7px; } .mbar i { display:block; height:100%; background:#3182f6; width:80%; }
+  .mbtn { position:absolute; left:14px; right:14px; bottom:14px; background:#3182f6; color:#fff; text-align:center; font-weight:800; padding:14px; border-radius:14px; font-size:15px; }
+  .sheet2 { position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:20px 20px 0 0; padding:16px; height:210px; box-shadow:0 -8px 24px rgba(0,0,0,.15); font-size:13px; }
+  .sheet2 .big { font-size:24px; font-weight:800; margin:6px 0 2px; } .sheet2 .gain { color:#16a34a; font-weight:800; }
+  .cap { text-align:center; margin:10px 0 2px; font-weight:700; } .dsc { font-size:12.5px; color:var(--text-secondary); text-align:center; max-width:300px; margin:0 auto; }
+  .tag { position:absolute; top:10px; right:12px; font-size:10.5px; background:#191f28; color:#fff; padding:2px 8px; border-radius:99px; opacity:.75; }
+
+  /* 1 차분: 150ms 페이드, 눌림만 */
+  .m1 .mc { animation:m1in 6s infinite; } .m1 .mc:nth-child(2){animation-delay:.0s}
+  @keyframes m1in { 0%,3%{opacity:0} 8%,92%{opacity:1} 97%,100%{opacity:0} }
+  .m1 .mbtn { animation:m1btn 6s infinite; } @keyframes m1btn { 0%,40%{transform:scale(1)} 44%{transform:scale(.97)} 48%,100%{transform:scale(1)} }
+  .m1 .sheet2 { animation:m1sheet 6s infinite; } @keyframes m1sheet { 0%,50%{opacity:0} 56%,92%{opacity:1} 97%,100%{opacity:0} }
+
+  /* 2 보통: 카드 순서대로 떠오름, 시트 슬라이드, 막대 채움, 숫자 올라감 */
+  .m2 .mc { animation:m2in 6s infinite both; opacity:0; }
+  .m2 .mc:nth-child(1){animation-delay:0s} .m2 .mc:nth-child(2){animation-delay:.12s} .m2 .mc:nth-child(3){animation-delay:.24s}
+  @keyframes m2in { 0%{opacity:0;transform:translateY(18px)} 6%,92%{opacity:1;transform:none} 97%,100%{opacity:0;transform:translateY(8px)} }
+  .m2 .mbar i { animation:m2bar 6s infinite both; } @keyframes m2bar { 0%{width:0} 14%,92%{width:80%} 100%{width:0} }
+  .m2 .mbtn { animation:m2btn 6s infinite; } @keyframes m2btn { 0%,40%{transform:scale(1)} 44%{transform:scale(.96)} 50%,100%{transform:scale(1)} }
+  .m2 .sheet2 { animation:m2sheet 6s infinite both; transform:translateY(100%); } @keyframes m2sheet { 0%,48%{transform:translateY(100%)} 56%,90%{transform:none} 96%,100%{transform:translateY(100%)} }
+
+  /* 3 화려: 보통 + 바운스/반짝/튀어오르는 +N, 팝 */
+  .m3 .mc { animation:m3in 6s infinite both; opacity:0; }
+  .m3 .mc:nth-child(1){animation-delay:0s} .m3 .mc:nth-child(2){animation-delay:.12s} .m3 .mc:nth-child(3){animation-delay:.24s}
+  @keyframes m3in { 0%{opacity:0;transform:translateY(28px) scale(.96)} 7%{opacity:1;transform:translateY(-4px) scale(1.01)} 10%,92%{opacity:1;transform:none} 97%,100%{opacity:0;transform:translateY(8px)} }
+  .m3 .mbar i { animation:m3bar 6s infinite both; } @keyframes m3bar { 0%{width:0} 14%{width:86%} 18%,92%{width:80%} 100%{width:0} }
+  .m3 .mbtn { overflow:hidden; animation:m3btn 6s infinite; } @keyframes m3btn { 0%,40%{transform:scale(1)} 43%{transform:scale(.94)} 47%{transform:scale(1.05)} 52%,100%{transform:scale(1)} }
+  .m3 .mbtn::after { content:''; position:absolute; top:0; bottom:0; width:40px; left:-60px; background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent); animation:shine 6s infinite; } @keyframes shine { 0%,60%{left:-60px} 70%{left:320px} 100%{left:320px} }
+  .m3 .sheet2 { animation:m3sheet 6s infinite both; transform:translateY(100%); } @keyframes m3sheet { 0%,48%{transform:translateY(100%)} 54%{transform:translateY(-8px)} 58%,90%{transform:none} 96%,100%{transform:translateY(100%)} }
+  .m3 .pop { display:inline-block; animation:pop 6s infinite both; } @keyframes pop { 0%,56%{transform:scale(0);opacity:0} 61%{transform:scale(1.5);opacity:1} 65%,90%{transform:scale(1);opacity:1} 96%,100%{opacity:0} }
+</style>
+
+<h2>움직임은 어느 정도가 좋아요?</h2>
+<p class="subtitle">같은 장면(카드가 나타남 → 버튼 누름 → 결과 시트가 올라옴)을 세 가지 강도로 반복 재생해요. 직접 눈으로 보세요.</p>
+
+<div class="mrow">
+  <div class="mb" data-choice="m1" onclick="toggleSelect(this)">
+    <div class="stage m1"><span class="tag">차분</span>
+      <div class="mc"><b>봇 · 23세</b> 컨디션 80<div class="mbar"><i></i></div></div>
+      <div class="mc">이번 시즌 · MSI 진행 중</div>
+      <div class="mc">확인할 일 · 연봉 협상</div>
+      <div class="mbtn">다음 턴 진행</div>
+      <div class="sheet2"><b>6개월이 지났다</b><div class="big">판단력 181 <span class="gain">+41</span></div>돈 20만 → 30만</div></div>
+    <div class="cap">1. 차분</div><div class="dsc">부드럽게 나타나고, 버튼만 살짝 눌려요. 가장 조용하고 빨라요.</div>
+  </div>
+
+  <div class="mb" data-choice="m2" onclick="toggleSelect(this)">
+    <div class="stage m2"><span class="tag">보통</span>
+      <div class="mc"><b>봇 · 23세</b> 컨디션 80<div class="mbar"><i></i></div></div>
+      <div class="mc">이번 시즌 · MSI 진행 중</div>
+      <div class="mc">확인할 일 · 연봉 협상</div>
+      <div class="mbtn">다음 턴 진행</div>
+      <div class="sheet2"><b>6개월이 지났다</b><div class="big">판단력 <span class="cu" data-to="181">140</span> <span class="gain">+41</span></div>돈 20만 → 30만</div></div>
+    <div class="cap">2. 보통</div><div class="dsc">카드가 아래에서 차례로 떠오르고, 막대가 차오르고, 결과는 아래에서 올라오며 숫자가 올라가요.</div>
+  </div>
+
+  <div class="mb" data-choice="m3" onclick="toggleSelect(this)">
+    <div class="stage m3"><span class="tag">화려</span>
+      <div class="mc"><b>봇 · 23세</b> 컨디션 80<div class="mbar"><i></i></div></div>
+      <div class="mc">이번 시즌 · MSI 진행 중</div>
+      <div class="mc">확인할 일 · 연봉 협상</div>
+      <div class="mbtn">다음 턴 진행</div>
+      <div class="sheet2"><b>6개월이 지났다</b><div class="big">판단력 <span class="cu" data-to="181">140</span> <span class="gain pop">+41</span></div>돈 20만 → 30만</div></div>
+    <div class="cap">3. 화려</div><div class="dsc">보통에 더해 통통 튀는 등장, 버튼 반짝임, 시트 바운스, 증가 숫자가 튀어나와요.</div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const els=[...document.querySelectorAll('.cu')];
+    function run(){ els.forEach(el=>{ const to=+el.dataset.to, from=140, t0=performance.now()+3300, d=700;
+      (function f(now){ const p=Math.min(1,Math.max(0,(now-t0)/d)); el.textContent=Math.round(from+(to-from)*p); if(now<t0+d+200) requestAnimationFrame(f); })(performance.now()); }); }
+    run(); setInterval(run,6000);
+  })();
+</script>

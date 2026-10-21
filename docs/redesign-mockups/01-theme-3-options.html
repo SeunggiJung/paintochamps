@@ -1,0 +1,120 @@
+<style>
+  .vs-wrap { display:flex; gap:18px; flex-wrap:wrap; justify-content:center; }
+  .vs-item { cursor:pointer; text-align:center; }
+  .vs-item h3 { margin:10px 0 2px; }
+  .vs-item p { margin:0 0 6px; color:var(--text-secondary); font-size:13px; max-width:330px; }
+  .vs-item.selected .phone { outline:4px solid var(--selected-border); outline-offset:4px; }
+  .phone { width:360px; height:700px; border-radius:26px; overflow:hidden; position:relative; zoom:.78; text-align:left; box-shadow:0 8px 28px rgba(0,0,0,.18); font-family:'Pretendard','Noto Sans KR','Malgun Gothic',system-ui,sans-serif; }
+  .phone .scroll { height:100%; overflow:hidden; padding:14px 14px 150px; }
+  .room { width:100%; height:176px; background:url(/files/room.png) -16px -205px / 345px auto no-repeat; border-radius:12px; image-rendering:pixelated; }
+  .hd { display:flex; justify-content:space-between; align-items:flex-start; }
+  .nm { font-size:22px; font-weight:800; line-height:1.2; }
+  .sub { font-size:12.5px; margin-top:3px; }
+  .bar { height:10px; border-radius:99px; overflow:hidden; margin:8px 0 4px; }
+  .bar i { display:block; height:100%; width:80%; }
+  .row2 { display:flex; justify-content:space-between; font-size:13px; }
+  .sch div.r { display:flex; justify-content:space-between; padding:7px 0; font-size:14px; }
+  .btm { position:absolute; left:0; right:0; bottom:0; padding:12px 14px 16px; }
+  .btm .go { display:block; width:100%; padding:15px; font-size:17px; font-weight:800; text-align:center; }
+  .btm .mini { display:flex; gap:8px; margin-top:8px; }
+  .btm .mini span { flex:1; text-align:center; padding:9px 0; font-size:13px; font-weight:700; }
+  .card2 { padding:14px 16px; margin-bottom:12px; }
+  .card2 h4 { margin:0 0 6px; font-size:15px; }
+  .chip { display:inline-block; font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:99px; margin-right:4px; }
+
+  /* A: 밝은 카드 (킥루 정리판) */
+  .A { background:#f2f4f6; color:#191f28; }
+  .A .card2 { background:#fff; border-radius:20px; }
+  .A .sub, .A .row2 b.l, .A .r span.m { color:#8b95a1; }
+  .A .bar { background:#e9ecef; } .A .bar i { background:#3182f6; }
+  .A .chip { background:#e8f3ff; color:#1b64da; }
+  .A .btm { background:linear-gradient(to top,#f2f4f6 70%,rgba(242,244,246,0)); }
+  .A .go { background:#3182f6; color:#fff; border-radius:16px; }
+  .A .mini span { background:#e5e8eb; color:#4e5968; border-radius:12px; }
+  .A .room { border-radius:14px; }
+  .A .hot { color:#f04452; font-weight:700; }
+
+  /* B: 크림 + 도트 테두리 (메이플풍) */
+  .B { background:#fff1d6; color:#3b2a20; }
+  .B .card2 { background:#fffdf4; border:3px solid #5b3a29; border-radius:10px; box-shadow:0 4px 0 #5b3a29; }
+  .B .sub, .B .r span.m { color:#8a6a55; }
+  .B .bar { background:#f0dcc0; border:2px solid #5b3a29; height:14px; } .B .bar i { background:repeating-linear-gradient(90deg,#ff8a3d 0 8px,#ffa860 8px 10px); }
+  .B .chip { background:#ffd45e; border:2px solid #5b3a29; color:#5b3a29; border-radius:6px; }
+  .B .btm { background:linear-gradient(to top,#fff1d6 72%,rgba(255,241,214,0)); }
+  .B .go { background:#ff8a3d; color:#fff; border:3px solid #5b3a29; border-radius:10px; box-shadow:0 5px 0 #5b3a29; text-shadow:0 2px 0 rgba(0,0,0,.25); }
+  .B .mini span { background:#fffdf4; border:3px solid #5b3a29; border-radius:8px; box-shadow:0 3px 0 #5b3a29; color:#5b3a29; }
+  .B .room { border:3px solid #5b3a29; border-radius:8px; height:170px; }
+  .B .hot { color:#d9480f; font-weight:800; }
+
+  /* C: 다크 다듬기 */
+  .C { background:radial-gradient(120% 60% at 50% 0%,#2b2f6b 0%,#14172f 60%); color:#eef0ff; }
+  .C .card2 { background:rgba(36,42,92,.72); border:1px solid #3b4490; border-radius:18px; box-shadow:0 6px 18px rgba(0,0,0,.25); }
+  .C .sub, .C .r span.m { color:#9aa3d6; }
+  .C .bar { background:#10132b; } .C .bar i { background:linear-gradient(90deg,#6c8cff,#a78bfa); }
+  .C .chip { background:rgba(255,207,90,.16); color:#ffcf5a; }
+  .C .btm { background:linear-gradient(to top,#14172f 70%,rgba(20,23,47,0)); }
+  .C .go { background:linear-gradient(90deg,#5b8cff,#8f6bff); color:#fff; border-radius:16px; box-shadow:0 6px 18px rgba(91,140,255,.45); }
+  .C .mini span { background:#232a5c; color:#c5ccff; border-radius:12px; }
+  .C .hot { color:#ffcf5a; font-weight:800; }
+</style>
+
+<h2>어느 쪽 분위기가 마음에 들어요? (도트 방 그림이 보이게 위치를 올렸어요)</h2>
+<p class="subtitle">같은 홈 화면(프로 1부 23세)을 세 가지 분위기로 그렸어요. 도트 방 그림은 지금 그대로고, 둘러싼 화면만 바꿨어요.</p>
+
+<div class="vs-wrap">
+
+  <div class="vs-item" data-choice="A" onclick="toggleSelect(this)">
+    <div class="phone A"><div class="scroll">
+      <div class="card2"><div class="hd"><div><div class="nm">봇 · 23세</div><div class="sub">8시즌 3/4턴 · AOS · 프로 1부</div></div><span class="chip">KIWOOM DRX</span></div>
+        <div class="row2" style="margin-top:10px"><span class="sub">컨디션 · 좋음</span><b>80</b></div><div class="bar"><i></i></div>
+        <div class="row2" style="margin-top:8px"><span><span class="sub">돈</span> <b>4억 3,230만</b></span><span><span class="sub">명성</span> <b>90</b></span></div>
+        <div class="sub" style="margin-top:8px">구단 재정 ★★★★★ · 인기 ★★★★☆ · 명성 ★★★★★ <span class="hot">▲ 상승세</span></div></div>
+      <div class="card2"><div class="room"></div></div>
+      <div class="card2"><h4>이번 시즌 일정</h4><div class="sch">
+        <div class="r"><span>LCK 라운드 1~2</span><b class="hot">1위 / 10팀</b></div>
+        <div class="r"><span>로드 투 MSI</span><b class="hot">3위 / 6팀</b></div>
+        <div class="r"><span>MSI</span><b style="color:#3182f6">진행 중</b></div>
+        <div class="r"><span class="m">월드 챔피언십</span><span class="m">2턴 뒤</span></div></div></div>
+      <div class="card2"><h4>이번 시즌 계획</h4><span class="chip">균형</span><span class="chip">훈련: 영상 분석</span><div class="sub" style="margin-top:8px">이번 턴 예정 · 영상 분석, 개인 레슨</div></div>
+    </div>
+    <div class="btm"><span class="go">다음 턴 진행</span><div class="mini"><span>내 경력</span><span>연봉 협상</span><span>이적 요청</span></div></div></div>
+    <h3>A. 밝은 카드 (킥루 정리판)</h3><p>킥루와 가장 가까워요. 밝은 회색 배경에 흰 카드, 파란 포인트, 아래 고정 버튼. 깔끔하고 읽기 편해요.</p>
+  </div>
+
+  <div class="vs-item" data-choice="B" onclick="toggleSelect(this)">
+    <div class="phone B"><div class="scroll">
+      <div class="card2"><div class="hd"><div><div class="nm">봇 · 23세</div><div class="sub">8시즌 3/4턴 · AOS · 프로 1부</div></div><span class="chip">KIWOOM DRX</span></div>
+        <div class="row2" style="margin-top:10px"><span class="sub">컨디션 · 좋음</span><b>80</b></div><div class="bar"><i></i></div>
+        <div class="row2" style="margin-top:8px"><span><span class="sub">돈</span> <b>4억 3,230만</b></span><span><span class="sub">명성</span> <b>90</b></span></div>
+        <div class="sub" style="margin-top:8px">구단 재정 ★★★★★ · 인기 ★★★★☆ · 명성 ★★★★★ <span class="hot">▲ 상승세</span></div></div>
+      <div class="card2"><div class="room"></div></div>
+      <div class="card2"><h4>이번 시즌 일정</h4><div class="sch">
+        <div class="r"><span>LCK 라운드 1~2</span><b class="hot">1위 / 10팀</b></div>
+        <div class="r"><span>로드 투 MSI</span><b class="hot">3위 / 6팀</b></div>
+        <div class="r"><span>MSI</span><b style="color:#d9480f">진행 중</b></div>
+        <div class="r"><span class="m">월드 챔피언십</span><span class="m">2턴 뒤</span></div></div></div>
+      <div class="card2"><h4>이번 시즌 계획</h4><span class="chip">균형</span><span class="chip">훈련: 영상 분석</span><div class="sub" style="margin-top:8px">이번 턴 예정 · 영상 분석, 개인 레슨</div></div>
+    </div>
+    <div class="btm"><span class="go">다음 턴 진행</span><div class="mini"><span>내 경력</span><span>연봉 협상</span><span>이적 요청</span></div></div></div>
+    <h3>B. 크림 + 도트 테두리 (메이플풍)</h3><p>따뜻한 크림색에 굵은 갈색 테두리, 눌리는 입체 버튼. 도트 그림과 가장 잘 어울리는 귀여운 쪽이에요.</p>
+  </div>
+
+  <div class="vs-item" data-choice="C" onclick="toggleSelect(this)">
+    <div class="phone C"><div class="scroll">
+      <div class="card2"><div class="hd"><div><div class="nm">봇 · 23세</div><div class="sub">8시즌 3/4턴 · AOS · 프로 1부</div></div><span class="chip">KIWOOM DRX</span></div>
+        <div class="row2" style="margin-top:10px"><span class="sub">컨디션 · 좋음</span><b>80</b></div><div class="bar"><i></i></div>
+        <div class="row2" style="margin-top:8px"><span><span class="sub">돈</span> <b>4억 3,230만</b></span><span><span class="sub">명성</span> <b>90</b></span></div>
+        <div class="sub" style="margin-top:8px">구단 재정 ★★★★★ · 인기 ★★★★☆ · 명성 ★★★★★ <span class="hot">▲ 상승세</span></div></div>
+      <div class="card2"><div class="room"></div></div>
+      <div class="card2"><h4>이번 시즌 일정</h4><div class="sch">
+        <div class="r"><span>LCK 라운드 1~2</span><b class="hot">1위 / 10팀</b></div>
+        <div class="r"><span>로드 투 MSI</span><b class="hot">3위 / 6팀</b></div>
+        <div class="r"><span>MSI</span><b style="color:#8fb0ff">진행 중</b></div>
+        <div class="r"><span class="m">월드 챔피언십</span><span class="m">2턴 뒤</span></div></div></div>
+      <div class="card2"><h4>이번 시즌 계획</h4><span class="chip">균형</span><span class="chip">훈련: 영상 분석</span><div class="sub" style="margin-top:8px">이번 턴 예정 · 영상 분석, 개인 레슨</div></div>
+    </div>
+    <div class="btm"><span class="go">다음 턴 진행</span><div class="mini"><span>내 경력</span><span>연봉 협상</span><span>이적 요청</span></div></div></div>
+    <h3>C. 다크 다듬기</h3><p>지금의 어두운 느낌은 유지하되 보라빛 그라데이션과 금색 포인트로 깊이를 줬어요. 지금 게임과 가장 이어져요.</p>
+  </div>
+
+</div>
