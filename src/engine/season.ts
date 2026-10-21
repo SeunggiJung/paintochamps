@@ -14,7 +14,7 @@ import { adaptationAfterMove, makeBlankCheckOffer, makeOverseasOffers, movesLeag
 import { genrePower } from './power.ts'
 import { salaryOf, teamProfile } from './teams.ts'
 import { createRng, gaussian, mixSeed, type Rng } from './rng.ts'
-import type { EndingId, EventRecord, GameState, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
+import type { EndingId, EventRecord, GameState, Offer, PendingOffers, SeasonRecord, StageId, StandingRow } from './state.ts'
 import { pathOf, routeStep, type TestResult } from './routes.ts'
 import type { GenreId } from './types.ts'
 import { isCareerOver, isSettled, turnScale, turnsPerSeason } from './turn.ts'
@@ -345,6 +345,20 @@ function leagueUnderdog(runs: readonly { expected?: number; fieldSize: number }[
   return !!league && league.expected! > league.fieldSize / 2
 }
 
+/**
+ * 시즌 도중 팀을 옮기면 아직 끝까지 공개하지 않은 대회의 순위표·최종 순서에 남은 옛 팀 이름을 새 팀으로 바꾼다.
+ * 결과는 대회가 시작될 때 정해 둔 것이라 이름만 바뀌고, 이미 끝까지 공개한 대회는 그때 팀 기록이라 그대로 둔다.
+ */
+function renamePlayerTeamInRuns(state: GameState, teamName: string): GameState {
+  const run = state.seasonRun
+  if (!run) return state
+  const rows = (table: StandingRow[] | null) => (table ? table.map((r) => (r.isPlayer ? { ...r, name: teamName } : r)) : table)
+  const runs = run.runs.map((r) =>
+    r.revealed === 'end' ? r : { ...r, mid: rows(r.mid), table: rows(r.table), order: r.order.map((t) => (t.isPlayer ? { ...t, name: teamName } : t)) },
+  )
+  return { ...state, seasonRun: { ...run, runs } }
+}
+
 /** 스카우트·이적 제안 하나를 고른다. index가 null이면 거절(이적 제안만 거절할 수 있다). */
 export function acceptOffer(state: GameState, index: number | null): GameState {
   const pending = state.pendingOffers
@@ -375,7 +389,7 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
   const salaryMult = offer.checkMult !== undefined && baseSalary > 0 ? checkSalary / baseSalary : 1
   const bonus = leagueMove && league !== domesticLeagueId(state.genre) ? Math.round((offer.checkMult !== undefined ? checkSalary : salaryOf({ ...joined, team: offer.team, salaryMult: 1 })) * OVERSEAS_RULES.signingBonusTurns) : 0
   return {
-    ...joined,
+    ...renamePlayerTeamInRuns(joined, offer.team.name),
     everPro: moved.everPro || stage === 'pro2' || stage === 'pro1',
     debutTeamId: stage === 'pro1' && state.debutTeamId === null ? offer.team.id : state.debutTeamId,
     team: offer.team,

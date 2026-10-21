@@ -171,7 +171,10 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   }
   // 목표 등급 이상이 나올 때까지 평소의 2배 속도로 계속 다시 뽑는다. 누적 횟수는 다시 뽑기 횟수에 그대로 센다. 버튼을 다시 누르면 멈춘다.
   const autoStep = () => {
-    if (!autoRunning) return
+    if (!autoRunning) {
+      setBusy(false) // 다음 회차를 기다리는 사이에 멈추기를 눌렀다면 버튼을 되살린다
+      return
+    }
     rollIndex++
     show(rollAt(draft.seed, draft.genre, rollIndex), true, AUTO_SPEED, (hit) => {
       if (hit || !autoRunning) {

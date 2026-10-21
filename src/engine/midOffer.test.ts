@@ -37,6 +37,20 @@ describe('시즌 중간 이적 제안', () => {
     expect(acceptOffer(s!, 0).team?.id).not.toBe(TEAM.id)
   })
 
+  it('시즌 중간에 옮기면 아직 끝까지 공개하지 않은 대회의 순위표에도 새 팀 이름이 나온다', () => {
+    const rows = (name: string) => [{ name, wins: 3, losses: 1, isPlayer: true }, { name: '상대', wins: 1, losses: 3, isPlayer: false }]
+    const run = (id: string, revealed: 'none' | 'mid' | 'end', name: string) => ({
+      id, name: id, placement: 1, fieldSize: 2, fame: 0, money: 0, order: [{ id: 'p', name, power: 1, isPlayer: true }], mid: rows(name), table: rows(name), advanced: [], revealed,
+    })
+    const s = firstOffer(make({ seasonRun: { season: 1, phase: 0.5, runs: [run('done', 'end', TEAM.name), run('open', 'mid', TEAM.name)], skipped: [], qualified: [], points: 0 } }))!
+    const moved = acceptOffer(s, 0)
+    const [done, open] = moved.seasonRun!.runs
+    expect(open.table![0].name).toBe(moved.team!.name)
+    expect(open.mid![0].name).toBe(moved.team!.name)
+    expect(open.order[0].name).toBe(moved.team!.name)
+    expect(done.table![0].name).toBe(TEAM.name)
+  })
+
   it('같은 판·같은 턴이면 같은 결과다', () => {
     const a = rollMidSeasonOffer(make({ turnCount: 7 }))
     const b = rollMidSeasonOffer(make({ turnCount: 7 }))
