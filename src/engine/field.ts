@@ -127,6 +127,12 @@ export function logoSlugOf(teamId: string): string | null {
   return e ? (e.logo ?? e.slug) : null
 }
 
+/** 구단 시장 정보(재정·인기·명성)를 찾는 이름표. 2군·챌린저스 팀은 모 구단의 이름표를 쓴다. 풀에 없는 팀이면 null. */
+export function marketSlugOf(teamId: string): string | null {
+  const e = ENTRY_OF.get(teamId)
+  return e ? (e.parent ?? e.slug) : null
+}
+
 /** 2부 팀의 모 구단(1부 팀). 연계된 1군이 없으면 null. */
 export function parentOrgOf(team: TeamRef, genre: GenreId): TeamRef | null {
   const parent = ENTRY_OF.get(team.id)?.parent

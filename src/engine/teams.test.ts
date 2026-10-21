@@ -43,8 +43,10 @@ describe('팀 정보', () => {
   })
 
   it('강한 팀일수록 월급을 더 주고, 상위 리그일수록 월급이 높다', () => {
-    const pro1 = proOrgs('fps').map((t) => teamProfile(21, 5, t, 'pro1')!).sort((a, b) => a.power - b.power)
-    expect(pro1[pro1.length - 1].salary).toBeGreaterThanOrEqual(pro1[0].salary)
+    // 같은 리그에서는 재정이 넉넉한 구단이 월급을 더 준다
+    const pro1 = proOrgs('fps').map((t) => teamProfile(21, 5, t, 'pro1')!).sort((a, b) => a.market.finance - b.market.finance)
+    const avg = (xs: { salary: number }[]) => xs.reduce((a, b) => a + b.salary, 0) / xs.length
+    expect(avg(pro1.slice(-4))).toBeGreaterThan(avg(pro1.slice(0, 4)))
     const am = teamProfile(21, 5, amateurTeams()[0], 'amateur_team')!
     const p2 = teamProfile(21, 5, proOrgs('fps')[0], 'pro2')!
     const p1 = teamProfile(21, 5, proOrgs('fps')[0], 'pro1')!

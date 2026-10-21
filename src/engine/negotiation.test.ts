@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ASKS, canNegotiate, negotiateSalary, negotiationChance } from './negotiation.ts'
 import { acceptOffer, settleSeason } from './season.ts'
 import { createInitialState, type GameState } from './state.ts'
-import { salaryOf } from './teams.ts'
+import { offerTerms, salaryOf } from './teams.ts'
 import type { Stats } from './types.ts'
 
 const TEAM = { id: 'org_0', name: '나이트호크' }
@@ -72,11 +72,14 @@ describe('연봉 협상', () => {
     expect(salaryOf(s)).toBeGreaterThan(0)
   })
 
-  it('팀을 옮기면 협상한 월급 배율이 초기화되고 새 계약에서 다시 협상할 수 있다', () => {
+  it('팀을 옮겨도 올려 둔 월급은 제안 월급에 반영되고, 새 계약 직후에는 협상할 수 없고 한 턴이 지나면 다시 협상할 수 있다', () => {
     const raised = { ...make({ salaryMult: 1.5, negotiatedSeason: 1, season: 1 }), pendingOffers: { kind: 'transfer' as const, offers: [{ team: { id: 'org_3', name: '다른팀' }, perk: 'salary' as const }] } }
+    const terms = offerTerms(raised, raised.pendingOffers.offers[0])!
     const moved = acceptOffer(raised, 0)
-    expect(moved.salaryMult).toBe(1)
-    expect(canNegotiate(moved)).toBe(true)
+    // 시장 기준 월급이 아니라 지금 월급을 존중한 제안 월급이 그대로 이어진다
+    expect(Math.abs(salaryOf(moved) - terms.offerSalary)).toBeLessThanOrEqual(1)
+    expect(canNegotiate(moved)).toBe(false)
+    expect(canNegotiate({ ...moved, turnCount: moved.turnCount + 1 })).toBe(true)
   })
 
   it('강등으로 팀이 바뀌어도 배율이 초기화된다', () => {

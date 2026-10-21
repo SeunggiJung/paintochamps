@@ -5,7 +5,7 @@ import { earnedAchievements } from '../engine/achievements.ts'
 import { acceptOffer, eventsFor, requestTransfer, retire, settleSeason, stageName, transferBlocker, type EventResult, type SeasonReport } from '../engine/season.ts'
 import type { GameState } from '../engine/state.ts'
 import { startNextSeason } from '../engine/turn.ts'
-import { recordFinish, saveGame } from '../save/storage.ts'
+import { recordFinish, saveGame, tokensFor } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { confirmSheet } from './confirm.ts'
 import { acquireTeam, assetGrade, netWorth, OWNER, ownerBlocker } from '../engine/life.ts'
@@ -79,8 +79,9 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
       const before = ctx.meta
       const isNew = !before.endings[state.finished]
       const achievements = earnedAchievements(state).map((id) => ({ id, isNew: !before.achievements[id] }))
+      const tokens = tokensFor(before, state)
       ctx.meta = recordFinish(ctx.storage, state)
-      ctx.toEnding(state, { isNew, achievements })
+      ctx.toEnding(state, { isNew, achievements, tokens })
       return
     }
     const next = startNextSeason(state)
@@ -127,8 +128,6 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     if (offer && pending.pendingOffers) {
       const kind = pending.pendingOffers.kind
       await showContract(pending, offer, kind === 'scout' ? 'join' : kind, pending.pendingOffers.stage)
-      // 새 계약을 맺었으니 월급을 협상할 수 있다
-      state = await openNegotiation(state)
     }
     joined = offer ? `${offer.team.name}에 합류했다.` : pending.pendingOffers?.kind === 'overseas' ? '다른 리그의 제안을 거절했다.' : pending.pendingOffers?.kind === 'callup' ? '콜업을 거절하고 프로 2부에 남기로 했다.' : '제안을 거절했다.'
     render()

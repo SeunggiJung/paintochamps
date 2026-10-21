@@ -4,7 +4,7 @@
   "fameBonus": { "perFame": 0.004, "max": 1.5 },
   "moneyScale": { "basement": 1, "local_cup": 1, "amateur_team": 2, "pro2": 8, "pro1": 30 },
   "leagueSize": { "amateur_team": 6, "pro2": 6, "pro1": 10 },
-  "strengthSpread": { "min": 0.8, "max": 1.4 },
+  "strengthSpread": { "min": 0.9, "max": 1.2 },
   "teamWeight": 0.3,
   "negotiation": {
     "fameChance": 0.002,

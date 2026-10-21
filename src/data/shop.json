@@ -1,0 +1,9 @@
+{
+  "tokens": { "first": 3, "repeat": 1 },
+  "items": [
+    { "id": "sr_ticket", "name": "SR 보장권", "kind": "stock", "max": 5, "cost": 6, "desc": "캐릭터 생성에서 켜면 뽑기 결과가 SR 이상으로만 나와요. 한 판 시작할 때 한 장 사라져요." },
+    { "id": "negotiation", "name": "협상 노하우", "kind": "level", "costs": [10, 15, 20], "desc": "연봉 협상 성공 확률이 영구히 +3%p씩 올라요. (최대 3단계)" },
+    { "id": "fame_start", "name": "인맥 쌓기", "kind": "level", "costs": [12, 20], "desc": "새 판을 시작할 때 명성이 +5씩 더 높아요. (최대 2단계)" }
+  ],
+  "perk": { "negotiationPerLevel": 0.03, "startFamePerLevel": 5 }
+}

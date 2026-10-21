@@ -72,6 +72,59 @@ function worldBonus(mode: GameState['mode']): number {
   return (modes[mode] as { worldBonus?: number }).worldBonus ?? 0
 }
 
+/** 이 순위로 얻는 진출권과 챔피언십 포인트 (run은 이 대회 앞까지의 진행 상황) */
+function qualifyOutcome(ev: EventDef, placement: number, run: SeasonRun, events: EventDef[]): { qualified: string[]; advanced: string[]; points: number } {
+  const qualified: string[] = []
+  const nameOf = (id: string) => events.find((e) => e.id === id)?.name ?? id
+  const advanced: string[] = []
+  for (const q of ev.qualifies ?? []) {
+    if (placement <= q.top && placement >= (q.min ?? 1)) {
+      qualified.push(q.to)
+      advanced.push(`${nameOf(q.to)} 진출!`)
+    }
+  }
+  let points = run.points
+  if (ev.points) points += ev.points[placement - 1] ?? 0
+  if (ev.pointsQualify && points >= ev.pointsQualify.minPoints && !qualified.includes(ev.pointsQualify.to) && !run.qualified.includes(ev.pointsQualify.to)) {
+    qualified.push(ev.pointsQualify.to)
+    advanced.push(`${nameOf(ev.pointsQualify.to)} 진출! (챔피언십 포인트)`)
+  }
+  return { qualified, advanced, points }
+}
+
+/**
+ * 시즌 도중 팀을 옮겼을 때, 이미 시작했지만 아직 끝나지 않은 대회를 지금 소속 팀과 능력치로 다시 정한다.
+ * 대회마다 시드가 같아 상대 구성은 그대로고 내 팀의 전력만 달라진다. 끝까지 공개한 대회는 그때 팀의 기록이라 그대로 둔다.
+ * 이미 중간 순위를 공개한 대회는 공개 상태를 유지한다(최종 순위와 보상만 새 결과를 따른다).
+ */
+export function replayOngoing(state: GameState): GameState {
+  const run = state.seasonRun
+  if (!run || run.season !== state.season || run.runs.every((r) => r.revealed === 'end')) return state
+  const events = eventsFor(state)
+  const indexOf = (id: string) => events.findIndex((e) => e.id === id)
+  // 끝난 대회가 준 진출권·포인트만 남기고 나머지는 다시 쌓는다
+  let acc: SeasonRun = { ...run, runs: run.runs.filter((r) => r.revealed === 'end' || indexOf(r.id) < 0), qualified: [], points: 0 }
+  const skipped = run.skipped.filter((id) => !run.runs.some((r) => r.id === id))
+  events.forEach((ev, index) => {
+    const old = run.runs.find((r) => r.id === ev.id)
+    if (!old) return
+    if (old.revealed === 'end') {
+      const o = qualifyOutcome(ev, old.placement, acc, events)
+      acc = { ...acc, qualified: [...new Set([...acc.qualified, ...o.qualified])], points: o.points }
+      return
+    }
+    const played = playEvent(state, ev, index, acc, events)
+    if (!played) {
+      skipped.push(ev.id)
+      return
+    }
+    acc = { ...acc, runs: [...acc.runs, { ...played.record, revealed: old.revealed }], qualified: [...new Set([...acc.qualified, ...played.qualified])], points: played.points }
+  })
+  // 대회 순서대로 다시 정렬
+  const runs = [...acc.runs].sort((a, b) => indexOf(a.id) - indexOf(b.id))
+  return { ...state, seasonRun: { ...acc, runs, skipped } }
+}
+
 /** 대회 하나를 치러 결과를 정한다. 진출권이 없거나 상위 팀에 못 들었으면 null(열리지 않음). */
 function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun, events: EventDef[]): { record: RunRecord; qualified: string[]; points: number } | null {
   if (ev.needs && !run.qualified.includes(ev.needs)) return null
@@ -116,21 +169,7 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
   }
   const placement = order.findIndex((t) => t.isPlayer) + 1
 
-  const qualified: string[] = []
-  const nameOf = (id: string) => events.find((e) => e.id === id)?.name ?? id
-  const advanced: string[] = []
-  for (const q of ev.qualifies ?? []) {
-    if (placement <= q.top && placement >= (q.min ?? 1)) {
-      qualified.push(q.to)
-      advanced.push(`${nameOf(q.to)} 진출!`)
-    }
-  }
-  let points = run.points
-  if (ev.points) points += ev.points[placement - 1] ?? 0
-  if (ev.pointsQualify && points >= ev.pointsQualify.minPoints && !qualified.includes(ev.pointsQualify.to) && !run.qualified.includes(ev.pointsQualify.to)) {
-    qualified.push(ev.pointsQualify.to)
-    advanced.push(`${nameOf(ev.pointsQualify.to)} 진출! (챔피언십 포인트)`)
-  }
+  const { qualified, advanced, points } = qualifyOutcome(ev, placement, run, events)
 
   const reward = ev.rewards.find((r) => placement <= r.upTo) ?? ev.rewards[ev.rewards.length - 1]
   // 해외 리그는 리그마다 대회 명성 보상 배율이 다르다 (국내 1.0)
@@ -155,8 +194,9 @@ export function runOf(state: GameState): SeasonRun {
 /**
  * 시간을 toPhase(0~1)까지 진행한다. 기간이 시작된 대회는 결과를 정하고, 절반·끝 시점에 닿은 대회는 결과를 공개한다(보상 반영).
  * 이미 공개한 것은 다시 공개하지 않으므로 여러 번 불러도 안전하다.
+ * startState는 이 구간을 시작하던 때의 상태로, 새로 시작하는 대회의 결과는 이 상태(소속 팀·능력치)로 정한다.
  */
-export function advanceCalendar(state: GameState, toPhase: number): CalendarUpdate {
+export function advanceCalendar(state: GameState, toPhase: number, startState: GameState = state): CalendarUpdate {
   const events = eventsFor(state)
   let run = runOf(state)
   const phaseBefore = run.phase
@@ -168,7 +208,8 @@ export function advanceCalendar(state: GameState, toPhase: number): CalendarUpda
     let rec = run.runs.find((r) => r.id === ev.id)
     // 기간이 시작되면 결과를 정한다
     if (!rec && !run.skipped.includes(ev.id) && ev.span[0] < toPhase) {
-      const played = playEvent(next, ev, index, run, events)
+      // 결과는 기간이 시작되기 직전(이 구간을 시작하던 때)의 팀과 능력치로 정한다
+      const played = playEvent(startState, ev, index, run, events)
       if (!played) run = { ...run, skipped: [...run.skipped, ev.id] }
       else {
         rec = played.record

@@ -1,6 +1,7 @@
 import contracts from '../data/contracts.json'
 import { applyEffects } from './effects.ts'
 import { mixSeed, createRng } from './rng.ts'
+import { hasSettledIn } from './career.ts'
 import { pathOf } from './routes.ts'
 import type { GameState } from './state.ts'
 import { salaryOf } from './teams.ts'
@@ -23,16 +24,16 @@ function isTrainee(state: GameState): boolean {
   return state.stage === 'amateur_team' && pathOf(state) === 'academy'
 }
 
-/** 지금 월급 협상을 할 수 있는지: 팀 소속이고, 이번 시즌에 아직 협상하지 않았다 */
+/** 지금 월급 협상을 할 수 있는지: 팀 소속이고, 새 팀에 합류하고 한 턴이 지났고, 이번 시즌에 아직 협상하지 않았다 */
 export function canNegotiate(state: GameState): boolean {
-  return !!state.team && !isTrainee(state) && !state.finished && (state.negotiatedSeason ?? 0) !== state.season
+  return !!state.team && !isTrainee(state) && !state.finished && (state.negotiatedSeason ?? 0) !== state.season && hasSettledIn(state)
 }
 
 /** 요구에 성공할 확률: 기본 확률 + 명성 보너스(상한 있음), 5~95%로 제한 */
 export function negotiationChance(state: GameState, ask: Ask): number {
   const n = contracts.negotiation
   const bonus = Math.min(n.maxFameChance, Math.max(0, state.fame) * n.fameChance)
-  return Math.min(0.95, Math.max(0.05, ask.chance + bonus))
+  return Math.min(0.95, Math.max(0.05, ask.chance + bonus + (state.perks?.negotiation ?? 0)))
 }
 
 export interface NegotiationResult {

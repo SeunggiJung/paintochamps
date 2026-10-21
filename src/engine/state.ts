@@ -134,6 +134,28 @@ export interface EventRecord {
   fieldSize: number
 }
 
+/** 한 구단에서 보낸 기간 (경력 화면용). 팀이 바뀔 때마다 새로 쌓는다 */
+export interface Stint {
+  team: TeamRef
+  stage: StageId
+  /** 합류한 시즌과 나이 */
+  fromSeason: number
+  fromAge: number
+  /** 떠난 시즌 (아직 소속이면 없다) */
+  toSeason?: number
+  toAge?: number
+  /** 소속 리그 id (옛 기록·국내 1부 외에는 없을 수 있다) */
+  league?: string
+}
+
+/** 판을 시작할 때 영구 강화(업적 상점)에서 받아 오는 효과 */
+export interface Perks {
+  /** 연봉 협상 성공 확률 보너스 (0.03 = +3%p) */
+  negotiation?: number
+  /** 시작 명성 보너스 */
+  fame?: number
+}
+
 export interface SeasonRecord {
   season: number
   age: number
@@ -147,6 +169,8 @@ export interface SeasonRecord {
   intlPoints?: Record<string, [number, number]>
   /** 시즌 활약 요약: 평점·리그 내 순위·수상 이름 (옛 세이브에는 없을 수 있다) */
   highlights?: { rating: number; rank: number; players: number; awards: string[] }
+  /** 이 시즌 마지막에 소속한 팀 이름 (경력 화면용, 옛 세이브에는 없을 수 있다) */
+  teamName?: string | null
   /** 이 시즌의 소속 팀 id (없으면 null). 업적 판정용, 옛 세이브에는 없을 수 있다 */
   teamId?: string | null
   /** 시즌을 마칠 때 부상 중이거나 슬럼프였는가 (업적 판정용) */
@@ -188,6 +212,12 @@ export interface GameState {
   salaryMult: number
   /** 월급 협상을 마지막으로 한 시즌 (시즌당 한 번). 계약을 새로 맺으면 0으로 돌아가 다시 협상할 수 있다. */
   negotiatedSeason: number
+  /** 지금 팀에 합류한 시점의 turnCount. 합류하고 한 턴이 지나야 연봉 협상을 할 수 있다 (옛 세이브에는 없다) */
+  teamSinceTurn?: number
+  /** 거쳐 간 구단 기록 (옛 세이브에는 없을 수 있다) */
+  stints?: Stint[]
+  /** 업적 상점에서 산 영구 효과 (옛 세이브에는 없다) */
+  perks?: Perks
   /** 이번 시즌에 고를 수 있는 무작위 훈련 후보. 시즌이 시작될 때 뽑는다. (옛 세이브에는 없을 수 있다 — trainingMenuOf) */
   trainingMenu: ActionId[]
   /** 이번 시즌에 정한 훈련. 시즌 동안 이 훈련만 할 수 있고, 시즌이 시작되면 null로 돌아가 후보 중에서 다시 고른다. 코치가 교체를 제안하면 바뀐다. (옛 세이브에는 없을 수 있다) */
@@ -274,9 +304,11 @@ export interface NewGameOptions {
   seed: number
   /** 다시 뽑은 횟수 (기본 0) */
   rerolls?: number
+  /** 업적 상점에서 산 영구 효과 */
+  perks?: Perks
 }
 
-export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0 }: NewGameOptions): GameState {
+export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0, perks }: NewGameOptions): GameState {
   return {
     saveVersion: 1,
     seed,
@@ -292,12 +324,14 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     trait: gacha.trait,
     condition: rules.start.condition,
     money: rules.start.money,
-    fame: rules.start.fame,
+    fame: rules.start.fame + (perks?.fame ?? 0),
     equipment: { keyboard: 0, mouse: 0, monitor: 0, pc: 0 },
     facilities: {},
     warmup: 0,
     salaryMult: 1,
     negotiatedSeason: 0,
+    stints: [],
+    perks: perks ?? {},
     trainingMenu: drawTrainingMenu(seed, 0, false),
     seasonTraining: null,
     trainingSwapSeason: 0,

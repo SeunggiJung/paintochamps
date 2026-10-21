@@ -9,6 +9,7 @@ import { advanceCalendar, type CalendarUpdate } from './calendar.ts'
 import { applyEffects, type Effects } from './effects.ts'
 import { coachEfficiency, housingRecovery, languageGain, medicSpeed, mentalGuard, prFame, studioBoost, trainerGuard, trainerRecovery } from './facilities.ts'
 import { ageGrowthFactor, equipmentEfficiency, growthDelta } from './growth.ts'
+import { popularityFame } from './teamMarket.ts'
 import { adaptationOf, adaptationRecoveryPenalty, isOverseas, OVERSEAS_RULES } from './leagues.ts'
 import { warmupBonus } from './minigame.ts'
 import { createRng, mixSeed, type Rng } from './rng.ts'
@@ -318,6 +319,8 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
   next = { ...next, condition: clamp(next.condition + (rules.conditionRecoveryPerBase + housingRecovery(next) + trainerRecovery(next) - adaptationRecoveryPenalty(next)) * scale, 0, 100) }
   // 홍보 에이전시: 턴마다 명성이 조금씩 오른다
   if (prFame(next) > 0) next = { ...next, fame: next.fame + prFame(next) * scale }
+  // 인기 있는 구단에서 뛰면 시간이 지나면서 명성이 조금씩 오른다
+  if (popularityFame(next) > 0) next = { ...next, fame: next.fame + popularityFame(next) * scale }
 
   const months = modes[next.mode].turnMonths
   next = {
@@ -331,7 +334,7 @@ export function applyTurn(state: GameState, choice: TurnChoice, rng: Rng = actio
   }
   // 시간이 흘러 기간이 시작·절반·끝에 닿은 대회를 진행하고 결과를 공개한다 (미리보기·AI 평가는 건너뛴다)
   const phase = next.turnInSeason / turnsPerSeason(next.mode)
-  const update: CalendarUpdate = calendar ? advanceCalendar(next, phase) : { state: next, beats: [], running: [], phaseBefore: phase, phaseAfter: phase }
+  const update: CalendarUpdate = calendar ? advanceCalendar(next, phase, state) : { state: next, beats: [], running: [], phaseBefore: phase, phaseAfter: phase }
   next = update.state
   return { ok: true, state: next, delta: diff(state, next), seasonEnded: next.turnInSeason === turnsPerSeason(next.mode), notes, calendar: update }
 }

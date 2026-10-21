@@ -9,6 +9,7 @@ import { formatMoney, formatMoneyDelta } from './format.ts'
 import { teamIcon } from './teamIcon.ts'
 
 const STRENGTH_LABEL: Record<Strength, string> = { strong: '강팀', average: '평범한 팀', weak: '약팀' }
+const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(5 - n)
 const signed = (n: number) => (n > 0 ? `+${Math.round(n)}` : String(Math.round(n)))
 
 /** 계약 혜택 문구 */
@@ -21,7 +22,8 @@ export function offerButton(state: GameState, offer: Offer, onPick: () => void, 
   const terms = offerTerms(state, offer, stage)
   const lines: HTMLElement[] = []
   if (terms) {
-    const { profile, gap, salaryDelta, strength, boost } = terms
+    const { profile, gap, salaryDelta, strength, boost, offerSalary } = terms
+    const m = profile.market
     const gapText = Math.abs(gap) < 5 ? '내 실력과 비슷' : gap > 0 ? `내 실력보다 ${Math.round(gap)} 높음` : `내 실력보다 ${Math.round(-gap)} 낮음`
     // 시즌 중간 제안은 지난 시즌보다 이번 시즌에 이미 공개된 대회 성적이 판단에 더 쓸모 있다
     const results = midSeason ? seasonResultsOf(state, offer.team) : []
@@ -34,9 +36,10 @@ export function offerButton(state: GameState, offer: Offer, onPick: () => void, 
       h(
         'span',
         { class: 'offer-line' },
-        `월급 ${formatMoney(profile.salary)} / 3개월`,
+        `월급 ${formatMoney(offerSalary)} / 3개월`,
         state.team ? h('em', { class: salaryDelta >= 0 ? 'up' : 'down' }, ` (지금보다 ${formatMoneyDelta(salaryDelta)})`) : null,
       ),
+      h('span', { class: 'offer-line muted' }, `재정 ${stars(m.finance)} · 인기 ${stars(m.popularity)} · 명성 ${stars(m.prestige)}`),
       h('span', { class: 'offer-line muted' }, `대회 전력 ${signed(boost)} · ${perkLabel(offer, stage)}`),
     )
   } else lines.push(h('span', { class: 'offer-line muted' }, perkLabel(offer, stage)))
@@ -50,7 +53,7 @@ export function offerButton(state: GameState, offer: Offer, onPick: () => void, 
     const rank = leagueRankOf(state, lg.id)
     lines.unshift(h('span', { class: 'offer-line' }, `${lg.name} · ${lg.region} · ${rank ? `리그 순위 ${rank.rank}위 / ${rank.size}개 리그` : '리그 순위 집계 전'}`))
     if (!lg.domestic) {
-      lines.push(h('span', { class: 'offer-line muted' }, `적응 난이도 ${lg.adaptHard} (적응도 ${lg.adaptStart}에서 시작, 시즌마다 +${OVERSEAS_RULES.adaptGain}) · 이적 계약금 ${terms ? formatMoney(terms.profile.salary * OVERSEAS_RULES.signingBonusTurns) : '-'}`))
+      lines.push(h('span', { class: 'offer-line muted' }, `적응 난이도 ${lg.adaptHard} (적응도 ${lg.adaptStart}에서 시작, 시즌마다 +${OVERSEAS_RULES.adaptGain}) · 이적 계약금 ${terms ? formatMoney(terms.offerSalary * OVERSEAS_RULES.signingBonusTurns) : '-'}`))
     }
   }
   return h('button', { class: 'choice offer', onclick: onPick }, teamIcon(offer.team.id, 44), h('span', { class: 'offer-body' }, h('b', {}, offer.team.name), ...lines))

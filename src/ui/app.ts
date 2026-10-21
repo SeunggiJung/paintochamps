@@ -8,6 +8,7 @@ import { gachaScreen } from './gachaScreen.ts'
 import { homeScreen } from './home.ts'
 import { infoScreen, isInfoPageId, type InfoPageId } from './infoPages.ts'
 import { seasonScreen } from './seasonScreen.ts'
+import { shopScreen } from './shopScreen.ts'
 import { soundToggle } from './sound.ts'
 import { titleScreen } from './title.ts'
 
@@ -17,6 +18,8 @@ export interface EndingInfo {
   isNew: boolean
   /** 이번 판에서 달성한 업적 (isNew: 처음 달성한 업적) */
   achievements: { id: AchievementId; isNew: boolean }[]
+  /** 이번 판에서 업적으로 받은 토큰 */
+  tokens: number
 }
 
 /** 화면들이 공유하는 것: 저장소와 화면 전환 */
@@ -31,6 +34,8 @@ export interface Ctx {
   /** 커리어가 끝난 뒤의 엔딩 화면 */
   toEnding(state: GameState, info: EndingInfo): void
   toCodex(): void
+  /** 업적 상점 */
+  toShop(): void
   /** 서비스 소개·게임 가이드·개인정보처리방침·이용약관·문의 */
   toInfo(page: InfoPageId): void
 }
@@ -63,6 +68,7 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     toSeason: (state) => show(seasonScreen(ctx, state)),
     toEnding: (state, info) => show(endingScreen(ctx, state, info)),
     toCodex: () => show(codexScreen(ctx)),
+    toShop: () => show(shopScreen(ctx)),
     toInfo(page) {
       setHash(`/${page}`)
       show(infoScreen(ctx, page))

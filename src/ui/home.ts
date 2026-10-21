@@ -34,6 +34,9 @@ import { conditionHelp, conditionText } from './conditionHelp.ts'
 import { conditionTier } from '../engine/growth.ts'
 import { showContract } from './contractScene.ts'
 import { offerButton } from './offerView.ts'
+import { buildCareer } from '../engine/career.ts'
+import { canNegotiate } from '../engine/negotiation.ts'
+import { openCareer } from './careerView.ts'
 import { openNegotiation } from './negotiationView.ts'
 import { openPlanSheet } from './planScreen.ts'
 import { statName } from './statHelp.ts'
@@ -118,8 +121,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       ),
     )
     if (index !== null) await showContract(s, pending.offers[index], 'callup', stage)
-    const moved = acceptOffer(s, index)
-    return index !== null ? await openNegotiation(moved) : moved
+    return acceptOffer(s, index)
   }
 
   /** 시즌 도중 다른 팀에서 온 이적 제안. 하나를 골라 옮기거나 남는다. */
@@ -141,9 +143,8 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       ),
     )
     if (index !== null) await showContract(s, pending.offers[index], 'transfer')
-    const moved = acceptOffer(s, index)
-    // 팀을 옮겼으면 새 계약의 월급을 협상할 수 있다
-    return index !== null ? await openNegotiation(moved) : moved
+    // 새 계약 직후에는 월급을 협상할 수 없다. 한 턴이 지나면 홈의 '연봉 협상' 버튼이 열린다.
+    return acceptOffer(s, index)
   }
 
   /** 시즌 중간에 플레이어가 이적을 요청한다. 다른 팀 제안을 받아 보고, 거절하면 남는다. */
@@ -163,6 +164,16 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
       state = r.state
       await confirmSheet({ title: '이적 요청', message: '아직 관심을 보이는 팀이 없다. 이번 시즌 중간 요청은 여기까지다. 성적과 명성을 더 쌓으면 기회가 온다.', ok: '확인', cancel: '닫기' })
     }
+    busy = false
+    saveGame(ctx.storage, state)
+    render()
+  }
+
+  /** 합류하고 한 턴이 지난 뒤, 시즌당 한 번 월급 인상을 요구한다 */
+  const negotiateNow = async () => {
+    if (busy || !canNegotiate(state)) return
+    busy = true
+    state = await openNegotiation(state)
     busy = false
     saveGame(ctx.storage, state)
     render()
@@ -350,6 +361,8 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         { class: 'turn-bar', 'data-guide': 'turnbar' },
         error && h('p', { class: 'error', role: 'alert' }, error),
         h('button', { class: 'btn primary', disabled: busy || !state.seasonTraining, onclick: playTurn }, state.seasonTraining ? '다음 턴 진행' : '먼저 시즌 계획을 세우세요'),
+        h('button', { class: 'btn ghost small', onclick: () => void openCareer(buildCareer(state)) }, '내 경력'),
+        !busy && canNegotiate(state) && h('button', { class: 'btn small', onclick: () => void negotiateNow() }, '연봉 협상'),
         !busy && !transferBlocker(state, 'mid') && h('button', { class: 'btn small', onclick: () => void requestMidTransfer() }, '이적 요청'),
         h('button', { class: 'btn ghost small', onclick: () => ctx.toTitle() }, '타이틀로 (자동 저장됨)'),
       ),

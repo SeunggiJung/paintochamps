@@ -3,6 +3,7 @@ import testData from '../data/tests.json'
 import { moneyScale } from './economy.ts'
 import { academyName, pickTeams } from './field.ts'
 import { genrePower } from './power.ts'
+import { changeTeam } from './career.ts'
 import { gaussian, type Rng } from './rng.ts'
 import type { GameState, PathId, PendingOffers, StageId } from './state.ts'
 import type { StatKey } from './types.ts'
@@ -155,7 +156,7 @@ export function routeStep(before: GameState, after: GameState, { placementOf, sc
       if (t.passed) {
         const org = pickTeams(rng, 'pro1', 1, new Set(), after.genre)[0]
         move('amateur_team', 'academy')
-        s = { ...s, academyInvite: false, team: { id: org.id, name: academyName(org) } }
+        s = changeTeam({ ...s, academyInvite: false }, { id: org.id, name: academyName(org) }, true)
         notes.push(`아카데미 입단 테스트 합격! ${academyName(org)}의 연습생이 되었다.`)
       } else if ((before.academyRetries ?? 0) < R.academy.retryMax) {
         s = { ...s, academyRetries: (before.academyRetries ?? 0) + 1 }

@@ -1,0 +1,30 @@
+{
+  "_note": "구단 재정·인기도·명성은 공개 보도(2025년 T1 매출 약 900억 추정·농심 약 70억·VCT 파트너 수익 배분 등)와 성적·팬덤 규모를 바탕으로 한 5단계 추정 등급이다. 공식 수치가 아니며 게임 밸런스를 위해 단순화했다.",
+  "effects": {
+    "financeSalary": [0.75, 0.88, 1.0, 1.15, 1.35],
+    "financeBid": [0.95, 1.0, 1.05, 1.12, 1.25],
+    "financeCap": [1.25, 1.6, 2.1, 2.8, 4.0],
+    "popularityFame": [0, 0.1, 0.2, 0.4, 0.6],
+    "prestigeFame": [0, 2, 4, 7, 10]
+  },
+  "teams": {
+    "t1": { "finance": 5, "popularity": 5, "prestige": 5 },
+    "geng": { "finance": 5, "popularity": 4, "prestige": 5 },
+    "hle": { "finance": 4, "popularity": 4, "prestige": 4 },
+    "kt": { "finance": 4, "popularity": 3, "prestige": 4 },
+    "dk": { "finance": 3, "popularity": 3, "prestige": 4 },
+    "brion": { "finance": 2, "popularity": 2, "prestige": 2 },
+    "ns": { "finance": 3, "popularity": 2, "prestige": 3 },
+    "bnk": { "finance": 3, "popularity": 2, "prestige": 2 },
+    "drx": { "finance": 3, "popularity": 3, "prestige": 4 },
+    "soopers": { "finance": 3, "popularity": 2, "prestige": 2 },
+    "prx": { "finance": 4, "popularity": 4, "prestige": 5 },
+    "zeta": { "finance": 2, "popularity": 3, "prestige": 3 },
+    "dfm": { "finance": 2, "popularity": 2, "prestige": 3 },
+    "rrq": { "finance": 3, "popularity": 3, "prestige": 3 },
+    "ge": { "finance": 2, "popularity": 2, "prestige": 2 },
+    "fullsense": { "finance": 2, "popularity": 2, "prestige": 2 },
+    "varrel": { "finance": 2, "popularity": 1, "prestige": 2 },
+    "secret": { "finance": 2, "popularity": 2, "prestige": 2 }
+  }
+}

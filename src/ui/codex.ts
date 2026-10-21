@@ -1,9 +1,10 @@
 import genres from '../data/genres.json'
 import { ACHIEVEMENTS } from '../engine/achievements.ts'
-import { ENDINGS } from '../engine/endings.ts'
+import { endingDef, ENDINGS } from '../engine/endings.ts'
 import { stageName } from '../engine/season.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
+import { openCareer } from './careerView.ts'
 import { endingArt } from './ending.ts'
 import { MODE_INFO } from './labels.ts'
 
@@ -45,6 +46,16 @@ export function codexScreen(ctx: Ctx): HTMLElement {
     h('h2', {}, `${found} / ${ENDINGS.length} 발견`),
     h('p', { class: 'muted small' }, finishedRuns > 0 ? `완주 ${finishedRuns}회 · 지금까지 오른 최고 단계 ${stageName(bestStage)}` : '아직 완주한 판이 없습니다. 끝까지 플레이하면 여기에 기록됩니다.'),
     ...ENDINGS.map(card),
+    ctx.meta.careers.length > 0 && h('h2', {}, `명예의 전당 (${ctx.meta.careers.length})`),
+    ...ctx.meta.careers.map((c) =>
+      h(
+        'section',
+        { class: 'card' },
+        h('div', { class: 'row' }, h('b', {}, `${c.name} · ${genres[c.genre].name}`), h('span', { class: 'chip' }, endingDef(c.ending).name)),
+        h('span', { class: 'muted small' }, `${c.age}세 · 우승 ${c.career.totals.titles}회(월드 ${c.career.totals.worldTitles}회) · 구단 ${c.career.totals.teams}곳 · 수상 ${c.career.totals.awards}회`),
+        h('button', { class: 'btn small', onclick: () => void openCareer(c.career, `${c.name}의 경력`) }, '경력 보기'),
+      ),
+    ),
     h('h2', {}, `업적 ${ACHIEVEMENTS.filter((a) => achievements[a.id]).length} / ${ACHIEVEMENTS.length}`),
     ...ACHIEVEMENTS.map(achievementCard),
     h('button', { class: 'btn', onclick: () => ctx.toTitle() }, '타이틀로'),

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { advanceCalendar, replayOngoing } from './calendar.ts'
 import { acceptOffer, rollMidSeasonOffer } from './season.ts'
 import { createInitialState, type GameState } from './state.ts'
 
@@ -37,18 +38,23 @@ describe('시즌 중간 이적 제안', () => {
     expect(acceptOffer(s!, 0).team?.id).not.toBe(TEAM.id)
   })
 
-  it('시즌 중간에 옮기면 아직 끝까지 공개하지 않은 대회의 순위표에도 새 팀 이름이 나온다', () => {
-    const rows = (name: string) => [{ name, wins: 3, losses: 1, isPlayer: true }, { name: '상대', wins: 1, losses: 3, isPlayer: false }]
-    const run = (id: string, revealed: 'none' | 'mid' | 'end', name: string) => ({
-      id, name: id, placement: 1, fieldSize: 2, fame: 0, money: 0, order: [{ id: 'p', name, power: 1, isPlayer: true }], mid: rows(name), table: rows(name), advanced: [], revealed,
-    })
-    const s = firstOffer(make({ seasonRun: { season: 1, phase: 0.5, runs: [run('done', 'end', TEAM.name), run('open', 'mid', TEAM.name)], skipped: [], qualified: [], points: 0 } }))!
-    const moved = acceptOffer(s, 0)
-    const [done, open] = moved.seasonRun!.runs
-    expect(open.table![0].name).toBe(moved.team!.name)
-    expect(open.mid![0].name).toBe(moved.team!.name)
-    expect(open.order[0].name).toBe(moved.team!.name)
-    expect(done.table![0].name).toBe(TEAM.name)
+  it('시즌 중간에 옮기면 진행 중인 리그는 새 팀의 전력으로 다시 정해지고, 끝난 대회는 그대로다', () => {
+    const base = make({ stage: 'pro2', mode: 'standard' })
+    const mid = advanceCalendar(base, 0.3).state
+    const before = mid.seasonRun!.runs.find((r) => r.id === 'pro2_spring')!
+    expect(before.revealed).not.toBe('end')
+    const offered = firstOffer(mid)!
+    const moved = acceptOffer(offered, 0)
+    const after = moved.seasonRun!.runs.find((r) => r.id === 'pro2_spring')!
+    const me = (rows: NonNullable<typeof after.table>) => rows.find((r) => r.isPlayer)!.name
+    expect(me(after.table!)).toBe(moved.team!.name)
+    expect(after.order.find((t) => t.isPlayer)!.name).toBe(moved.team!.name)
+    expect(after.revealed).toBe(before.revealed)
+    // 같은 팀 전력이면 같은 결과 (옮기지 않고 다시 정해도 달라지지 않는다)
+    expect(replayOngoing(mid).seasonRun!.runs[0].table).toEqual(before.table)
+    // 이미 끝난 대회는 건드리지 않는다
+    const ended = advanceCalendar(base, 1).state
+    expect(replayOngoing({ ...ended, team: offered.pendingOffers!.offers[0].team }).seasonRun).toEqual(ended.seasonRun)
   })
 
   it('같은 판·같은 턴이면 같은 결과다', () => {

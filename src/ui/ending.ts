@@ -1,11 +1,13 @@
 import genres from '../data/genres.json'
 import { achievementDef } from '../engine/achievements.ts'
+import { buildCareer } from '../engine/career.ts'
 import { endingDef } from '../engine/endings.ts'
 import { assetGrade, homeEpilogue, netWorth } from '../engine/life.ts'
 import { stageName } from '../engine/season.ts'
 import type { EndingId, GameState } from '../engine/state.ts'
 import { bestStageOf } from '../save/storage.ts'
 import type { Ctx, EndingInfo } from './app.ts'
+import { careerSections } from './careerView.ts'
 import { celebrate } from './confetti.ts'
 import { h } from './dom.ts'
 import { endingSceneSvg } from './endingScenes.ts'
@@ -36,7 +38,7 @@ function bestOfSeason(events: GameState['history'][number]['events']): string {
 }
 
 /** 커리어가 끝났을 때 보는 엔딩 화면. */
-export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements }: EndingInfo): HTMLElement {
+export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements, tokens }: EndingInfo): HTMLElement {
   const id = state.finished
   if (!id) throw new Error('끝나지 않은 판이다')
   const def = endingDef(id)
@@ -64,6 +66,8 @@ export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements }
       const def = achievementDef(a.id)
       return h('section', { class: 'card achievement' }, h('p', { class: 'eyebrow' }, a.isNew ? '업적 달성!' : '업적 (재달성)'), h('p', { class: 'headline-title' }, `🏅 ${def.name}`), h('p', { class: 'muted' }, def.desc))
     }),
+    tokens > 0 && h('section', { class: 'card' }, h('p', { class: 'headline-title' }, `🪙 업적 토큰 +${tokens}`), h('p', { class: 'muted small' }, '타이틀의 업적 상점에서 다음 판을 도와줄 물건을 살 수 있어요.')),
+    ...careerSections(buildCareer(state)),
     h(
       'section',
       { class: 'card' },

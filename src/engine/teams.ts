@@ -4,6 +4,7 @@ import { domesticLeagueId, leagueDef } from './leagues.ts'
 import { salaryFameMultiplier } from './economy.ts'
 import { genrePower } from './power.ts'
 import { pathOf } from './routes.ts'
+import { financeSalary, marketOf, offerSalary, type TeamMarket } from './teamMarket.ts'
 import type { GameState, Offer, StageId, TeamRef } from './state.ts'
 import type { GenreId } from './types.ts'
 
@@ -28,6 +29,8 @@ export interface TeamProfile {
   salary: number
   /** 팀이 속한 리그 (1부가 아니면 null) */
   league: string | null
+  /** 팀의 재정·인기도·명성 등급 */
+  market: TeamMarket
 }
 
 /** 이 단계에서 팀이 속할 풀: 아마추어 팀 단계는 아마추어 팀, 프로 2부는 챌린저스 팀, 프로 1부는 구단 */
@@ -60,8 +63,9 @@ export function teamProfile(seed: number, season: number, team: TeamRef, stage: 
   const leagueSize = league && league !== domesticLeagueId(genre) ? pool.length : LEAGUE_SIZE[contracted]
   // 월급은 같은 리그 안에서의 팀 강도로 정하고(리그 전력 보정은 빼고), 리그 월급 배율을 곱한다
   const mult = league ? leagueDef(league).salaryMult : 1
-  const salary = Math.round(salaryFor(contracted, power - leagueStrength(team.id)) * mult * salaryFameMultiplier(fame))
-  return { team, stage, power, lastRank: 1 + Math.floor((index * leagueSize) / order.length), leagueSize, salary, league }
+  const market = marketOf(team)
+  const salary = Math.round(salaryFor(contracted, power - leagueStrength(team.id)) * financeSalary(market) * mult * salaryFameMultiplier(fame))
+  return { team, stage, power, lastRank: 1 + Math.floor((index * leagueSize) / order.length), leagueSize, salary, league, market }
 }
 
 /** 정석 루트의 연습생은 팀 전력과 상관없이 훈련비 정도만 받는다 */
@@ -140,6 +144,8 @@ export interface OfferTerms {
   myPower: number
   /** 팀 전력 − 내 실력치. 양수면 나보다 강한 팀 */
   gap: number
+  /** 이 팀이 나에게 제시하는 월급(3개월 기준). 지금 월급과 구단 재정을 함께 본 값이다 */
+  offerSalary: number
   /** 지금 받는 월급과의 차이 (무소속이면 전액) */
   salaryDelta: number
   strength: Strength
@@ -154,11 +160,14 @@ export function offerTerms(state: GameState, offer: Offer, stage: StageId = stat
   const myPower = genrePower(state.stats, state.genre)
   const gap = profile.power - myPower
   const tier = TIER_OF_STAGE[stage]!
+  const current = salaryOf(state)
+  const bid = offerSalary(profile.market, profile.salary, current)
   return {
     profile,
     myPower,
     gap,
-    salaryDelta: profile.salary - salaryOf(state),
+    offerSalary: bid,
+    salaryDelta: bid - current,
     strength: strengthOf(stage, profile.power, profile.league),
     boost: contracts.teamWeight * (profile.power - leagueStrength(offer.team.id) - TIERS[tier].mean),
   }

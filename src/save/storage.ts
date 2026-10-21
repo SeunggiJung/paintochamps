@@ -1,4 +1,6 @@
 import { earnedAchievements, type AchievementId } from '../engine/achievements.ts'
+import { buildCareer, type Career } from '../engine/career.ts'
+import { canBuy, nextCost, perksOf, SHOP_ITEMS, tokenReward, type Inventory } from '../engine/shop.ts'
 import { pro2Teams, proOrgs } from '../engine/field.ts'
 import { STAT_KEYS } from '../engine/types.ts'
 import type { EndingId, GameState, StageId, TeamRef } from '../engine/state.ts'
@@ -102,6 +104,18 @@ export interface FinishSummary {
   rerolls: number
 }
 
+/** 끝낸 커리어 하나의 경력 기록 (명예의 전당) */
+export interface CareerSnapshot {
+  name: string
+  genre: GameState['genre']
+  ending: EndingId
+  age: number
+  career: Career
+}
+
+/** 최근 몇 판의 경력까지 남기는가 */
+const MAX_CAREERS = 20
+
 /** 판을 넘어 유지되는 기록: 엔딩 도감, 튜토리얼 완료 여부 */
 export interface MetaSave {
   version: 1
@@ -113,6 +127,13 @@ export interface MetaSave {
   achievements: Partial<Record<AchievementId, { count: number; last?: FinishSummary }>>
   bestStage: StageId
   finishedRuns: number
+  /** 업적 토큰: 지금 가진 수와 지금까지 번 수 (옛 도감에는 없을 수 있다) */
+  tokens: number
+  tokensEarned: number
+  /** 업적 상점에서 산 것: 소모품은 개수, 영구 강화는 단계 */
+  inventory: Inventory
+  /** 끝낸 커리어의 경력 기록, 최근 것이 앞 */
+  careers: CareerSnapshot[]
 }
 
 const STAGE_RANK: StageId[] = ['basement', 'local_cup', 'amateur_team', 'pro2', 'pro1']
@@ -138,7 +159,7 @@ export function finishSummary(state: GameState): FinishSummary {
 }
 
 export function emptyMeta(): MetaSave {
-  return { version: 1, tutorialDone: false, guideDone: false, endings: {}, achievements: {}, bestStage: 'basement', finishedRuns: 0 }
+  return { version: 1, tutorialDone: false, guideDone: false, endings: {}, achievements: {}, bestStage: 'basement', finishedRuns: 0, tokens: 0, tokensEarned: 0, inventory: {}, careers: [] }
 }
 
 export function loadMeta(storage: KeyValueStorage): MetaSave {
@@ -164,8 +185,14 @@ export function recordFinish(storage: KeyValueStorage, state: GameState): MetaSa
   const prev = meta.endings[state.finished]?.count ?? 0
   // 강등당해도 지금까지 오른 가장 높은 단계를 기록한다
   const bestStage = bestStageOf(state, meta.bestStage)
+  // 업적을 달성하면 토큰을 받는다 (처음 달성한 업적은 더 많이)
+  const earned = earnedAchievements(state)
+  const gained = earned.reduce((sum, id) => sum + tokenReward(!meta.achievements[id]), 0)
   const next: MetaSave = {
     ...meta,
+    tokens: meta.tokens + gained,
+    tokensEarned: meta.tokensEarned + gained,
+    careers: [{ name: state.name, genre: state.genre, ending: state.finished, age: state.age, career: buildCareer(state) }, ...meta.careers].slice(0, MAX_CAREERS),
     tutorialDone: meta.tutorialDone || state.mode === 'tutorial',
     endings: { ...meta.endings, [state.finished]: { count: prev + 1, last: finishSummary(state) } },
     achievements: { ...meta.achievements, ...Object.fromEntries(earnedAchievements(state).map((id) => [id, { count: (meta.achievements[id]?.count ?? 0) + 1, last: finishSummary(state) }])) },
@@ -175,4 +202,35 @@ export function recordFinish(storage: KeyValueStorage, state: GameState): MetaSa
   safe(() => storage.setItem(META_KEY, JSON.stringify(next)), undefined)
   clearGame(storage)
   return next
+}
+
+/** 이번 판에서 업적으로 받을 토큰 (recordFinish 전의 도감 기준) */
+export function tokensFor(meta: MetaSave, state: GameState): number {
+  return earnedAchievements(state).reduce((sum, id) => sum + tokenReward(!meta.achievements[id]), 0)
+}
+
+/** 업적 상점에서 물건을 산다. 토큰이 모자라거나 더 살 수 없으면 null. */
+export function buyItem(storage: KeyValueStorage, id: string): MetaSave | null {
+  const meta = loadMeta(storage)
+  const item = SHOP_ITEMS.find((i) => i.id === id)
+  if (!item || !canBuy(item, meta.inventory, meta.tokens)) return null
+  const cost = nextCost(item, meta.inventory)!
+  const next: MetaSave = { ...meta, tokens: meta.tokens - cost, inventory: { ...meta.inventory, [id]: (meta.inventory[id] ?? 0) + 1 } }
+  safe(() => storage.setItem(META_KEY, JSON.stringify(next)), undefined)
+  return next
+}
+
+/** SR 보장권을 한 장 쓴다. 없으면 null. */
+export function useSrTicket(storage: KeyValueStorage): MetaSave | null {
+  const meta = loadMeta(storage)
+  const owned = meta.inventory.sr_ticket ?? 0
+  if (owned <= 0) return null
+  const next: MetaSave = { ...meta, inventory: { ...meta.inventory, sr_ticket: owned - 1 } }
+  safe(() => storage.setItem(META_KEY, JSON.stringify(next)), undefined)
+  return next
+}
+
+/** 새 판에 줄 영구 효과 */
+export function perksFromMeta(meta: MetaSave) {
+  return perksOf(meta.inventory)
 }

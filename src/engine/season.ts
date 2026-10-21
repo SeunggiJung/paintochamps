@@ -1,7 +1,9 @@
 import rules from '../data/rules.json'
 import stageData from '../data/stages.json'
 import { evaluateEnding } from './endings.ts'
-import { advanceCalendar } from './calendar.ts'
+import { advanceCalendar, replayOngoing } from './calendar.ts'
+import { changeTeam } from './career.ts'
+import { prestigeFame } from './teamMarket.ts'
 import { moneyScale } from './economy.ts'
 import { eventsFor, playerPower, type EventDef } from './competitions.ts'
 import { farmTeamOf, parentOrgOf, pickTeams } from './field.ts'
@@ -12,9 +14,9 @@ import { intlPointsOf, leagueRanking, type LeagueStanding } from './leagueRank.t
 import { settleAds } from './ads.ts'
 import { adaptationAfterMove, makeBlankCheckOffer, makeOverseasOffers, movesLeague, overseasBlocker } from './overseas.ts'
 import { genrePower } from './power.ts'
-import { salaryOf, teamProfile } from './teams.ts'
+import { offerTerms, salaryOf, teamProfile } from './teams.ts'
 import { createRng, gaussian, mixSeed, type Rng } from './rng.ts'
-import type { EndingId, EventRecord, GameState, Offer, PendingOffers, SeasonRecord, StageId, StandingRow } from './state.ts'
+import type { EndingId, EventRecord, GameState, Offer, PendingOffers, SeasonRecord, StageId } from './state.ts'
 import { pathOf, routeStep, type TestResult } from './routes.ts'
 import type { GenreId } from './types.ts'
 import { isCareerOver, isSettled, turnScale, turnsPerSeason } from './turn.ts'
@@ -270,7 +272,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
     // 1부에서 강등되면 같은 구단의 2부 팀(챌린저스)으로 내려간다. 연계된 팀이 없으면 무작위 2부 팀.
     // 해외 리그에서 밀려나면 국내로 돌아와 같은 구단 2부가 아니라 무작위 2부 팀으로 간다
     if (state.stage === 'pro1') team = (team && !isOverseas(state) && farmTeamOf(team, state.genre)) || pickTeams(rng, 'pro2', 1, new Set(), state.genre)[0]
-    next = { ...next, stage: lower, team, path: 'open', salaryMult: 1, negotiatedSeason: 0, league: domesticLeagueId(state.genre), adaptation: 100 }
+    next = changeTeam({ ...next, stage: lower, path: 'open', salaryMult: 1, negotiatedSeason: 0, league: domesticLeagueId(state.genre), adaptation: 100 }, team, true)
   } else if (!worldChampion && state.stage === 'pro2') {
     // 프로 2부 → 1부는 자동 승급이 아니라 1부 팀의 콜업 제안이다. 지금 팀(1군 콜업)과 다른 구단에서 온다. 거절하면 2부에 남는다.
     const cond = STAGES[state.stage].next!
@@ -313,6 +315,7 @@ export function settleSeason(state: GameState): { state: GameState; report: Seas
     events: results.map(({ id, name, placement, fieldSize }) => ({ id, name, placement, fieldSize })),
     highlights: { rating: highlights.rating, rank: highlights.ratingRank, players: highlights.players, awards: highlights.awards.map((a) => a.name) },
     teamId: state.team?.id ?? null,
+    teamName: state.team?.name ?? null,
     salary: salaryOf(state) * 4,
     league: leagueIdOf(state),
     intlPoints,
@@ -345,20 +348,6 @@ function leagueUnderdog(runs: readonly { expected?: number; fieldSize: number }[
   return !!league && league.expected! > league.fieldSize / 2
 }
 
-/**
- * 시즌 도중 팀을 옮기면 아직 끝까지 공개하지 않은 대회의 순위표·최종 순서에 남은 옛 팀 이름을 새 팀으로 바꾼다.
- * 결과는 대회가 시작될 때 정해 둔 것이라 이름만 바뀌고, 이미 끝까지 공개한 대회는 그때 팀 기록이라 그대로 둔다.
- */
-function renamePlayerTeamInRuns(state: GameState, teamName: string): GameState {
-  const run = state.seasonRun
-  if (!run) return state
-  const rows = (table: StandingRow[] | null) => (table ? table.map((r) => (r.isPlayer ? { ...r, name: teamName } : r)) : table)
-  const runs = run.runs.map((r) =>
-    r.revealed === 'end' ? r : { ...r, mid: rows(r.mid), table: rows(r.table), order: r.order.map((t) => (t.isPlayer ? { ...t, name: teamName } : t)) },
-  )
-  return { ...state, seasonRun: { ...run, runs } }
-}
-
 /** 스카우트·이적 제안 하나를 고른다. index가 null이면 거절(이적 제안만 거절할 수 있다). */
 export function acceptOffer(state: GameState, index: number | null): GameState {
   const pending = state.pendingOffers
@@ -384,21 +373,27 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
   }
   // 해외 이적은 계약금(월급 몇 턴분)을 받는다
   // 백지수표는 새 월급이 지금 월급의 checkMult배가 되도록 협상 배율을 정한다
-  const baseSalary = teamProfile(state.seed, state.season, offer.team, 'pro1', state.fame, state.genre)?.salary ?? 0
+  const terms = offerTerms(state, offer, stage)
+  // 입단 때 받는 명성(구단 후광)까지 반영한 명성으로 새 구단의 기준 월급을 본다 (월급 배율이 이후에도 같은 월급을 만든다)
+  const fameAfter = state.fame + (offer.perk === 'playtime' ? OFFERS.playtimeFame : 0) + prestigeFame(offer.team)
+  const baseSalary = teamProfile(state.seed, state.season, offer.team, stage, fameAfter, state.genre)?.salary ?? 0
   const checkSalary = offer.checkMult !== undefined ? salaryOf(state) * offer.checkMult : 0
-  const salaryMult = offer.checkMult !== undefined && baseSalary > 0 ? checkSalary / baseSalary : 1
+  // 이적하면 지금 월급과 새 구단의 재정을 함께 본 제안 월급을 그대로 이어받는다 (협상으로 올려 둔 월급이 초기화되지 않는다)
+  const salaryMult = baseSalary > 0 ? (offer.checkMult !== undefined ? checkSalary : terms!.offerSalary) / baseSalary : 1
   const bonus = leagueMove && league !== domesticLeagueId(state.genre) ? Math.round((offer.checkMult !== undefined ? checkSalary : salaryOf({ ...joined, team: offer.team, salaryMult: 1 })) * OVERSEAS_RULES.signingBonusTurns) : 0
-  return {
-    ...renamePlayerTeamInRuns(joined, offer.team.name),
+  const result: GameState = {
+    ...joined,
     everPro: moved.everPro || stage === 'pro2' || stage === 'pro1',
     debutTeamId: stage === 'pro1' && state.debutTeamId === null ? offer.team.id : state.debutTeamId,
-    team: offer.team,
     money: state.money + (offer.perk === 'salary' ? OFFERS.salaryMoney * moneyScale(stage) : 0) + bonus,
-    fame: state.fame + (offer.perk === 'playtime' ? OFFERS.playtimeFame : 0),
+    fame: fameAfter,
     salaryMult,
     negotiatedSeason: 0,
     pendingOffers: null,
   }
+  const signed = changeTeam(result, offer.team, isSettled(state))
+  // 시즌 도중에 같은 단계 안에서 팀을 옮겼다면 진행 중인 대회는 새 팀의 전력으로 다시 정한다
+  return stage === state.stage && !isSettled(state) ? replayOngoing(signed) : signed
 }
 
 /** 자진 은퇴: 시즌 결산을 마친 시점에 언제든 고를 수 있다. */

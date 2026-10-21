@@ -3,7 +3,7 @@ import genres from '../data/genres.json'
 import { gradeBounds, gradeOdds } from '../engine/gacha.ts'
 import { createInitialState } from '../engine/state.ts'
 import { STAT_KEYS, type GachaResult, type Grade } from '../engine/types.ts'
-import { saveGame } from '../save/storage.ts'
+import { perksFromMeta, saveGame, useSrTicket } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import type { NewGameDraft } from './create.ts'
 import { h } from './dom.ts'
@@ -11,7 +11,7 @@ import { statName } from './statHelp.ts'
 import { GRADE_COMMENT, GRADE_LABEL, MODE_INFO, STAT_LABEL } from './labels.ts'
 import { celebrate } from './confetti.ts'
 import { playGradeSfx } from './sound.ts'
-import { rollAt } from './newGame.ts'
+import { rollAt, rollAtMin } from './newGame.ts'
 
 const STEP_MS = 130
 /** 등급 공개 직전 뜸 들이는 시간 */
@@ -43,6 +43,12 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   const autoBtn = h('button', { class: 'btn' }, '원하는 등급이 나올 때까지 뽑기')
   /** 목표 등급 자동 뽑기가 돌아가는 중인지 */
   let autoRunning = false
+
+  /** SR 보장권(업적 상점)을 쓰는 중인가. 켜면 뽑기 결과가 SR 이상으로만 나오고, 시작할 때 한 장 쓴다. */
+  let ticketOn = false
+  const tickets = () => ctx.meta.inventory.sr_ticket ?? 0
+  const ticketBtn = h('button', { class: 'btn ghost small' })
+  const current = () => (ticketOn ? rollAtMin(draft.seed, draft.genre, rollIndex) : rollAt(draft.seed, draft.genre, rollIndex))
 
   const clearTimers = () => {
     timers.forEach(clearTimeout)
@@ -163,7 +169,7 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
     stage.title = busy && !autoRunning ? '눌러서 건너뛰기' : ''
   }
 
-  const roll = () => show(rollAt(draft.seed, draft.genre, rollIndex), true)
+  const roll = () => show(current(), true)
 
   rerollBtn.onclick = () => {
     rollIndex++
@@ -176,7 +182,7 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
       return
     }
     rollIndex++
-    show(rollAt(draft.seed, draft.genre, rollIndex), true, AUTO_SPEED, (hit) => {
+    show(current(), true, AUTO_SPEED, (hit) => {
       if (hit || !autoRunning) {
         autoRunning = false
         setBusy(false)
@@ -195,15 +201,30 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
     autoRunning = true
     autoStep()
   }
+  const renderTicket = () => {
+    ticketBtn.textContent = ticketOn ? `SR 보장권 사용 중 (보유 ${tickets()}장) · 끄기` : `SR 보장권 쓰기 (보유 ${tickets()}장)`
+    ticketBtn.classList.toggle('active', ticketOn)
+  }
+  ticketBtn.onclick = () => {
+    if (autoRunning) return
+    ticketOn = !ticketOn
+    renderTicket()
+    roll()
+  }
   startBtn.onclick = () => {
     clearTimers()
+    const perks = perksFromMeta(ctx.meta)
+    const result = current()
+    // 보장권을 쓴 판이면 한 장 사라진다
+    if (ticketOn) ctx.meta = useSrTicket(ctx.storage) ?? ctx.meta
     const state = createInitialState({
       name: draft.name,
       genre: draft.genre,
       mode: draft.mode,
-      gacha: rollAt(draft.seed, draft.genre, rollIndex),
+      gacha: result,
       seed: draft.seed,
       rerolls: rollIndex,
+      perks,
     })
     saveGame(ctx.storage, state)
     ctx.toHome(state)
@@ -216,8 +237,10 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
     h('p', { class: 'muted small' }, `${genre.name} · ${MODE_INFO[draft.mode].name} 모드 · 합계 ${gacha.statTotal}`),
     stage,
     h('div', { class: 'auto-roll' }, targetSelect, autoBtn),
+    tickets() > 0 && ticketBtn,
     h('div', { class: 'stack' }, startBtn, rerollBtn, h('button', { class: 'btn ghost', onclick: () => ctx.toCreate() }, '처음부터')),
   )
+  renderTicket()
   roll()
   return screen
 }
