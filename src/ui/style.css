@@ -330,6 +330,7 @@ input[type='text'] {
 .new-chip { background: var(--grade-UR); color: #2a1a00; font-weight: 700; align-self: center; }
 .kv-row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
 .kv-row b { text-align: right; }
+.kv-row.me { font-weight: 700; color: var(--accent, #4f8cff); }
 .codex-card { display: flex; flex-direction: row; align-items: center; gap: 14px; }
 .codex-card.locked { opacity: 0.8; }
 .codex-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }

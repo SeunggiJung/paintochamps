@@ -1,6 +1,6 @@
 import competitions from '../data/competitions.json'
 import type { NamePool } from './field.ts'
-import { leagueOfState } from './leagues.ts'
+import { eventVenue, leagueOfState } from './leagues.ts'
 import { mentalAdjusted } from './match.ts'
 import { genrePower } from './power.ts'
 import type { GameState, ModeId } from './state.ts'
@@ -17,6 +17,8 @@ export interface EventDef {
   name: string
   /** 시즌 안에서 이 대회가 열리는 기간 [시작, 끝] (0~1, 시즌의 몇 %가 지난 시점). 끝나는 때 결과가 나온다. */
   span: [number, number]
+  /** 이름의 {city}가 열리는 지역: 월드 개최 지역에서 몇 칸 뒤 지역인가 (0 = 월드와 같은 지역) */
+  hostOffset?: number
   /** 이 모드에서만 열린다 (없으면 모든 모드). 튜토리얼에서 빼려면 표준·정밀만 적는다. */
   modes?: ModeId[]
   format: 'league' | 'elimination'
@@ -56,13 +58,15 @@ export interface EventDef {
 const CALENDAR_OF: Record<GenreId, 'aos' | 'fps'> = { aos: 'aos', rts: 'aos', fps: 'fps', fighting: 'fps' }
 
 /** 이번 시즌에 치르는 대회 목록 (시간 순서) */
-export function eventsFor(state: Pick<GameState, 'stage' | 'genre' | 'mode'> & { season?: number; league?: string }): EventDef[] {
+export function eventsFor(state: Pick<GameState, 'stage' | 'genre' | 'mode'> & { season?: number; league?: string; seed?: number }): EventDef[] {
   const all = (state.stage === 'pro1' ? competitions.stages.pro1[CALENDAR_OF[state.genre]] : competitions.stages[state.stage]) as EventDef[]
   // 해외 리그의 일정은 국내 일정의 틀을 그대로 쓰고 이름만 소속 리그로 바꾼다
   const league = leagueOfState(state).name
   return all
     .filter((e) => (!e.modes || e.modes.includes(state.mode)) && (!e.everyNSeasons || (state.season !== undefined && state.season % e.everyNSeasons === 0)))
     .map((e) => (e.name.includes('{league}') ? { ...e, name: e.name.replace('{league}', league) } : e))
+    // 국제 대회의 이름 뒤에는 그 시즌 개최 도시가 붙는다 (정식 명칭은 도시를 뺀 이름)
+    .map((e) => (e.name.includes('{city}') ? { ...e, name: e.name.replace('{city}', eventVenue(state.genre, state.season ?? 1, state.seed ?? 0, e.id, e.hostOffset ?? 0).city) } : e))
 }
 
 /** 공식 일정이 아닌 대회인지 (대회 id로 조회) */

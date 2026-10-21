@@ -20,6 +20,7 @@ import { LEVEL_TEXT } from '../engine/highlights.ts'
 import { canNegotiate } from '../engine/negotiation.ts'
 import { openNegotiation } from './negotiationView.ts'
 import { openSheet } from './sheet.ts'
+import { openStandings } from './standingsView.ts'
 import { seasonLine } from '../engine/seasonLine.ts'
 
 const ENDING_NAME = Object.fromEntries(endings.order.map((e) => [e.id, e.name]))
@@ -288,6 +289,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
       ),
       highlightsCard(),
       leagueCard(),
+      state.seasonRun && h('section', { class: 'card' }, h('h3', {}, '다른 팀 성적'), h('p', { class: 'muted small' }, '이번 시즌 리그 순위표와 대회 결과를 볼 수 있어요.'), h('button', { class: 'btn small', onclick: () => void openStandings(state) }, '다른 팀 성적 보기')),
       adReportCard(),
       h(
         'section',

@@ -41,6 +41,7 @@ import { openNegotiation } from './negotiationView.ts'
 import { openPlanSheet } from './planScreen.ts'
 import { statName } from './statHelp.ts'
 import { teamIcon } from './teamIcon.ts'
+import { teamMarketText } from './marketLabel.ts'
 import { salaryOf } from '../engine/teams.ts'
 import { formatMoney } from './format.ts'
 import { runGuide } from './guide.ts'
@@ -328,6 +329,7 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
           state.team && salaryOf(state) > 0 ? ` · 월급 ${formatMoney(salaryOf(state))}/3개월` : null,
           isOverseas(state) ? ` · ${leagueOfState(state).name} 적응 ${Math.round(adaptationOf(state))}%` : null,
         ),
+        state.team && state.stage !== 'amateur_team' && h('p', { class: 'muted small' }, `구단 ${teamMarketText(state, state.team)}`),
         h(
           'div',
           { class: 'meters' },

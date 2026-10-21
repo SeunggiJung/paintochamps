@@ -1,4 +1,5 @@
 import data from '../data/leagues.json'
+import { createRng, mixSeed } from './rng.ts'
 import type { GameState } from './state.ts'
 import type { GenreId } from './types.ts'
 
@@ -19,6 +20,8 @@ export interface LeagueDef {
   id: LeagueId
   name: string
   region: string
+  /** 이 지역에서 열리는 국제 대회의 개최 도시 후보 (대회 이름 뒤에 개최지로 붙는다) */
+  cities?: string[]
   /** 국내(기본) 리그인가 */
   domestic?: boolean
   /** 이 리그 팀의 전력에 더하는 값 (국내 = 0 기준) */
@@ -101,6 +104,20 @@ export function adaptationPenalty(state: Pick<GameState, 'genre'> & { league?: L
 export function worldHost(genre: GenreId, season: number): LeagueDef {
   const hosts = FAMILIES[familyOf(genre)].worldHosts
   return leagueDef(hosts[(Math.max(1, season) - 1) % hosts.length])
+}
+
+/**
+ * 그 시즌 국제 대회의 개최지. offset은 월드(챔피언스)가 열리는 지역에서 몇 칸 뒤 지역인지(0이면 월드와 같은 지역)이고,
+ * 도시는 그 지역 후보 중 판·시즌·대회로 정해진다. 대회 이름은 그대로고 개최 도시만 뒤에 붙는다.
+ */
+export function eventVenue(genre: GenreId, season: number, seed: number, eventId: string, offset: number): { region: LeagueDef; city: string } {
+  const hosts = FAMILIES[familyOf(genre)].worldHosts
+  const region = leagueDef(hosts[(Math.max(1, season) - 1 + offset) % hosts.length])
+  const cities = region.cities ?? [region.region]
+  let hash = 2166136261
+  for (let i = 0; i < eventId.length; i++) hash = Math.imul(hash ^ eventId.charCodeAt(i), 16777619)
+  const rng = createRng(mixSeed(seed, season, hash >>> 0, 0x76e1))
+  return { region, city: cities[Math.floor(rng() * cities.length)] }
 }
 
 /** 적응이 덜 됐을 때 줄어드는 턴당 컨디션 회복 (3개월 기준) */

@@ -6,15 +6,11 @@ import type { GameState, Offer, StageId } from '../engine/state.ts'
 import { offerTerms, salaryOf, seasonResultsOf, type Strength } from '../engine/teams.ts'
 import { marketContext, marketTrend } from '../engine/teamMarket.ts'
 import { h } from './dom.ts'
+import { marketText } from './marketLabel.ts'
 import { formatMoney, formatMoneyDelta } from './format.ts'
 import { teamIcon } from './teamIcon.ts'
 
 const STRENGTH_LABEL: Record<Strength, string> = { strong: '강팀', average: '평범한 팀', weak: '약팀' }
-const stars = (v: number) => {
-  const n = Math.min(5, Math.max(1, Math.round(v)))
-  return '★'.repeat(n) + '☆'.repeat(5 - n)
-}
-const TREND_MARK = { 1: ' ▲ 상승세', 0: '', [-1]: ' ▼ 하락세' } as const
 const signed = (n: number) => (n > 0 ? `+${Math.round(n)}` : String(Math.round(n)))
 
 /** 계약 혜택 문구 */
@@ -44,7 +40,7 @@ export function offerButton(state: GameState, offer: Offer, onPick: () => void, 
         `월급 ${formatMoney(offerSalary)} / 3개월`,
         state.team ? h('em', { class: salaryDelta >= 0 ? 'up' : 'down' }, ` (지금보다 ${formatMoneyDelta(salaryDelta)})`) : null,
       ),
-      h('span', { class: 'offer-line muted' }, `재정 ${stars(m.finance)} · 인기 ${stars(m.popularity)} · 명성 ${stars(m.prestige)}${TREND_MARK[marketTrend(offer.team, marketContext(state))]}`),
+      h('span', { class: 'offer-line muted' }, marketText(m, marketTrend(offer.team, marketContext(state)))),
       h('span', { class: 'offer-line muted' }, `대회 전력 ${signed(boost)} · ${perkLabel(offer, stage)}`),
     )
   } else lines.push(h('span', { class: 'offer-line muted' }, perkLabel(offer, stage)))
