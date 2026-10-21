@@ -25,3 +25,6 @@ dist-ssr
 
 # Playwright 플러그인 임시 출력(스크린샷·스냅샷)
 .playwright-mcp/
+
+# superpowers 브레인스토밍 시안 임시 파일
+.superpowers/
