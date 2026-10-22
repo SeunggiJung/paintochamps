@@ -1,0 +1,87 @@
+/* 디자인 토큰: 테마 3종(light=밝은 카드, cozy=크림+도트, dark=다크). data-theme가 없으면 dark. */
+:root,
+:root[data-theme='dark'] {
+  --bg: #14172f;
+  --bg-image: radial-gradient(120% 60% at 50% 0%, #2b2f6b 0%, #14172f 60%);
+  --page-bg: #0b0d1f;
+  --panel: rgba(36, 42, 92, 0.72);
+  --panel-2: #232a5c;
+  --line: #3b4490;
+  --text: #eef0ff;
+  --muted: #9aa3d6;
+  --accent: #6c8cff;
+  --accent-text: #fff;
+  --accent-soft: #2f3a85;
+  --track: #10132b;
+  --danger: #ff6b7a;
+  --up: #4cd18a;
+  --warn-bg: rgba(240, 68, 82, 0.22);
+  --warn-text: #ff8a9a;
+  --gold: #ffcf5a;
+  --overlay: #000a;
+  --tab-bg: #181c3c;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --border: 1px solid var(--line);
+  --shadow: none;
+  --grade-N: #8b93ad;
+  --grade-R: #4cc38a;
+  --grade-SR: #4fa3ff;
+  --grade-SSR: #b980ff;
+  --grade-UR: #ffb740;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f2f4f6;
+  --bg-image: none;
+  --page-bg: #e3e7ec;
+  --panel: #fff;
+  --panel-2: #eef0f3;
+  --line: #e5e8eb;
+  --text: #191f28;
+  --muted: #6b7684; /* 시안 #8b95a1은 대비 2.8 */
+  --accent: #3182f6;
+  --accent-text: #fff;
+  --accent-soft: #e8f3ff;
+  --track: #e5e8eb;
+  --danger: #f04452;
+  --up: #17913f; /* 시안 #1ba34a는 대비 2.98 */
+  --warn-bg: #ffe1e4;
+  --warn-text: #d6293a;
+  --gold: #d6870a;
+  --overlay: #000a;
+  --tab-bg: #fff;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --border: 1px solid var(--line);
+  --shadow: none;
+  color-scheme: light;
+}
+
+:root[data-theme='cozy'] {
+  --bg: #fff1d6;
+  --bg-image: none;
+  --page-bg: #f0dcae;
+  --panel: #fffdf4;
+  --panel-2: #f7e4bd;
+  --line: #e6cfa8;
+  --text: #3b2a20;
+  --muted: #8a6a55;
+  --accent: #ff8a3d;
+  --accent-text: #3b2a20; /* 시안 흰색은 주황 위에서 대비 2.3 */
+  --accent-soft: #ffd45e;
+  --track: #f0dcc0;
+  --danger: #d9480f;
+  --up: #2f8a3a;
+  --warn-bg: #ffd9c9;
+  --warn-text: #b83a14;
+  --gold: #a47500;
+  --overlay: #000a;
+  --tab-bg: #fffdf4;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --border: 3px solid #5b3a29;
+  --shadow: 0 4px 0 #5b3a29;
+  color-scheme: light;
+}

@@ -1,3 +1,4 @@
+import './ui/theme.css'
 import './ui/style.css'
 import type { KeyValueStorage } from './save/storage.ts'
 import { startApp } from './ui/app.ts'
