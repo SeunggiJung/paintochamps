@@ -10,6 +10,8 @@ import { infoScreen, isInfoPageId, type InfoPageId } from './infoPages.ts'
 import { seasonScreen } from './seasonScreen.ts'
 import { shopScreen } from './shopScreen.ts'
 import { soundToggle } from './sound.ts'
+import { loadFont } from './fonts.ts'
+import { applyPrefs, loadPrefs, readEnv, savePrefs, type Prefs } from './prefs.ts'
 import { titleScreen } from './title.ts'
 
 /** 엔딩 화면에 넘기는 기록 정보 */
@@ -26,6 +28,10 @@ export interface EndingInfo {
 export interface Ctx {
   storage: KeyValueStorage
   meta: ReturnType<typeof loadMeta>
+  /** 테마·글자·움직임·도감 보기 설정 */
+  prefs: Prefs
+  /** 설정을 바꿔 저장하고 화면에 적용한다 */
+  updatePrefs(patch: Partial<Prefs>): void
   toTitle(): void
   toCreate(): void
   toGacha(draft: NewGameDraft): void
@@ -57,6 +63,13 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
   const ctx: Ctx = {
     storage,
     meta: loadMeta(storage),
+    prefs: loadPrefs(storage),
+    updatePrefs(patch) {
+      ctx.prefs = { ...ctx.prefs, ...patch }
+      savePrefs(storage, ctx.prefs)
+      applyPrefs(ctx.prefs, readEnv())
+      void loadFont(ctx.prefs.font)
+    },
     toTitle() {
       ctx.meta = loadMeta(storage)
       setHash('')

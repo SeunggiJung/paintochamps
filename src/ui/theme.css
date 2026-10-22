@@ -85,3 +85,9 @@
   --shadow: 0 4px 0 #5b3a29;
   color-scheme: light;
 }
+
+/* 글자: 선택한 글자 CSS는 fonts.ts가 지연 로드한다 */
+:root,
+:root[data-font='pretendard'] { --font-body: 'Pretendard Variable', system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif; }
+:root[data-font='jua'] { --font-body: 'Jua', system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif; }
+:root[data-font='galmuri'] { --font-body: 'Galmuri11', system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif; }
