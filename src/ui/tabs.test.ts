@@ -36,7 +36,7 @@ const proState = (patch: Partial<GameState> = {}) =>
   baseState({ stage: 'pro1', team: { id: 'aos_pro1_t1', name: 'T1' } as GameState['team'], turnCount: 3, teamSinceTurn: 0, negotiatedSeason: 0, ...patch })
 
 function session(state: GameState): GameSession {
-  return new GameSession({ storage: memory() } as unknown as Ctx, state)
+  return new GameSession({ storage: memory(), meta: emptyMeta() } as unknown as Ctx, state)
 }
 
 const find = (root: HTMLElement, text: string) => [...root.querySelectorAll<HTMLElement>('button, .chip')].find((b) => b.textContent?.includes(text))

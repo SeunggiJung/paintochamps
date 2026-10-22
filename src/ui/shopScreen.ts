@@ -2,6 +2,7 @@ import { canBuy, nextCost, SHOP_ITEMS, type ShopItem } from '../engine/shop.ts'
 import { buyItem } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
+import { showGuideOnce } from './guides.ts'
 
 /** 업적 상점: 업적을 달성해 모은 토큰으로 다음 판들에 쓰는 보너스를 산다. */
 export function shopScreen(ctx: Ctx, back: () => void): HTMLElement {
@@ -43,5 +44,6 @@ export function shopScreen(ctx: Ctx, back: () => void): HTMLElement {
     )
   }
   render()
+  void showGuideOnce(ctx, 'tokenShop')
   return root
 }

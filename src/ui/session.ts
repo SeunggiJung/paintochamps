@@ -29,6 +29,7 @@ import { outfitLook } from './roomScene.ts'
 import { openSheet } from './sheet.ts'
 import { openShop as openShopSheet } from './shopSheet.ts'
 import { playSfx, vibrate } from './sound.ts'
+import { showGuideOnce } from './guides.ts'
 import { askCafeTeamName } from './teamNameSheet.ts'
 import { turnChangeGraph } from './turnResult.ts'
 
@@ -105,11 +106,12 @@ export class GameSession {
     this.refresh()
     let next = r.state
     // 시간이 흘러가는 연출 (대회가 끝나는 시점마다 결과 카드)
-    await playTimeline({ before, calendar: r.calendar, actions: choice.map((c) => ACTIONS[c.id].name) })
+    await playTimeline({ before, calendar: r.calendar, actions: choice.map((c) => ACTIONS[c.id].name), beforeBroadcast: () => showGuideOnce(this.ctx, 'broadcast') })
     if (next.injuredMonths > before.injuredMonths) {
       playSfx('hurt')
       vibrate([120, 60, 120])
     }
+    await showGuideOnce(this.ctx, 'turnResult')
     await openSheet<void>((close) =>
       h(
         'div',
@@ -124,13 +126,19 @@ export class GameSession {
     const coach = coachSwapOffer(next, r.calendar.beats)
     if (coach) next = await this.askCoachSwap(next, coach)
     const event = rollEvent(next, turnRng(next))
-    if (event) next = await runEvent(next, event)
+    if (event) {
+      await showGuideOnce(this.ctx, 'event')
+      next = await runEvent(next, event)
+    }
     next = await this.runAdShoots(next)
     next = await this.askPromotion(rollMidSeasonPromotion(next))
     next = await this.askMidSeasonOffer(rollMidSeasonOffer(next))
     // 시즌이 이어질 때 가끔(약 30%): 쉬는 시간 미니게임(건너뛰어도 되고, 잘하면 다음 턴 훈련 효율이 조금 오른다)
     const mini = !next.finished && !next.pendingOffers && next.turnInSeason < turnsPerSeason(next.mode) ? rollMiniGame(next) : null
-    if (mini) next = await offerMiniGame(next, mini)
+    if (mini) {
+      await showGuideOnce(this.ctx, 'minigame')
+      next = await offerMiniGame(next, mini)
+    }
     this.busy = false
     this.commit(next)
     scrollTo(0, 0)
@@ -174,6 +182,7 @@ export class GameSession {
   async openShop(): Promise<void> {
     if (this.busy) return
     this.busy = true
+    await showGuideOnce(this.ctx, 'shop')
     const next = await openShopSheet(this.state)
     this.busy = false
     this.commit(next)
@@ -219,6 +228,7 @@ export class GameSession {
   private async askPromotion(s: GameState): Promise<GameState> {
     const pending = s.pendingOffers
     if (!pending || pending.kind !== 'callup') return s
+    await showGuideOnce(this.ctx, 'midOffer')
     const stage = pending.stage ?? 'pro1'
     const index = await openSheet<number | null>((close) =>
       h(
@@ -237,6 +247,7 @@ export class GameSession {
   private async askMidSeasonOffer(s: GameState, requested = false): Promise<GameState> {
     const pending = s.pendingOffers
     if (!pending) return s
+    await showGuideOnce(this.ctx, 'midOffer')
     const index = await openSheet<number | null>((close) =>
       h(
         'div',

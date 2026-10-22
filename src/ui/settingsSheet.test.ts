@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { emptyMeta } from '../save/storage.ts'
 import { defaultPrefs, type Prefs } from './prefs.ts'
 import { openSettings } from './settingsSheet.ts'
 import type { Ctx } from './app.ts'
@@ -12,6 +13,7 @@ function fakeCtx() {
   const patches: Partial<Prefs>[] = []
   const ctx = {
     prefs: { ...defaultPrefs },
+    meta: emptyMeta(),
     updatePrefs: (p: Partial<Prefs>) => {
       patches.push(p)
       ctx.prefs = { ...ctx.prefs, ...p }

@@ -12,6 +12,7 @@ import { ACTIONS, buyEquipment, checkEquipment } from '../engine/turn.ts'
 import { saveGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { segmented, stepDots } from './components.ts'
+import { guideHelp, showGuideOnce } from './guides.ts'
 import { helpIcon } from './conditionHelp.ts'
 import { confirmSheet } from './confirm.ts'
 import { h } from './dom.ts'
@@ -173,7 +174,7 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
     const best = bestTraining(state, menu)
     const lessonCost = Math.ceil(actionCost({ id: 'private_lesson' }, state))
     return [
-      h('p', { class: 'eyebrow' }, `${state.season}시즌 계획`),
+      h('div', { class: 'row' }, h('p', { class: 'eyebrow' }, `${state.season}시즌 계획`), guideHelp(ctx, 'plan')),
       h('p', { class: 'event-text' }, '이번 시즌을 어떻게 보낼지 정하자. 시즌이 시작되면 컨디션에 맞춰 알아서 흘러가고, 대회·이적 같은 큰 일에만 직접 결정한다.'),
       h('h3', {}, '방침'),
       h(
@@ -240,7 +241,7 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
     if (!tabs.some((t) => t.id === spend)) spend = 'equipment'
     const list = spend === 'equipment' ? equipmentList() : spend === 'facility' ? facilityList() : spend === 'ads' ? adList() : homeList()
     return [
-      h('div', { class: 'row' }, h('h2', {}, '지출 계획'), h('span', { class: 'muted small' }, `보유 돈 ${formatMoney(state.money)}`)),
+      h('div', { class: 'row' }, h('h2', {}, '지출 계획', guideHelp(ctx, 'spend')), h('span', { class: 'muted small' }, `보유 돈 ${formatMoney(state.money)}`)),
       h('p', { class: 'muted small' }, '시즌 시작에 돈이 되는 만큼 살 수 있어요. 시즌 중에는 바꿀 수 없어요.'),
       segmented(tabs, spend, (id) => ((spend = id), draw())),
       h('div', { class: 'choices vertical' }, ...list),
@@ -267,6 +268,14 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
 
   function draw() {
     root.replaceChildren(stepDots(2, step), ...(step === 1 ? stepOne() : stepTwo()))
+    // 상황이 처음 나타날 때 한 번만 (이미 본 것은 아무것도 안 뜬다)
+    if (step === 1) void showGuideOnce(ctx, 'plan')
+    else {
+      void showGuideOnce(ctx, 'spend').then(() => {
+        if (spend === 'ads') return showGuideOnce(ctx, 'ads')
+        if (spend === 'home') return showGuideOnce(ctx, 'house')
+      })
+    }
   }
   draw()
   return root

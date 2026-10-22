@@ -2,6 +2,7 @@ import type { Ctx } from './app.ts'
 import { segmented } from './components.ts'
 import { h } from './dom.ts'
 import type { FontId, MotionPref, ThemePref } from './prefs.ts'
+import { listGuides, showGuide } from './guides.ts'
 import { openSheet } from './sheet.ts'
 import { onSoundChange, setSoundEnabled, soundEnabled } from './sound.ts'
 import { openUpdateLog } from './updateLog.ts'
@@ -42,7 +43,7 @@ export function openSettings(ctx: Ctx, opts: { inGame: boolean }): Promise<void>
           row('움직임', segmented(MOTION_ITEMS, ctx.prefs.motion, (motion) => (ctx.updatePrefs({ motion }), render()))),
           sound,
           link('업데이트 로그', () => void openUpdateLog()),
-          link('가이드 모아 보기', () => {}, '준비 중'),
+          link('가이드 모아 보기', () => void openGuideList(ctx), `${listGuides(ctx).filter((g) => g.seen).length}/${listGuides(ctx).length}`),
           ...(opts.inGame ? [link('타이틀로', () => (close(undefined), ctx.toTitle()))] : []),
         )
       }
@@ -50,6 +51,27 @@ export function openSettings(ctx: Ctx, opts: { inGame: boolean }): Promise<void>
       render()
       return root
     },
+    { variant: 'info' },
+  )
+}
+
+/** 가이드 모아 보기: 본 것은 ✓, 누르면 다시 연다 (본 기록은 바뀌지 않는다) */
+function openGuideList(ctx: Ctx): Promise<void> {
+  return openSheet<void>(
+    () =>
+      h(
+        'div',
+        { class: 'stack-tight' },
+        h('p', { class: 'eyebrow' }, '가이드 모아 보기'),
+        ...listGuides(ctx).map((g) =>
+          h(
+            'button',
+            { class: 'settings-link guide-row', type: 'button', onclick: () => void (g.id === 'start' ? ctx.showStartGuide() : showGuide(ctx, g.id)) },
+            h('span', {}, `${g.seen ? '✓ ' : ''}${g.title}`),
+            h('span', { class: 'muted small' }, g.where),
+          ),
+        ),
+      ),
     { variant: 'info' },
   )
 }

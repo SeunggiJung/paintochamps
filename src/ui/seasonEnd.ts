@@ -4,6 +4,7 @@ import { saveGame } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { confirmSheet } from './confirm.ts'
 import { h } from './dom.ts'
+import { showGuideOnce } from './guides.ts'
 import { askCafeTeamName } from './teamNameSheet.ts'
 
 /**
@@ -87,5 +88,6 @@ export function seasonEnd(ctx: Ctx, initial: GameState): HTMLElement {
     )
   }
   draw()
+  if (upcomingTest(state)) void showGuideOnce(ctx, 'prep')
   return root
 }

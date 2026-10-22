@@ -13,6 +13,7 @@ import { countUp } from '../countUp.ts'
 import { h } from '../dom.ts'
 import { formatMoney } from '../format.ts'
 import type { GameSession } from '../session.ts'
+import { guideHelp, showGuideOnce } from '../guides.ts'
 import { statName } from '../statHelp.ts'
 
 const EQUIPMENT = equipmentData as Record<EquipmentId, { name: string }>
@@ -42,7 +43,7 @@ export function playerTab(session: GameSession): HTMLElement {
   const contract = h(
     'section',
     { class: 'card', 'data-guide': 'contract' },
-    h('h3', {}, '계약'),
+    h('div', { class: 'row' }, h('h3', {}, '계약'), guideHelp(session.ctx, 'contract')),
     h('p', { class: 'small' }, state.team ? `${state.team.name}` : '소속 팀 없음', salary > 0 ? h('span', { class: 'muted' }, ` · 월급 ${formatMoney(salary)}/3개월`) : null),
     h(
       'div',
@@ -64,6 +65,8 @@ export function playerTab(session: GameSession): HTMLElement {
     ),
     h('p', { class: 'muted small' }, '구매는 시즌 시작 때 지출 계획에서 해요.'),
   )
+
+  if (state.team && !session.busy) void showGuideOnce(session.ctx, 'contract')
 
   const career = h('button', { class: 'settings-link', type: 'button', onclick: () => void session.showCareer() }, h('span', {}, '내 경력'), h('span', { class: 'muted' }, '›'))
 

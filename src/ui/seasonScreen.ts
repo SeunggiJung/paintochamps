@@ -23,6 +23,7 @@ import { openSheet } from './sheet.ts'
 import { openStandings } from './standingsView.ts'
 import { seasonLine } from '../engine/seasonLine.ts'
 import { segmented } from './components.ts'
+import { showGuideOnce } from './guides.ts'
 import { canStartNextSeason, settleAlerts, startLabel, type SettleTab } from './seasonFlow.ts'
 
 const ENDING_NAME = Object.fromEntries(endings.order.map((e) => [e.id, e.name]))
@@ -323,7 +324,11 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
           { id: 'offers', label: '제안', dot: settleAlerts(state).offers },
         ],
         tab,
-        (id) => ((tab = id), render()),
+        (id) => {
+          tab = id
+          render()
+          if (id === 'offers' && state.pendingOffers) void showGuideOnce(ctx, 'offers')
+        },
       ),
       ...tabContent(),
       h('div', { class: 'plan-cta' }, h('button', { class: 'btn primary', type: 'button', disabled: !start.ok, onclick: () => void proceed() }, startLabel(state, before.season))),

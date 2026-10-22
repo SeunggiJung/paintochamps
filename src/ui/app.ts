@@ -1,7 +1,7 @@
 import { turnsPerSeason } from '../engine/turn.ts'
 import type { AchievementId } from '../engine/achievements.ts'
 import type { GameState } from '../engine/state.ts'
-import { loadGame, loadMeta, markGuideDone, type KeyValueStorage } from '../save/storage.ts'
+import { hasSeenGuide, loadGame, loadMeta, markGuideSeen, type KeyValueStorage } from '../save/storage.ts'
 import { codexScreen } from './codex.ts'
 import { endingScreen } from './ending.ts'
 import { createScreen, type NewGameDraft } from './create.ts'
@@ -55,6 +55,8 @@ export interface Ctx {
   toSeasonEnd(state: GameState): void
   /** 시즌 계획 전체 화면 (① 계획 → ② 지출 계획) */
   toPlan(state: GameState): void
+  /** 첫 접속 가이드(말풍선 5단계)를 지금 홈 화면 위에 띄운다 */
+  showStartGuide(): Promise<void>
   toCodex(back?: () => void): void
   /** 업적 상점 */
   toShop(back?: () => void): void
@@ -138,18 +140,17 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
       inGame = true
       paintTab('home')
       // 첫 접속 가이드: 화면에 붙은 뒤 위치를 재야 해서 다음 프레임에 띄운다
-      if (!ctx.meta.guideDone && state.season === 1 && state.turnInSeason === 0) {
-        requestAnimationFrame(async () => {
-          await runGuide(shell.root)
-          ctx.meta = markGuideDone(storage)
-        })
-      }
+      if (!hasSeenGuide(ctx.meta, 'start') && state.season === 1 && state.turnInSeason === 0) requestAnimationFrame(() => void ctx.showStartGuide())
     },
     toSeason: (state) => show(seasonScreen(ctx, state), true),
     toEnding: (state, info) => show(endingScreen(ctx, state, info), true),
     toSeasonEnd: (state) => show(seasonEnd(ctx, state), true),
     toPlan: (state) => show(planFlow(ctx, state), true),
     showTab: (tab) => paintTab(tab),
+    async showStartGuide() {
+      await runGuide(shell.root)
+      ctx.meta = markGuideSeen(storage, 'start')
+    },
     toCodex: (back) => show(codexScreen(ctx, back ?? (() => ctx.toTitle()))),
     toShop: (back) => show(shopScreen(ctx, back ?? (() => ctx.toTitle()))),
     toInfo(page) {

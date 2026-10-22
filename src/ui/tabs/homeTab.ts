@@ -18,6 +18,7 @@ import { MODE_INFO } from '../labels.ts'
 import { teamMarketText } from '../marketLabel.ts'
 import { roomSceneSvg } from '../roomScene.ts'
 import type { GameSession } from '../session.ts'
+import { showGuideOnce } from '../guides.ts'
 import { teamIcon } from '../teamIcon.ts'
 
 /** 계약 유형별 촬영 횟수 */
@@ -86,6 +87,9 @@ export function homeTab(session: GameSession): HTMLElement {
         return h('p', { class: 'small' }, h('b', {}, `${adTypeName(c.type)} · ${c.brand}`), h('span', { class: 'muted' }, remaining > 0 ? ` — 다음 촬영 ${shootTurn(c.type, c.done, state.mode)}턴째 뒤` : ' — 촬영 완료, 결산 때 정산'))
       }),
     )
+
+  // 부상·슬럼프를 처음 볼 때 한 번 (연출 중에는 띄우지 않는다)
+  if (!session.busy && warnChips.some((c) => c.startsWith('부상') || c.startsWith('슬럼프'))) void showGuideOnce(session.ctx, 'injury')
 
   const cta = h(
     'div',

@@ -24,8 +24,8 @@ export function createShell(host: HTMLElement, hooks: { onTab(tab: TabId): void;
   let current: TabId | null = null
   const badges = new Set<TabId>()
   const body = h('div', { class: 'shell-body' })
-  const gear = h('button', { class: 'gear', type: 'button', 'aria-label': '설정', onclick: () => hooks.onSettings() }, '⚙')
-  const tabbar = h('nav', { class: 'tabbar', 'aria-label': '메뉴' })
+  const gear = h('button', { class: 'gear', type: 'button', 'aria-label': '설정', 'data-guide': 'gear', onclick: () => hooks.onSettings() }, '⚙')
+  const tabbar = h('nav', { class: 'tabbar', 'aria-label': '메뉴', 'data-guide': 'tabs' })
   tabbar.hidden = true
   const root = h('div', { 'data-shell': '' }, body, tabbar, gear)
   host.replaceChildren(root)

@@ -39,8 +39,9 @@ function tableView(rows: StandingRow[], limit = 5): HTMLElement {
 }
 
 /** 대회 결과·중간 순위 카드. 확인을 누르면 이어서 진행한다. */
-export async function showBeat(beat: CalendarBeat, context?: { genre: GenreId; seed: number; season: number }): Promise<void> {
+export async function showBeat(beat: CalendarBeat, context?: { genre: GenreId; seed: number; season: number; beforeBroadcast?: () => Promise<void> }): Promise<void> {
   // 결승 중계 대회에서 결승까지 올랐다면 결과 카드 전에 중계 연출이 먼저 나온다
+  if (beat.kind === 'end' && beat.final && context) await context.beforeBroadcast?.()
   if (beat.kind === 'end' && beat.final && context) await playBroadcast(beat.final, context.genre, context.seed, context.season)
   if (beat.kind === 'end' && beat.world && beat.placement === 1) celebrate('UR')
   else if (beat.kind === 'end' && beat.placement === 1) celebrate('SR')
@@ -80,13 +81,15 @@ export interface TimelineInput {
   actions: string[]
   /** 정밀 모드처럼 턴이 많은 모드는 연출을 짧게 한다 */
   brief?: boolean
+  /** 결승 중계가 나오기 직전에 부른다 (첫 등장 가이드용) */
+  beforeBroadcast?: () => Promise<void>
 }
 
 /**
  * 턴을 누르면 시간이 흘러가는 연출: "○○ 중…"이 이어지다가 대회가 끝나는 시점마다 결과 카드가 뜨고,
  * 확인하면 나머지 시간이 이어진다. 화면을 누르면 빠르게 넘어간다(결과 카드는 그대로 보여 준다).
  */
-export function playTimeline({ before, calendar, actions, brief }: TimelineInput): Promise<void> {
+export function playTimeline({ before, calendar, actions, brief, beforeBroadcast }: TimelineInput): Promise<void> {
   const { phaseBefore, phaseAfter, beats, running } = calendar
   return openSheet<void>((close) => {
     const status = h('h2', {}, '')
@@ -143,7 +146,7 @@ export function playTimeline({ before, calendar, actions, brief }: TimelineInput
         // 결과 카드가 떠 있는 동안에는 진행 화면을 숨긴다
         const panel = root.closest<HTMLElement>('.sheet')
         if (panel) panel.style.visibility = 'hidden'
-        await showBeat(beat, { genre: before.genre, seed: before.seed, season: before.season })
+        await showBeat(beat, { genre: before.genre, seed: before.seed, season: before.season, beforeBroadcast })
         if (panel) panel.style.visibility = ''
       }
       if (phaseAfter > at) await segment(at, phaseAfter)
