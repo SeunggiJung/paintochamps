@@ -116,12 +116,17 @@ export interface CareerSnapshot {
 /** 최근 몇 판의 경력까지 남기는가 */
 const MAX_CAREERS = 20
 
+/** 상황별 첫 등장 가이드의 종류 (`start`는 첫 접속 홈 가이드) */
+export type GuideId = 'start' | 'plan' | 'spend' | 'contract' | 'offers' | 'event' | 'injury' | 'prep' | 'turnResult' | 'midOffer' | 'ads' | 'house' | 'shop' | 'tokenShop' | 'broadcast' | 'minigame'
+
 /** 판을 넘어 유지되는 기록: 엔딩 도감, 튜토리얼 완료 여부 */
 export interface MetaSave {
   version: 1
   tutorialDone: boolean
   /** 육성 화면 첫 안내(말풍선 가이드)를 봤는지 */
   guideDone: boolean
+  /** 상황별 가이드를 본 기록 (옛 도감에는 없을 수 있다) */
+  guidesSeen: Partial<Record<GuideId, true>>
   endings: Partial<Record<EndingId, { count: number; last?: FinishSummary }>>
   /** 달성한 업적. 횟수와 가장 최근 판 요약 (옛 도감에는 없을 수 있다) */
   achievements: Partial<Record<AchievementId, { count: number; last?: FinishSummary }>>
@@ -159,7 +164,7 @@ export function finishSummary(state: GameState): FinishSummary {
 }
 
 export function emptyMeta(): MetaSave {
-  return { version: 1, tutorialDone: false, guideDone: false, endings: {}, achievements: {}, bestStage: 'basement', finishedRuns: 0, tokens: 0, tokensEarned: 0, inventory: {}, careers: [] }
+  return { version: 1, tutorialDone: false, guideDone: false, guidesSeen: {}, endings: {}, achievements: {}, bestStage: 'basement', finishedRuns: 0, tokens: 0, tokensEarned: 0, inventory: {}, careers: [] }
 }
 
 export function loadMeta(storage: KeyValueStorage): MetaSave {
@@ -167,13 +172,25 @@ export function loadMeta(storage: KeyValueStorage): MetaSave {
     const text = storage.getItem(META_KEY)
     if (!text) return emptyMeta()
     const m = JSON.parse(text) as Partial<MetaSave>
-    return m && m.version === 1 && typeof m.endings === 'object' ? { ...emptyMeta(), ...m } : emptyMeta()
+    return m && m.version === 1 && typeof m.endings === 'object' ? { ...emptyMeta(), ...m, guidesSeen: { ...(m.guidesSeen ?? {}) } } : emptyMeta()
   }, emptyMeta())
 }
 
 /** 첫 안내를 봤다고 기록한다. */
 export function markGuideDone(storage: KeyValueStorage): MetaSave {
   const next: MetaSave = { ...loadMeta(storage), guideDone: true }
+  safe(() => storage.setItem(META_KEY, JSON.stringify(next)), undefined)
+  return next
+}
+
+export function hasSeenGuide(meta: MetaSave, id: GuideId): boolean {
+  return Boolean(meta.guidesSeen[id]) || (id === 'start' && meta.guideDone)
+}
+
+/** 상황별 가이드를 봤다고 기록한다. 이미 본 것은 그대로다. */
+export function markGuideSeen(storage: KeyValueStorage, id: GuideId): MetaSave {
+  const meta = loadMeta(storage)
+  const next: MetaSave = { ...meta, guideDone: meta.guideDone || id === 'start', guidesSeen: { ...meta.guidesSeen, [id]: true } }
   safe(() => storage.setItem(META_KEY, JSON.stringify(next)), undefined)
   return next
 }
