@@ -22,6 +22,8 @@ import { openNegotiation } from './negotiationView.ts'
 import { openSheet } from './sheet.ts'
 import { openStandings } from './standingsView.ts'
 import { seasonLine } from '../engine/seasonLine.ts'
+import { segmented } from './components.ts'
+import { canStartNextSeason, settleAlerts, startLabel, type SettleTab } from './seasonFlow.ts'
 
 const ENDING_NAME = Object.fromEntries(endings.order.map((e) => [e.id, e.name]))
 
@@ -222,6 +224,78 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     )
   }
 
+  let tab: SettleTab = 'result'
+
+  const emptyNote = (text: string) => h('p', { class: 'muted' }, text)
+
+  /** 탭별 내용 */
+  const tabContent = (): (HTMLElement | null | false)[] => {
+    if (tab === 'result') {
+      return [
+        report.routeNotes.length > 0 && h('section', { class: 'card' }, h('h3', {}, '진로'), ...report.routeNotes.map((n) => h('p', {}, n))),
+        ...report.tests.map((t) =>
+          h(
+            'section',
+            { class: 'card' },
+            h('div', { class: 'row' }, h('h3', {}, t.name), h('span', { class: t.passed ? 'place top' : 'place' }, t.passed ? '합격' : '불합격')),
+            ...t.items.map((it) =>
+              h(
+                'div',
+                { class: 'stat-row compact' },
+                h('span', { class: 'stat-name' }, it.label),
+                h('div', { class: 'bar' }, h('div', { class: `bar-fill${it.ratio < 0.8 ? ' low' : ''}`, style: `width:${Math.min(100, (it.ratio / 1.5) * 100)}%` })),
+                h('span', { class: 'stat-value' }, `${Math.round(it.ratio * 100)}%`),
+                h('span', {}),
+              ),
+            ),
+            h('p', { class: 'muted small' }, `종합 ${Math.round(t.score * 100)}점 (합격선 100점${t.prep ? ' · 시험 준비 반영' : ''})`),
+          ),
+        ),
+        h(
+          'section',
+          { class: 'card' },
+          h('h3', {}, '대회 성적'),
+          report.events.length === 0 && h('p', { class: 'muted' }, '이번 시즌은 참가한 대회가 없다.'),
+          ...report.events.map((e) =>
+            h(
+              'div',
+              { class: 'event-row' },
+              h('div', { class: 'row' }, h('b', {}, e.name), h('span', { class: e.placement <= 3 ? 'place top' : 'place' }, `${e.placement}위 / ${e.fieldSize}팀`)),
+              h('span', { class: 'muted small' }, `명성 ${signed(e.fame)}${e.money > 0 ? ` · 상금 +${formatMoney(e.money)}` : ''}`),
+            ),
+          ),
+          report.rival &&
+            h(
+              'div',
+              { class: 'event-row' },
+              h('div', { class: 'row' }, h('b', {}, '라이벌전'), h('span', { class: report.rival.won ? 'place top' : 'place' }, report.rival.won ? '승리' : '패배')),
+              h('span', { class: 'muted small' }, report.rival.won ? '명성 보너스를 얻었다.' : '아쉽게 졌다.'),
+            ),
+        ),
+        state.seasonRun && h('button', { class: 'settings-link', type: 'button', onclick: () => void openStandings(state) }, h('span', {}, '다른 팀 성적 보기'), h('span', { class: 'muted' }, '›')),
+        h('section', { class: 'card' }, h('h3', {}, '이번 시즌 합계'), changeLine('명성', String(Math.round(before.fame)), String(Math.round(settled.fame)), fameGain === 0 ? '±0' : signed(fameGain), fameGain), changeLine('돈', formatMoney(before.money), formatMoney(settled.money), moneyGain === 0 ? '±0' : formatMoneyDelta(moneyGain), moneyGain)),
+      ]
+    }
+    if (tab === 'growth') {
+      return [
+        h('section', { class: 'card' }, h('div', { class: 'row' }, h('h3', {}, '능력치 변동'), h('span', { class: 'power' }, `${genre} 실력치 `, h('b', {}, `${powerBefore} → ${powerAfter} `), delta(powerAfter - powerBefore))), statChangeBars(startStats, before.stats)),
+        highlightsCard(),
+      ]
+    }
+    if (tab === 'money') {
+      const cards = [adReportCard(), leagueCard()]
+      return cards.some(Boolean) ? cards : [emptyNote('이번 시즌에 정산할 내용이 없어요.')]
+    }
+    const cards = [
+      offersCard(),
+      negotiateCard(),
+      transferCard(),
+      state.finished && h('section', { class: 'card' }, h('h3', {}, '기록'), h('p', { class: 'muted' }, state.rerolls > 0 ? `능력치 뽑기를 ${state.rerolls}번 다시 뽑았다.` : '능력치 뽑기를 한 번에 확정했다.')),
+      canRetire() && h('button', { class: 'btn ghost small', type: 'button', onclick: askRetire }, '여기서 은퇴하기'),
+    ]
+    return cards.some(Boolean) ? cards : [emptyNote('지금 정할 제안이 없어요.')]
+  }
+
   function render() {
     const head = headline(before, report)
     const tags: string[] = []
@@ -229,6 +303,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     if (report.pendingOffers?.kind === 'callup') tags.push('1부 콜업 제안 도착')
     if (report.relegated) tags.push(`강등 ▼ ${stageName(report.stageBefore)} → ${stageName(report.stageAfter)}`)
     if (state.finished) tags.push(`엔딩: ${ENDING_NAME[state.finished]}`)
+    const start = canStartNextSeason(state)
 
     const parts = [
       h('p', { class: 'eyebrow' }, `${before.season}시즌 결산`),
@@ -241,73 +316,18 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         h('p', { class: 'muted' }, head.sub),
         tags.length > 0 && h('div', { class: 'chips' }, ...tags.map((t) => h('span', { class: 'chip' }, t))),
       ),
-      report.routeNotes.length > 0 && h('section', { class: 'card' }, h('h3', {}, '진로'), ...report.routeNotes.map((n) => h('p', {}, n))),
-      ...report.tests.map((t) =>
-        h(
-          'section',
-          { class: 'card' },
-          h('div', { class: 'row' }, h('h3', {}, t.name), h('span', { class: t.passed ? 'place top' : 'place' }, t.passed ? '합격' : '불합격')),
-          ...t.items.map((it) =>
-            h(
-              'div',
-              { class: 'stat-row compact' },
-              h('span', { class: 'stat-name' }, it.label),
-              h('div', { class: 'bar' }, h('div', { class: `bar-fill${it.ratio < 0.8 ? ' low' : ''}`, style: `width:${Math.min(100, (it.ratio / 1.5) * 100)}%` })),
-              h('span', { class: 'stat-value' }, `${Math.round(it.ratio * 100)}%`),
-              h('span', {}),
-            ),
-          ),
-          h('p', { class: 'muted small' }, `종합 ${Math.round(t.score * 100)}점 (합격선 100점${t.prep ? ' · 시험 준비 반영' : ''})`),
-        ),
+      segmented<SettleTab>(
+        [
+          { id: 'result', label: '성적' },
+          { id: 'growth', label: '성장' },
+          { id: 'money', label: '정산' },
+          { id: 'offers', label: '제안', dot: settleAlerts(state).offers },
+        ],
+        tab,
+        (id) => ((tab = id), render()),
       ),
-      h(
-        'section',
-        { class: 'card' },
-        h('div', { class: 'row' }, h('h3', {}, '능력치 변동'), h('span', { class: 'power' }, `${genre} 실력치 `, h('b', {}, `${powerBefore} → ${powerAfter} `), delta(powerAfter - powerBefore))),
-        statChangeBars(startStats, before.stats),
-      ),
-      h(
-        'section',
-        { class: 'card' },
-        h('h3', {}, '대회 성적'),
-        report.events.length === 0 && h('p', { class: 'muted' }, '이번 시즌은 참가한 대회가 없다.'),
-        ...report.events.map((e) =>
-          h(
-            'div',
-            { class: 'event-row' },
-            h('div', { class: 'row' }, h('b', {}, e.name), h('span', { class: e.placement <= 3 ? 'place top' : 'place' }, `${e.placement}위 / ${e.fieldSize}팀`)),
-            h('span', { class: 'muted small' }, `명성 ${signed(e.fame)}${e.money > 0 ? ` · 상금 +${formatMoney(e.money)}` : ''}`),
-          ),
-        ),
-        report.rival &&
-          h(
-            'div',
-            { class: 'event-row' },
-            h('div', { class: 'row' }, h('b', {}, '라이벌전'), h('span', { class: report.rival.won ? 'place top' : 'place' }, report.rival.won ? '승리' : '패배')),
-            h('span', { class: 'muted small' }, report.rival.won ? '명성 보너스를 얻었다.' : '아쉽게 졌다.'),
-          ),
-      ),
-      highlightsCard(),
-      leagueCard(),
-      state.seasonRun && h('section', { class: 'card' }, h('h3', {}, '다른 팀 성적'), h('p', { class: 'muted small' }, '이번 시즌 리그 순위표와 대회 결과를 볼 수 있어요.'), h('button', { class: 'btn small', onclick: () => void openStandings(state) }, '다른 팀 성적 보기')),
-      adReportCard(),
-      h(
-        'section',
-        { class: 'card' },
-        h('h3', {}, '이번 시즌 합계'),
-        changeLine('명성', String(Math.round(before.fame)), String(Math.round(settled.fame)), fameGain === 0 ? '±0' : signed(fameGain), fameGain),
-        changeLine('돈', formatMoney(before.money), formatMoney(settled.money), moneyGain === 0 ? '±0' : formatMoneyDelta(moneyGain), moneyGain),
-      ),
-      offersCard(),
-      negotiateCard(),
-      transferCard(),
-      state.finished && h('section', { class: 'card' }, h('h3', {}, '기록'), h('p', { class: 'muted' }, state.rerolls > 0 ? `능력치 뽑기를 ${state.rerolls}번 다시 뽑았다.` : '능력치 뽑기를 한 번에 확정했다.')),
-      h(
-        'button',
-        { class: 'btn primary', disabled: !!state.pendingOffers, onclick: () => void proceed() },
-        state.finished ? '커리어 마무리' : state.pendingOffers ? '제안을 골라 주세요' : `${before.season + 1}시즌 시작`,
-      ),
-      canRetire() && h('button', { class: 'btn ghost small', onclick: askRetire }, '여기서 은퇴하기'),
+      ...tabContent(),
+      h('div', { class: 'plan-cta' }, h('button', { class: 'btn primary', type: 'button', disabled: !start.ok, onclick: () => void proceed() }, startLabel(state, before.season))),
     ]
     root.replaceChildren(...parts.filter((p): p is HTMLElement => !!p))
   }
@@ -317,7 +337,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
   if (report.pendingOffers?.kind === 'callup') {
     const n = report.pendingOffers.offers.length
     void openSheet<void>((close) =>
-      h('div', { class: 'stack-tight' }, h('p', { class: 'eyebrow' }, '콜업 알림'), h('p', { class: 'event-text' }, `프로 1부 팀 ${n}곳에서 콜업 제안이 도착했다! 결과 화면 아래에서 확인하자.`), h('button', { class: 'btn primary', onclick: () => close() }, '확인')),
+      h('div', { class: 'stack-tight' }, h('p', { class: 'eyebrow' }, '콜업 알림'), h('p', { class: 'event-text' }, `프로 1부 팀 ${n}곳에서 콜업 제안이 도착했다! 제안 탭에서 확인하자.`), h('button', { class: 'btn primary', onclick: () => close() }, '확인')),
     )
   }
   return root
