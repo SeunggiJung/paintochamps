@@ -38,7 +38,7 @@ BALANCE_OUT=report.txt BALANCE_RUNS=150 npx vitest run src/sim
 
 Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 
-**배포**: Cloudflare Pages(기본 `*.pages.dev` 주소)에 GitHub 저장소를 연결했다. 빌드 명령 `npm run build`, 출력 폴더 `dist`, `master`에 push하면 자동 배포된다. 별도 설정 파일은 없다(`vite.config`도 없어 `base`는 기본값). 도메인은 아직 없다.
+**배포**: 실제 주소는 **https://paintochamps.tmdrl8336.workers.dev/** (2026-10-22 확인, 노션 메인 페이지의 '게임 하러 가기' 링크와 같다). Cloudflare에 GitHub 저장소를 연결했다. 빌드 명령 `npm run build`, 출력 폴더 `dist`, `master`에 push하면 자동 배포된다. 별도 설정 파일은 없다(`vite.config`도 없어 `base`는 기본값). 도메인은 아직 없다.
 
 ## 3. 반드시 지킬 구조 규칙
 
@@ -71,7 +71,7 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 
 `src/sim/` — 난이도 측정: `bot.ts`(봇 3종) `report.ts`(집계) `balance.test.ts`(회귀 테스트)
 
-`docs/` — **`handover-2026-10-22-wrapup.md` 최신 인수인계**(타이틀 이미지 교체·UI 마감 점검 상태·남은 일·이미지 프롬프트와 promptpilot 사용법·화면 점검 방법), `handover-2026-10-22-promptpilot.md` 이미지 방향 결정 기록(§1-1), `handover-2026-10-22-redesign.md` UI 리디자인 인수인계(UI 전체 리디자인: 새 세션 시작 절차·지금 상태·대기 중인 질문·확정 사항·시안 위치), `superpowers/specs/2026-10-22-ui-redesign-design.md` 리디자인 설계 문서, `superpowers/plans/2026-10-22-ui-redesign.md` 구현 계획(작업 24개), `redesign-mockups/` 시안 HTML(07~25)과 `redesign-baseline.md` 현재 화면 기준선, `handover-2026-10-21.md` 오늘 작업·남은 일·주의점 인수인계, `market-career-plan.md` 경력·구단 시장·업적 상점·개최지 기획과 시장조사(2026-10-21), `polish-plan.md` 플레이 감성 마무리 계획과 AI 이미지 도구 요청서, `design.md` 기획서 전문, `ending-images.md` 엔딩·도감 이미지 장면 목록, `feedback.md` 테스트 플레이 피드백·우선순위, `early-career-plan.md`·`career-pacing-plan.md`·`season-calendar-plan.md` 개편안, `money-economy-plan.md` 돈 소비처·수입원(광고·콜라보) 확장 기획 초안(2026-10-20, 결정 대기), `overseas-league-plan.md` 해외 1부 리그·해외 이적 기획(2026-10-20, 구현 현황은 §12), `images/` 게임 루프·로드맵 SVG
+`docs/` — **`handover-2026-10-22-wrapup.md` 최신 인수인계**(타이틀 이미지 교체·UI 마감 점검 상태·남은 일·이미지 프롬프트와 promptpilot 사용법·화면 점검 방법), `release-checklist.md` **푸시 체크리스트(푸시 때 무조건)**, `image-replacement-plan.md` 남은 이미지 교체 목록·우선순위·구현 방식, `handover-2026-10-22-promptpilot.md` 이미지 방향 결정 기록(§1-1), `handover-2026-10-22-redesign.md` UI 리디자인 인수인계(UI 전체 리디자인: 새 세션 시작 절차·지금 상태·대기 중인 질문·확정 사항·시안 위치), `superpowers/specs/2026-10-22-ui-redesign-design.md` 리디자인 설계 문서, `superpowers/plans/2026-10-22-ui-redesign.md` 구현 계획(작업 24개), `redesign-mockups/` 시안 HTML(07~25)과 `redesign-baseline.md` 현재 화면 기준선, `handover-2026-10-21.md` 오늘 작업·남은 일·주의점 인수인계, `market-career-plan.md` 경력·구단 시장·업적 상점·개최지 기획과 시장조사(2026-10-21), `polish-plan.md` 플레이 감성 마무리 계획과 AI 이미지 도구 요청서, `design.md` 기획서 전문, `ending-images.md` 엔딩·도감 이미지 장면 목록, `feedback.md` 테스트 플레이 피드백·우선순위, `early-career-plan.md`·`career-pacing-plan.md`·`season-calendar-plan.md` 개편안, `money-economy-plan.md` 돈 소비처·수입원(광고·콜라보) 확장 기획 초안(2026-10-20, 결정 대기), `overseas-league-plan.md` 해외 1부 리그·해외 이적 기획(2026-10-20, 구현 현황은 §12), `images/` 게임 루프·로드맵 SVG
 
 ## 5. 게임 진행 API (2단계 UI가 부를 순서)
 
@@ -179,6 +179,7 @@ saveGame(storage, s)                           // 매 턴 자동 저장
 - **한국어**로 대화한다. 코드 주석·커밋 메시지·문서도 한국어.
 - **응답 맨 끝에 "이번 턴에 한 작업" 요약**을 붙인다(변경 파일, 검증, 커밋, 노션, 미수행 항목).
 - **작업 단위마다 커밋**한다(논리 단위로 나누고 `feat/fix/docs/test/balance/chore` 접두사). **푸시는 사용자가 요청할 때만 한다(푸시 전에 `data/updates.json`에 인게임 변경이 다 있는지 확인 — §6 업데이트 로그)**(사용자 지시, 2026-10-16. 2026-10-15의 "커밋마다 푸시"를 되돌림. 푸시하면 Cloudflare Pages가 자동 배포되므로 요청받아도 테스트·빌드가 통과했는지 먼저 확인한다). 커밋은 계속 작업 단위마다 한다. 커밋 메시지 끝에 `Co-Authored-By` 줄을 붙인다.
+- **푸시할 때는 무조건 `docs/release-checklist.md`를 끝까지 따른다**(사용자 지시, 2026-10-22): 푸시 → **배포 결과 확인** → **노션 작성**(작업일지·트러블슈팅·메인 페이지) → **노션 기획서 갱신** → 결과 보고. 하나라도 못 했으면 이유와 함께 "미수행"으로 보고한다(조용히 건너뛰지 않는다). 사용자가 "푸시해"라고만 해도 이 전체를 뜻한다.
 - **노션에 기록**한다: 의미 있는 작업은 작업일지에, 막힌 문제와 해결은 트러블슈팅에(원인을 확인 못 했으면 그렇게 적는다). 기획서 페이지와 메인 체크리스트도 함께 갱신.
 - **추측하지 말고 확인한 뒤 말한다.** 저장소·원격·설정 같은 사실은 명령으로 확인(실제로 "원격이 없다"고 추측했다가 틀린 적이 있다). 결과는 부풀리지 않고 실패·한계를 그대로 말한다.
 - 사용자가 결정할 것(설계 취향, 난이도 방향)은 물어보고, 임시값으로 진행한 건 임시라고 밝힌다. 수치는 모두 초안이다.
