@@ -248,6 +248,15 @@ input[type='text'] {
 .stat-row { grid-template-columns: 7em 1fr 2.5em auto; }
 .stat-row.compact { grid-template-columns: 7em 1fr 2.6em 2.6em; }
 .overlay.center { align-items: center; padding: 16px; }
+.overlay.info .sheet { max-height: 92dvh; position: relative; padding-top: 28px; }
+.sheet-grab { position: absolute; top: 0; left: 0; right: 0; height: 28px; display: flex; justify-content: center; align-items: center; cursor: grab; touch-action: none; }
+.sheet-grab span { width: 40px; height: 5px; border-radius: 3px; background: var(--line); }
+.sheet-close { position: absolute; top: 6px; right: 10px; width: 36px; height: 36px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 1.1rem; cursor: pointer; }
+.overlay.cinema { align-items: stretch; background: var(--bg); }
+.overlay.cinema .sheet { max-width: none; max-height: none; height: 100%; border-radius: 0; border: 0; display: flex; flex-direction: column; justify-content: center; position: relative; animation: none; }
+.cin-top { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+.cin-chip { background: var(--panel-2); color: var(--text); border-radius: 999px; padding: 4px 12px; font-size: 0.85rem; font-weight: 600; }
+.overlay.cinema .skip-btn { position: absolute; top: 12px; right: 12px; }
 .overlay.center .sheet { border-radius: 20px; max-height: 80dvh; animation: pop 0.22s ease-out; }
 @keyframes pop { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .overlay.center .sheet { animation: none; } }
