@@ -86,16 +86,12 @@ export function createScreen(ctx: Ctx): HTMLElement {
   return h(
     'main',
     { class: 'screen' },
+    h('button', { class: 'btn ghost small back-btn', type: 'button', onclick: () => ctx.toTitle() }, '‹ 뒤로'),
     h('h2', {}, '캐릭터 만들기'),
     h('label', { class: 'field' }, h('span', {}, '이름'), nameInput),
     error,
     h('section', {}, h('h3', {}, '장르'), genreBox),
     h('section', {}, h('h3', {}, '모드'), modeBox),
-    h(
-      'div',
-      { class: 'stack' },
-      h('button', { class: 'btn primary', onclick: next }, '능력치 뽑기'),
-      h('button', { class: 'btn ghost', onclick: () => ctx.toTitle() }, '뒤로'),
-    ),
+    h('div', { class: 'plan-cta' }, h('button', { class: 'btn primary', type: 'button', onclick: next }, '능력치 뽑기')),
   )
 }

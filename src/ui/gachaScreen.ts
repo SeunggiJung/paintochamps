@@ -12,6 +12,8 @@ import { GRADE_COMMENT, GRADE_LABEL, MODE_INFO, STAT_LABEL } from './labels.ts'
 import { celebrate } from './confetti.ts'
 import { playGradeSfx } from './sound.ts'
 import { rollAt, rollAtMin } from './newGame.ts'
+import { segmented } from './components.ts'
+import { openSheet } from './sheet.ts'
 
 const STEP_MS = 130
 /** 등급 공개 직전 뜸 들이는 시간 */
@@ -31,16 +33,12 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   let timers: number[] = []
 
   const stage = h('div', { class: 'gacha-card', role: 'status', 'aria-live': 'polite' })
-  const rerollBtn = h('button', { class: 'btn' })
-  const startBtn = h('button', { class: 'btn primary' }, '이 캐릭터로 시작')
+  const rerollBtn = h('button', { class: 'btn', type: 'button' }, '다시 뽑기')
+  /** 카드 아래 안내 줄: 뽑는 중에는 건너뛰기 안내, 끝나면 다시 뽑은 횟수 */
+  const note = h('p', { class: 'muted small gacha-note' })
+  const startBtn = h('button', { class: 'btn primary', type: 'button' }, '이 캐릭터로 시작')
   let targetGrade: Grade = 'SSR'
-  const targetSelect = h(
-    'select',
-    { class: 'auto-roll-select', 'aria-label': '목표 등급' },
-    ...GRADE_ORDER.slice(1).map((g) => h('option', { value: g, selected: g === targetGrade }, `${GRADE_LABEL[g]} 이상`)),
-  ) as HTMLSelectElement
-  targetSelect.onchange = () => (targetGrade = targetSelect.value as Grade)
-  const autoBtn = h('button', { class: 'btn' }, '원하는 등급이 나올 때까지 뽑기')
+  const autoBtn = h('button', { class: 'link-btn auto-link', type: 'button' }, '원하는 등급까지 뽑기 ›')
   /** 목표 등급 자동 뽑기가 돌아가는 중인지 */
   let autoRunning = false
 
@@ -159,13 +157,12 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   const isHit = (g: Grade) => GRADE_ORDER.indexOf(g) >= GRADE_ORDER.indexOf(targetGrade)
 
   const setBusy = (busy: boolean) => {
-    rerollBtn.textContent = rollIndex > 0 ? `다시 뽑기 (${rollIndex}회 다시 뽑음)` : '다시 뽑기'
     rerollBtn.disabled = busy || autoRunning
     startBtn.disabled = busy || autoRunning
-    targetSelect.disabled = autoRunning
     // 자동 뽑기 중에는 같은 버튼이 '멈추기'가 된다
     autoBtn.disabled = busy && !autoRunning
-    autoBtn.textContent = autoRunning ? `멈추기 (누적 ${rollIndex}회 다시 뽑음)` : '원하는 등급이 나올 때까지 뽑기'
+    autoBtn.textContent = autoRunning ? `멈추기 (누적 ${rollIndex}회 다시 뽑음)` : '원하는 등급까지 뽑기 ›'
+    note.textContent = busy && !autoRunning ? '카드를 누르면 건너뛰어요' : rollIndex > 0 ? `${rollIndex}번 다시 뽑았어요` : ''
     stage.title = busy && !autoRunning ? '눌러서 건너뛰기' : ''
   }
 
@@ -192,14 +189,41 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
     })
     setBusy(true)
   }
+  /** 목표 등급을 고르는 시트. '뽑기 시작'을 누르면 자동 뽑기가 돈다. */
+  const chooseTarget = async () => {
+    const picked = await openSheet<Grade | null>(
+      (close) => {
+        let pick: Grade = targetGrade
+        const body = h('div', { class: 'stack-tight' })
+        const draw = () =>
+          body.replaceChildren(
+            h('p', { class: 'eyebrow' }, '원하는 등급까지 뽑기'),
+            h('p', { class: 'muted small' }, '고른 등급 이상이 나올 때까지 평소의 2배 속도로 계속 다시 뽑아요. 다시 뽑은 횟수는 그대로 세어요.'),
+            segmented(
+              GRADE_ORDER.slice(1).map((g) => ({ id: g, label: `${GRADE_LABEL[g]} 이상` })),
+              pick,
+              (g) => ((pick = g), draw()),
+            ),
+            h('button', { class: 'btn primary', type: 'button', onclick: () => close(pick) }, '뽑기 시작'),
+            h('button', { class: 'btn ghost small', type: 'button', onclick: () => close(null) }, '취소'),
+          )
+        draw()
+        return body
+      },
+      { variant: 'decision', autofocus: false },
+    )
+    if (!picked) return
+    targetGrade = picked
+    autoRunning = true
+    autoStep()
+  }
   autoBtn.onclick = () => {
     if (autoRunning) {
       autoRunning = false // 지금 연출까지만 보여 주고 멈춘다
       setBusy(true)
       return
     }
-    autoRunning = true
-    autoStep()
+    void chooseTarget()
   }
   const renderTicket = () => {
     ticketBtn.textContent = ticketOn ? `SR 보장권 사용 중 (보유 ${tickets()}장) · 끄기` : `SR 보장권 쓰기 (보유 ${tickets()}장)`
@@ -233,12 +257,14 @@ export function gachaScreen(ctx: Ctx, draft: NewGameDraft): HTMLElement {
   const screen = h(
     'main',
     { class: 'screen' },
+    h('button', { class: 'btn ghost small back-btn', type: 'button', onclick: () => ctx.toCreate() }, '‹ 뒤로'),
     h('h2', {}, `${draft.name}의 재능`),
     h('p', { class: 'muted small' }, `${genre.name} · ${MODE_INFO[draft.mode].name} 모드 · 합계 ${gacha.statTotal}`),
     stage,
-    h('div', { class: 'auto-roll' }, targetSelect, autoBtn),
+    note,
+    autoBtn,
     tickets() > 0 && ticketBtn,
-    h('div', { class: 'stack' }, startBtn, rerollBtn, h('button', { class: 'btn ghost', onclick: () => ctx.toCreate() }, '처음부터')),
+    h('div', { class: 'plan-cta btn-row gacha-actions' }, rerollBtn, startBtn),
   )
   renderTicket()
   roll()
