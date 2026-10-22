@@ -9,6 +9,10 @@ import { GameSession } from './session.ts'
 import { homeTab } from './tabs/homeTab.ts'
 import { playerTab } from './tabs/playerTab.ts'
 import { seasonTab } from './tabs/seasonTab.ts'
+import { codexScreen } from './codex.ts'
+import { endingDef } from '../engine/endings.ts'
+import { emptyMeta } from '../save/storage.ts'
+import { defaultPrefs, type Prefs } from './prefs.ts'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -87,5 +91,59 @@ describe('시즌 탭', () => {
   it('seasonTraining이 null이어도 그려진다', () => {
     const root = seasonTab(session(baseState({ seasonTraining: null })))
     expect(root.textContent).toContain('아직 정하지 않았어요')
+  })
+})
+
+function codexCtx(metaPatch: Partial<ReturnType<typeof emptyMeta>> = {}) {
+  const patches: Partial<Prefs>[] = []
+  const ctx = {
+    storage: memory(),
+    meta: { ...emptyMeta(), ...metaPatch },
+    prefs: { ...defaultPrefs },
+    updatePrefs: (p: Partial<Prefs>) => {
+      patches.push(p)
+      ctx.prefs = { ...ctx.prefs, ...p }
+    },
+    toTitle: vi.fn(),
+  } as unknown as Ctx
+  return { ctx, patches }
+}
+
+describe('도감', () => {
+  it('기본은 타일 보기이고 전환 버튼이 리스트로 바꾼다', () => {
+    const { ctx, patches } = codexCtx()
+    const root = codexScreen(ctx, () => {})
+    document.body.append(root)
+    expect(root.querySelector('.codex-grid.tile')).not.toBeNull()
+    find(root, '☰')!.click()
+    expect(patches).toEqual([{ codexView: 'list' }])
+    expect(root.querySelector('.codex-grid.list')).not.toBeNull()
+  })
+
+  it('못 본 엔딩은 ???이고 설명 문자열이 DOM에 없다', () => {
+    const { ctx } = codexCtx()
+    const root = codexScreen(ctx, () => {})
+    expect(root.textContent).toContain('???')
+    expect(root.textContent).not.toContain(endingDef('legend').desc)
+  })
+
+  it('명예의 전당 탭에서는 전환 버튼이 없다', () => {
+    const { ctx } = codexCtx()
+    const root = codexScreen(ctx, () => {})
+    document.body.append(root)
+    find(root, '명예의 전당')!.click()
+    expect(find(root, '☰')).toBeUndefined()
+  })
+
+  it('발견 수가 meta.endings와 같다', () => {
+    const { ctx } = codexCtx({ endings: { legend: { count: 1 }, hobbyist: { count: 2 } } as never })
+    expect(codexScreen(ctx, () => {}).textContent).toContain('2 / ')
+  })
+
+  it('뒤로 버튼이 back을 부른다', () => {
+    const { ctx } = codexCtx()
+    const back = vi.fn()
+    find(codexScreen(ctx, back), '뒤로')!.click()
+    expect(back).toHaveBeenCalled()
   })
 })

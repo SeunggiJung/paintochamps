@@ -4,7 +4,7 @@ import type { Ctx } from './app.ts'
 import { h } from './dom.ts'
 
 /** 업적 상점: 업적을 달성해 모은 토큰으로 다음 판들에 쓰는 보너스를 산다. */
-export function shopScreen(ctx: Ctx): HTMLElement {
+export function shopScreen(ctx: Ctx, back: () => void): HTMLElement {
   const root = h('main', { class: 'screen shop' })
 
   const itemCard = (item: ShopItem) => {
@@ -35,11 +35,11 @@ export function shopScreen(ctx: Ctx): HTMLElement {
 
   const render = () => {
     root.replaceChildren(
+      h('button', { class: 'btn ghost small back-btn', type: 'button', onclick: back }, '‹ 뒤로'),
       h('p', { class: 'eyebrow' }, '업적 상점'),
       h('h2', {}, `🪙 토큰 ${ctx.meta.tokens}개`),
       h('p', { class: 'muted small' }, `업적을 처음 달성하면 토큰 3개, 다시 달성하면 1개를 받아요. 지금까지 모은 토큰 ${ctx.meta.tokensEarned}개.`),
       ...SHOP_ITEMS.map(itemCard),
-      h('button', { class: 'btn', onclick: () => ctx.toTitle() }, '타이틀로'),
     )
   }
   render()

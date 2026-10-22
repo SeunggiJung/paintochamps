@@ -49,9 +49,10 @@ export interface Ctx {
   toEnding(state: GameState, info: EndingInfo): void
   /** 하단 탭 화면으로 이동 (탭 뷰는 이후 작업에서 연결) */
   showTab(tab: TabId): void
-  toCodex(): void
+  /** 엔딩·업적 도감 (back이 없으면 타이틀로 돌아간다) */
+  toCodex(back?: () => void): void
   /** 업적 상점 */
-  toShop(): void
+  toShop(back?: () => void): void
   /** 서비스 소개·게임 가이드·개인정보처리방침·이용약관·문의 */
   toInfo(page: InfoPageId): void
 }
@@ -134,8 +135,8 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     toSeason: (state) => show(seasonScreen(ctx, state), true),
     toEnding: (state, info) => show(endingScreen(ctx, state, info), true),
     showTab: (tab) => paintTab(tab),
-    toCodex: () => show(codexScreen(ctx)),
-    toShop: () => show(shopScreen(ctx)),
+    toCodex: (back) => show(codexScreen(ctx, back ?? (() => ctx.toTitle()))),
+    toShop: (back) => show(shopScreen(ctx, back ?? (() => ctx.toTitle()))),
     toInfo(page) {
       setHash(`/${page}`)
       show(infoScreen(ctx, page))
