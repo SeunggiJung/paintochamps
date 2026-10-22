@@ -9,7 +9,7 @@ import { homeScreen } from './home.ts'
 import { infoScreen, isInfoPageId, type InfoPageId } from './infoPages.ts'
 import { seasonScreen } from './seasonScreen.ts'
 import { shopScreen } from './shopScreen.ts'
-import { soundToggle } from './sound.ts'
+import { createShell, type TabId } from './shell.ts'
 import { loadFont } from './fonts.ts'
 import { applyPrefs, loadPrefs, readEnv, savePrefs, type Prefs } from './prefs.ts'
 import { titleScreen } from './title.ts'
@@ -39,6 +39,8 @@ export interface Ctx {
   toSeason(state: GameState): void
   /** 커리어가 끝난 뒤의 엔딩 화면 */
   toEnding(state: GameState, info: EndingInfo): void
+  /** 하단 탭 화면으로 이동 (탭 뷰는 이후 작업에서 연결) */
+  showTab(tab: TabId): void
   toCodex(): void
   /** 업적 상점 */
   toShop(): void
@@ -58,8 +60,11 @@ function setHash(hash: string): void {
 const pageFromHash = (): string => location.hash.replace(/^#\/?/, '')
 
 export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
-  const show = (el: HTMLElement) => root.replaceChildren(el)
-  document.body.append(soundToggle())
+  const shell = createShell(root, {
+    onTab: (tab) => ctx.showTab(tab),
+    onSettings: () => console.info('설정 시트는 다음 작업에서 연결한다'),
+  })
+  const show = (el: HTMLElement) => shell.showFull(el)
   const ctx: Ctx = {
     storage,
     meta: loadMeta(storage),
@@ -80,6 +85,7 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     toHome: (state) => show(homeScreen(ctx, state)),
     toSeason: (state) => show(seasonScreen(ctx, state)),
     toEnding: (state, info) => show(endingScreen(ctx, state, info)),
+    showTab: () => {},
     toCodex: () => show(codexScreen(ctx)),
     toShop: () => show(shopScreen(ctx)),
     toInfo(page) {
