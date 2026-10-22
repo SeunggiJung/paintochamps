@@ -23,7 +23,6 @@ import { formatMoney } from './format.ts'
 import { runGuide } from './guide.ts'
 import { MODE_INFO } from './labels.ts'
 import { teamMarketText } from './marketLabel.ts'
-import { openPlanSheet } from './planScreen.ts'
 import { roomSceneSvg } from './roomScene.ts'
 import { GameSession } from './session.ts'
 import { statName } from './statHelp.ts'
@@ -48,11 +47,6 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
     if (session.state.slumpMonths > 0) chips.push(`슬럼프 ${Math.ceil(session.state.slumpMonths)}개월`)
     if (session.state.vice >= rules.vice.addictionAt) chips.push('중독 위험')
     return chips.map((c) => h('span', { class: 'chip warn' }, c))
-  }
-
-  /** 시즌 시작 계획(방침·훈련·레슨·장비)을 세운다. 정하면 시즌 중 행동은 컨디션에 맞춰 자동으로 흘러간다. */
-  const makePlan = async () => {
-    session.commit(await openPlanSheet(session.state))
   }
 
   /** 내 방: 꾸민 모습과 상점 버튼 */
@@ -92,7 +86,6 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
         { class: 'card', 'data-guide': 'plan' },
         h('h3', {}, `${session.state.season}시즌 계획`),
         h('p', { class: 'muted small' }, '이번 시즌의 방침과 훈련을 정해야 시즌이 시작됩니다.'),
-        h('button', { class: 'btn primary', disabled: session.busy, onclick: () => void makePlan() }, '계획 세우기'),
       )
     }
     const plan = planOf(session.state)
@@ -267,7 +260,6 @@ export function homeScreen(ctx: Ctx, initial: GameState): HTMLElement {
   // 화면에 붙은 뒤에 위치를 재야 해서 다음 프레임에 띄운다. 가이드를 먼저 보고, 그다음에 이번 시즌 계획을 세운다.
   requestAnimationFrame(async () => {
     if (!ctx.meta.guideDone && session.state.season === 1 && session.state.turnInSeason === 0) await showGuide()
-    if (!session.state.seasonTraining && !seasonOver()) await makePlan()
   })
   return root
 }

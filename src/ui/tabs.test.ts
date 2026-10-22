@@ -10,6 +10,8 @@ import { homeTab } from './tabs/homeTab.ts'
 import { playerTab } from './tabs/playerTab.ts'
 import { seasonTab } from './tabs/seasonTab.ts'
 import { codexScreen } from './codex.ts'
+import { planFlow } from './planFlow.ts'
+import { ACTIONS } from '../engine/turn.ts'
 import { endingDef } from '../engine/endings.ts'
 import { emptyMeta } from '../save/storage.ts'
 import { defaultPrefs, type Prefs } from './prefs.ts'
@@ -145,5 +147,50 @@ describe('도감', () => {
     const back = vi.fn()
     find(codexScreen(ctx, back), '뒤로')!.click()
     expect(back).toHaveBeenCalled()
+  })
+})
+
+describe('시즌 계획 흐름', () => {
+  const fresh = () => createInitialState({ name: '테스트', genre: 'aos', mode: 'standard', gacha: rollAt(7, 'aos', 0), seed: 7 })
+
+  function planCtx() {
+    const toHome = vi.fn()
+    const ctx = { storage: memory(), meta: emptyMeta(), toHome } as unknown as Ctx
+    return { ctx, toHome }
+  }
+
+  it('① 단계에서 훈련을 고르기 전에는 다음 버튼이 비활성, 고르면 활성', () => {
+    const { ctx } = planCtx()
+    const s = fresh()
+    const root = planFlow(ctx, s)
+    document.body.append(root)
+    const next = () => find(root, '지출 계획') as HTMLButtonElement | undefined
+    expect(root.textContent).toContain('이번 시즌 훈련을 골라 주세요')
+    const menu = trainingMenuOf(s)
+    find(root, ACTIONS[menu[0]].name)!.click()
+    expect(next()!.disabled).toBe(false)
+  })
+
+  it('② 단계의 시작 버튼이 seasonTraining을 정해 toHome을 부른다', () => {
+    const { ctx, toHome } = planCtx()
+    const s = fresh()
+    const root = planFlow(ctx, s)
+    document.body.append(root)
+    find(root, ACTIONS[trainingMenuOf(s)[0]].name)!.click()
+    find(root, '지출 계획')!.click()
+    find(root, '이 계획으로 시즌 시작')!.click()
+    expect(toHome).toHaveBeenCalledTimes(1)
+    expect((toHome.mock.calls[0][0] as GameState).seasonTraining).toBe(trainingMenuOf(s)[0])
+  })
+
+  it('광고 제안이 없으면 광고 세그먼트가 없다', () => {
+    const { ctx } = planCtx()
+    const s = fresh()
+    const root = planFlow(ctx, s)
+    document.body.append(root)
+    find(root, ACTIONS[trainingMenuOf(s)[0]].name)!.click()
+    find(root, '지출 계획')!.click()
+    expect(find(root, '광고')).toBeUndefined()
+    expect(find(root, '장비')).toBeTruthy()
   })
 })

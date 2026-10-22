@@ -551,3 +551,9 @@ input[type='text'] {
 .codex-grid.list .codex-item { flex-direction: row; align-items: center; gap: 12px; }
 .codex-grid.tile .ending-art.thumb { width: 100%; height: auto; aspect-ratio: 16 / 10; }
 .codex-grid.tile .small-art { aspect-ratio: 16 / 10; }
+.preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.preset-grid .choice { padding: 10px; gap: 4px; }
+.preset-grid .choice .muted { font-size: 0.72rem; line-height: 1.4; }
+.plan-cta { position: sticky; bottom: 0; margin-top: auto; padding: 10px 0 12px; display: flex; flex-direction: column; gap: 6px; background: linear-gradient(to top, var(--bg) 70%, transparent); }
+.plan-cta.btn-row { flex-direction: row; }
+.plan-flow .step-dots { margin-top: 4px; }

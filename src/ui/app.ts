@@ -5,6 +5,7 @@ import { loadGame, loadMeta, markGuideDone, type KeyValueStorage } from '../save
 import { codexScreen } from './codex.ts'
 import { endingScreen } from './ending.ts'
 import { createScreen, type NewGameDraft } from './create.ts'
+import { planFlow } from './planFlow.ts'
 import { runGuide } from './guide.ts'
 import { gachaScreen } from './gachaScreen.ts'
 import { homeScreen } from './home.ts'
@@ -50,6 +51,8 @@ export interface Ctx {
   /** 하단 탭 화면으로 이동 (탭 뷰는 이후 작업에서 연결) */
   showTab(tab: TabId): void
   /** 엔딩·업적 도감 (back이 없으면 타이틀로 돌아간다) */
+  /** 시즌 계획 전체 화면 (① 계획 → ② 지출 계획) */
+  toPlan(state: GameState): void
   toCodex(back?: () => void): void
   /** 업적 상점 */
   toShop(back?: () => void): void
@@ -116,8 +119,12 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     toHome(state) {
       unsubscribe()
       session = null
-      // 시즌 계획이 없거나 시즌이 끝난 상태는 전체 화면(옛 홈)이 맡는다 (다음 작업에서 계획·시즌 종료 화면으로 교체)
-      if (state.finished || !state.seasonTraining || state.turnInSeason >= turnsPerSeason(state.mode)) {
+      // 시즌이 끝난 상태는 전체 화면(옛 홈)이 맡는다 (다음 작업에서 시즌 종료 화면으로 교체)
+      if (!state.finished && state.turnInSeason < turnsPerSeason(state.mode) && !state.seasonTraining) {
+        ctx.toPlan(state)
+        return
+      }
+      if (state.finished || state.turnInSeason >= turnsPerSeason(state.mode)) {
         show(homeScreen(ctx, state), true)
         return
       }
@@ -134,6 +141,7 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     },
     toSeason: (state) => show(seasonScreen(ctx, state), true),
     toEnding: (state, info) => show(endingScreen(ctx, state, info), true),
+    toPlan: (state) => show(planFlow(ctx, state), true),
     showTab: (tab) => paintTab(tab),
     toCodex: (back) => show(codexScreen(ctx, back ?? (() => ctx.toTitle()))),
     toShop: (back) => show(shopScreen(ctx, back ?? (() => ctx.toTitle()))),
