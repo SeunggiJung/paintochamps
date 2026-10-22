@@ -81,3 +81,6 @@ export function applyPrefs(prefs: Prefs, env: Env, root: HTMLElement = document.
   root.dataset.font = prefs.font
   root.dataset.motion = resolveMotion(prefs.motion, env.reducedMotion)
 }
+
+/** 지금 화면의 움직임이 '차분'인가 (자동 설정이면 기기의 동작 줄이기가 반영된 값) */
+export const isCalm = (): boolean => document.documentElement.dataset.motion === 'calm'

@@ -1,5 +1,6 @@
 import { createRng } from '../engine/rng.ts'
 import type { Grade } from '../engine/types.ts'
+import { isCalm } from './prefs.ts'
 import { playGradeSfx, vibrate } from './sound.ts'
 
 interface Particle {
@@ -30,7 +31,7 @@ export function celebrate(grade: Grade): void {
   const preset = BURSTS[grade]
   if (preset) vibrate(grade === 'UR' ? [60, 40, 60, 40, 120] : [40, 30, 40])
   if (preset) playGradeSfx(grade)
-  if (!preset || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  if (!preset || isCalm()) return
 
   const canvas = document.createElement('canvas')
   canvas.className = 'confetti'

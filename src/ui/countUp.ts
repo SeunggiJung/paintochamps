@@ -1,3 +1,4 @@
+import { isCalm } from './prefs.ts'
 import { h } from './dom.ts'
 
 const DURATION_MS = 700
@@ -8,7 +9,7 @@ const DURATION_MS = 700
  */
 export function countUp(from: number, to: number, format: (n: number) => string = (n) => String(Math.round(n))): HTMLElement {
   const el = h('b', {}, format(to))
-  if (from === to || matchMedia('(prefers-reduced-motion: reduce)').matches) return el
+  if (from === to || isCalm()) return el
   el.textContent = format(from)
   let start = 0
   const step = (now: number) => {

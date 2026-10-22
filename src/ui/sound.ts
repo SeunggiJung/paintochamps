@@ -1,3 +1,4 @@
+import { isCalm } from './prefs.ts'
 import type { Grade } from '../engine/types.ts'
 
 /**
@@ -111,7 +112,7 @@ export const playGradeSfx = (grade: Grade): void => playSfx(`grade-${grade}`)
 /** 모바일 진동. 지원하지 않거나 모션 줄이기를 켠 사람에게는 아무것도 하지 않는다. */
 export function vibrate(pattern: number | number[]): void {
   if (!enabled || typeof navigator.vibrate !== 'function') return
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  if (isCalm()) return
   navigator.vibrate(pattern)
 }
 

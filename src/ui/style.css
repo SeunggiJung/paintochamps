@@ -58,7 +58,7 @@ input[type='text'] {
 .best-star { color: var(--gold); }
 .best-tag { margin-left: 6px; padding: 1px 6px; border-radius: 8px; background: var(--gold); color: #1a1a1a; font-size: 11px; font-weight: 700; }
 @keyframes best-glow { 0%, 100% { box-shadow: 0 0 5px rgba(245, 197, 66, 0.4); } 50% { box-shadow: 0 0 12px rgba(245, 197, 66, 0.85); } }
-@media (prefers-reduced-motion: reduce) { .choice.best { animation: none; } }
+:root[data-motion='calm'] .choice.best { animation: none; }
 
 /* 뽑기 카드 */
 .gacha-card {
@@ -83,9 +83,7 @@ input[type='text'] {
 .grade-SSR .grade-letter { color: var(--grade-SSR); }
 .grade-UR .grade-letter { color: var(--grade-UR); }
 
-@media (prefers-reduced-motion: reduce) {
-  .bar-fill, .stat-row, .trait, .grade { transition: none; }
-}
+:root[data-motion='calm'] .bar-fill, :root[data-motion='calm'] .stat-row, :root[data-motion='calm'] .trait, :root[data-motion='calm'] .grade { transition: none; }
 
 /* 폭죽 캔버스와 등급 공개 효과 */
 .confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
@@ -96,9 +94,7 @@ input[type='text'] {
 .grade:not(.hidden) .grade-letter { animation: stamp 0.45s cubic-bezier(0.2, 1.6, 0.4, 1); }
 @keyframes stamp { from { transform: scale(2.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
-@media (prefers-reduced-motion: reduce) {
-  .gacha-card, .grade-letter { animation: none !important; transition: none; }
-}
+:root[data-motion='calm'] .gacha-card, :root[data-motion='calm'] .grade-letter { animation: none !important; transition: none; }
 
 /* 육성 메인 */
 .home { padding-bottom: 220px; }
@@ -138,7 +134,7 @@ input[type='text'] {
 .stack-tight { display: flex; flex-direction: column; gap: 10px; }
 .event-text { margin: 0; font-size: 1.05rem; line-height: 1.6; }
 @keyframes rise { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
+:root[data-motion='calm'] .sheet { animation: none; }
 
 /* 시즌 결산 */
 .up { color: var(--grade-R); }
@@ -208,7 +204,7 @@ input[type='text'] {
 @keyframes shake { to { transform: translateY(-1.5px); } }
 @keyframes sparkPop { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .contract *, .contract { animation: none !important; } }
+:root[data-motion='calm'] .contract *, :root[data-motion='calm'] .contract { animation: none !important; }
 
 /* 시간이 흘러가는 연출·대회 결과 카드·일정 */
 .timeline { text-align: center; padding: 8px 0; }
@@ -263,7 +259,7 @@ input[type='text'] {
 .overlay.cinema .skip-btn { position: absolute; top: 12px; right: 12px; }
 .overlay.center .sheet { border-radius: 20px; max-height: 80dvh; animation: pop 0.22s ease-out; }
 @keyframes pop { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .overlay.center .sheet { animation: none; } }
+:root[data-motion='calm'] .overlay.center .sheet { animation: none; }
 .action.taken { border-color: var(--accent); background: var(--accent-soft); }
 .taken-tag { margin-left: 6px; }
 .delta-row .stat-name { min-width: 7em; }
@@ -289,7 +285,7 @@ input[type='text'] {
 .guide-text { margin: 0; line-height: 1.6; }
 .guide-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .guide-actions .btn.primary { min-width: 110px; }
-@media (prefers-reduced-motion: reduce) { .guide-spot { transition: none; } }
+:root[data-motion='calm'] .guide-spot { transition: none; }
 
 /* 고른 행동 (턴 진행 바 위) */
 .guide-help { background: none; border: var(--border); color: var(--muted); border-radius: 999px; width: 28px; height: 28px; font: inherit; cursor: pointer; }
@@ -313,7 +309,7 @@ input[type='text'] {
 .seg.loss { background: var(--danger); opacity: 0.85; }
 .change-bar .seg { height: 100%; flex: none; }
 @keyframes grow { from { transform: scaleX(0); } }
-@media (prefers-reduced-motion: reduce) { .seg.gain { animation: none; } }
+:root[data-motion='calm'] .seg.gain { animation: none; }
 
 /* 엔딩 화면·도감 */
 .ending-art { border-radius: 14px; border: 2px solid var(--line); flex: none; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--track); }
@@ -353,7 +349,7 @@ input[type='text'] {
 .mg-pad.lit { background: var(--pad); }
 .minigame-score { margin: 0; font-size: 1.15rem; font-weight: 700; }
 .minigame-bonus { margin: 0; color: var(--grade-R); font-weight: 700; }
-@media (prefers-reduced-motion: reduce) { .mg-target { animation: none; } }
+:root[data-motion='calm'] .mg-target { animation: none; }
 
 /* 시즌 활약 */
 .chip.award { background: #3a3220; border-color: #6b5a1e; color: var(--gold); }
@@ -419,11 +415,9 @@ input[type='text'] {
 .btn:not(:disabled):active, .choice:not(:disabled):active { transform: scale(0.97); filter: brightness(0.95); }
 .screen { animation: screenIn 0.22s ease-out; }
 @keyframes screenIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) {
-  .btn, .choice { transition: none; }
-  .btn:not(:disabled):active, .choice:not(:disabled):active { transform: none; }
-  .screen { animation: none; }
-}
+:root[data-motion='calm'] .btn, :root[data-motion='calm'] .choice { transition: none; }
+:root[data-motion='calm'] .btn:not(:disabled):active, :root[data-motion='calm'] .choice:not(:disabled):active { transform: none; }
+:root[data-motion='calm'] .screen { animation: none; }
 .season-line { margin: 0; font-style: italic; color: var(--muted); }
 
 /* 결승 중계 장면 (broadcastScene.ts) */
@@ -465,7 +459,7 @@ input[type='text'] {
 .bc-caption { min-height: 84px; padding: 10px 12px; border-radius: 12px; background: var(--track); border: var(--border); }
 .bc-caption .who { font-size: 0.75rem; color: var(--accent); font-weight: 800; margin: 0 0 2px; }
 .bc-caption .say { margin: 0; line-height: 1.5; }
-@media (prefers-reduced-motion: reduce) { .bs *, .bs { animation: none !important; } }
+:root[data-motion='calm'] .bs *, :root[data-motion='calm'] .bs { animation: none !important; }
 
 /* 광고 촬영 연출 */
 .ad-shoot { text-align: center; }
@@ -490,7 +484,8 @@ input[type='text'] {
 .ad-shoot.skip *, .ad-shoot.skip { animation: none !important; }
 .ad-shoot.skip .ad-cut { opacity: 1; }
 .ad-shoot.skip .ad-flash { opacity: 0; }
-@media (prefers-reduced-motion: reduce) { .ad-shoot *, .ad-shoot { animation: none !important; } .ad-cut { opacity: 1; } }
+:root[data-motion='calm'] .ad-shoot *, :root[data-motion='calm'] .ad-shoot { animation: none !important; }
+:root[data-motion='calm'] .ad-cut { opacity: 1; }
 
 /* 내 방·상점 */
 .room-preview { border-radius: 12px; overflow: hidden; border: var(--border); }
@@ -565,3 +560,12 @@ input[type='text'] {
 .auto-link { align-self: center; }
 .guide-lines { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
 .guide-row { flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 14px; }
+
+/* 움직임 '화려': 보통 + 시트 바운스·버튼 반짝임·증가 숫자 튀어나옴 */
+@keyframes riseBounce { from { transform: translateY(90px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes shimmer { from { transform: translateX(-120%); } to { transform: translateX(220%); } }
+@keyframes popIn { 0% { transform: scale(0.6); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+:root[data-motion='lively'] .overlay.decision .sheet, :root[data-motion='lively'] .overlay.result .sheet, :root[data-motion='lively'] .overlay.info .sheet { animation: riseBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+:root[data-motion='lively'] .btn.primary { position: relative; overflow: hidden; }
+:root[data-motion='lively'] .btn.primary:not(:disabled)::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40%; background: linear-gradient(100deg, transparent, #ffffff55, transparent); animation: shimmer 2.8s ease-in-out infinite; }
+:root[data-motion='lively'] .up, :root[data-motion='lively'] .chip.award { display: inline-block; animation: popIn 0.5s ease-out; }

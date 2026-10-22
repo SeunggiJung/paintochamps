@@ -184,12 +184,10 @@ const CSS = `
 .hero-captions .c2 { animation: heroS2 16s infinite; }
 .hero-captions .c3 { animation: heroS3 16s infinite; }
 .hero-captions .c4 { animation: heroS4 16s infinite; color: var(--grade-UR); }
-@media (prefers-reduced-motion: reduce) {
-  .hero *, .hero-captions span { animation: none !important; }
-  .hero .scene { opacity: 0; }
-  .hero .s4 { opacity: 1; }
-  .hero-captions .c4 { opacity: 1; }
-}
+:root[data-motion='calm'] .hero *, :root[data-motion='calm'] .hero-captions span { animation: none !important; }
+:root[data-motion='calm'] .hero .scene { opacity: 0; }
+:root[data-motion='calm'] .hero .s4 { opacity: 1; }
+:root[data-motion='calm'] .hero-captions .c4 { opacity: 1; }
 `
 
 let cssInstalled = false
