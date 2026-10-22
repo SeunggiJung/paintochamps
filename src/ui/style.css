@@ -557,3 +557,4 @@ input[type='text'] {
 .plan-cta { position: sticky; bottom: 0; margin-top: auto; padding: 10px 0 12px; display: flex; flex-direction: column; gap: 6px; background: linear-gradient(to top, var(--bg) 70%, transparent); }
 .plan-cta.btn-row { flex-direction: row; }
 .plan-flow .step-dots { margin-top: 4px; }
+.achievement-line { flex-direction: row; justify-content: space-between; align-items: center; }
