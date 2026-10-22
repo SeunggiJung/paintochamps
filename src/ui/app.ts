@@ -1,11 +1,18 @@
+import { turnsPerSeason } from '../engine/turn.ts'
 import type { AchievementId } from '../engine/achievements.ts'
 import type { GameState } from '../engine/state.ts'
-import { loadGame, loadMeta, type KeyValueStorage } from '../save/storage.ts'
+import { loadGame, loadMeta, markGuideDone, type KeyValueStorage } from '../save/storage.ts'
 import { codexScreen } from './codex.ts'
 import { endingScreen } from './ending.ts'
 import { createScreen, type NewGameDraft } from './create.ts'
+import { runGuide } from './guide.ts'
 import { gachaScreen } from './gachaScreen.ts'
 import { homeScreen } from './home.ts'
+import { GameSession } from './session.ts'
+import { homeTab } from './tabs/homeTab.ts'
+import { playerTab } from './tabs/playerTab.ts'
+import { recordTab } from './tabs/recordTab.ts'
+import { seasonTab } from './tabs/seasonTab.ts'
 import { infoScreen, isInfoPageId, type InfoPageId } from './infoPages.ts'
 import { seasonScreen } from './seasonScreen.ts'
 import { shopScreen } from './shopScreen.ts'
@@ -69,7 +76,24 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
   let inGame = false
   const show = (el: HTMLElement, game = false) => {
     inGame = game
+    unsubscribe()
+    session = null
     shell.showFull(el)
+  }
+  let session: GameSession | null = null
+  let unsubscribe = () => {}
+  /** 탭 화면을 그리고, 세션이 바뀌면 그 탭을 다시 그린다 */
+  const paintTab = (tab: TabId) => {
+    if (!session) return
+    const s = session
+    unsubscribe()
+    const view = { home: homeTab, season: seasonTab, player: playerTab, record: recordTab }[tab]
+    shell.showTab(tab, view(s))
+    unsubscribe = s.subscribe(() => {
+      if (session !== s) return
+      if (s.seasonOver()) ctx.toHome(s.state)
+      else paintTab(tab)
+    })
   }
   const ctx: Ctx = {
     storage,
@@ -88,10 +112,28 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     },
     toCreate: () => show(createScreen(ctx)),
     toGacha: (draft) => show(gachaScreen(ctx, draft)),
-    toHome: (state) => show(homeScreen(ctx, state), true),
+    toHome(state) {
+      unsubscribe()
+      session = null
+      // 시즌 계획이 없거나 시즌이 끝난 상태는 전체 화면(옛 홈)이 맡는다 (다음 작업에서 계획·시즌 종료 화면으로 교체)
+      if (state.finished || !state.seasonTraining || state.turnInSeason >= turnsPerSeason(state.mode)) {
+        show(homeScreen(ctx, state), true)
+        return
+      }
+      session = new GameSession(ctx, state)
+      inGame = true
+      paintTab('home')
+      // 첫 접속 가이드: 화면에 붙은 뒤 위치를 재야 해서 다음 프레임에 띄운다
+      if (!ctx.meta.guideDone && state.season === 1 && state.turnInSeason === 0) {
+        requestAnimationFrame(async () => {
+          await runGuide(shell.root)
+          ctx.meta = markGuideDone(storage)
+        })
+      }
+    },
     toSeason: (state) => show(seasonScreen(ctx, state), true),
     toEnding: (state, info) => show(endingScreen(ctx, state, info), true),
-    showTab: () => {},
+    showTab: (tab) => paintTab(tab),
     toCodex: () => show(codexScreen(ctx)),
     toShop: () => show(shopScreen(ctx)),
     toInfo(page) {

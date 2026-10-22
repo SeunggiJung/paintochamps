@@ -530,3 +530,10 @@ input[type='text'] {
 .settings { padding-top: 4px; }
 .settings-row { display: flex; flex-direction: column; gap: 6px; }
 .settings-link { display: flex; justify-content: space-between; align-items: center; min-height: 48px; padding: 0 14px; border: var(--border); border-radius: var(--radius); background: var(--panel); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; }
+
+.turn-cta { position: sticky; bottom: calc(56px + env(safe-area-inset-bottom)); margin-top: auto; padding: 10px 0 12px; display: flex; flex-direction: column; gap: 6px; background: linear-gradient(to top, var(--bg) 70%, transparent); }
+.turn-cta p { margin: 0; }
+.link-btn { border: 0; background: transparent; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; }
+.btn-row { display: flex; gap: 8px; }
+.btn-row .btn { flex: 1; }
+.home-tab { padding-bottom: 8px; }

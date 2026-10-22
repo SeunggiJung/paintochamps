@@ -43,9 +43,9 @@ export function createShell(host: HTMLElement, hooks: { onTab(tab: TabId): void;
       ),
     )
   }
-  const swap = (el: HTMLElement) => {
+  const swap = (el: HTMLElement, keepScroll = false) => {
     body.replaceChildren(el)
-    scrollTo(0, 0)
+    if (!keepScroll) scrollTo(0, 0)
   }
 
   return {
@@ -57,11 +57,12 @@ export function createShell(host: HTMLElement, hooks: { onTab(tab: TabId): void;
       swap(el)
     },
     showTab(tab, el) {
+      const same = current === tab
       current = tab
       tabbar.hidden = false
       root.classList.add('has-tabs')
       paintTabs()
-      swap(el)
+      swap(el, same)
     },
     get currentTab() {
       return current
