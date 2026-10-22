@@ -9,6 +9,7 @@ import { homeScreen } from './home.ts'
 import { infoScreen, isInfoPageId, type InfoPageId } from './infoPages.ts'
 import { seasonScreen } from './seasonScreen.ts'
 import { shopScreen } from './shopScreen.ts'
+import { openSettings } from './settingsSheet.ts'
 import { createShell, type TabId } from './shell.ts'
 import { loadFont } from './fonts.ts'
 import { applyPrefs, loadPrefs, readEnv, savePrefs, type Prefs } from './prefs.ts'
@@ -62,9 +63,14 @@ const pageFromHash = (): string => location.hash.replace(/^#\/?/, '')
 export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
   const shell = createShell(root, {
     onTab: (tab) => ctx.showTab(tab),
-    onSettings: () => console.info('설정 시트는 다음 작업에서 연결한다'),
+    onSettings: () => void openSettings(ctx, { inGame }),
   })
-  const show = (el: HTMLElement) => shell.showFull(el)
+  /** 육성·결산·엔딩 화면이면 설정에 '타이틀로'가 나온다 */
+  let inGame = false
+  const show = (el: HTMLElement, game = false) => {
+    inGame = game
+    shell.showFull(el)
+  }
   const ctx: Ctx = {
     storage,
     meta: loadMeta(storage),
@@ -82,9 +88,9 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     },
     toCreate: () => show(createScreen(ctx)),
     toGacha: (draft) => show(gachaScreen(ctx, draft)),
-    toHome: (state) => show(homeScreen(ctx, state)),
-    toSeason: (state) => show(seasonScreen(ctx, state)),
-    toEnding: (state, info) => show(endingScreen(ctx, state, info)),
+    toHome: (state) => show(homeScreen(ctx, state), true),
+    toSeason: (state) => show(seasonScreen(ctx, state), true),
+    toEnding: (state, info) => show(endingScreen(ctx, state, info), true),
     showTab: () => {},
     toCodex: () => show(codexScreen(ctx)),
     toShop: () => show(shopScreen(ctx)),
