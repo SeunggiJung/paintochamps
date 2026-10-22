@@ -22,6 +22,8 @@ export interface PresetDef {
   id: PresetId
   name: string
   desc: string
+  /** 계획 화면 카드에 쓰는 한 줄 설명 (전체 설명은 `desc`와 시즌 계획 가이드) */
+  short: string
   /** 컨디션이 min 이상인 첫 단계의 두 칸을 쓴다 (위에서부터) */
   tiers: { min: number; slots: [Token, Token] }[]
 }

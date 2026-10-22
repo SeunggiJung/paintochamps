@@ -172,7 +172,7 @@ input[type='text'] {
 /* 팀 아이콘·제안 카드 */
 .team-icon { display: inline-block; flex: none; vertical-align: middle; border-radius: 6px; overflow: hidden; image-rendering: pixelated; }
 .team-line { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
-.choice.offer { display: flex; align-items: center; gap: 12px; text-align: left; }
+.choice.offer { display: flex; flex-direction: row; align-items: center; gap: 12px; text-align: left; }
 .offer-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .offer-line { font-size: 0.82rem; }
 .offer-line.muted { color: var(--muted); }
@@ -378,7 +378,8 @@ input[type='text'] {
 .rgb { animation: rgbFill 3s linear infinite; }
 @keyframes rgbFill { 0% { fill: #ff3b3b; } 33% { fill: #3bff6a; } 66% { fill: #3b7bff; } 100% { fill: #ff3b3b; } }
 .spin { transform-box: fill-box; transform-origin: center; }
-.choice.with-art { display: flex; align-items: center; gap: 10px; text-align: left; }
+.choice.with-art { display: flex; flex-direction: row; align-items: center; gap: 10px; text-align: left; }
+.gear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
 .choice.with-art .choice-text { display: flex; flex-direction: column; gap: 2px; }
 .help-pop.list { max-height: 55vh; overflow-y: auto; }
 .train-list { gap: 3px; margin: 6px 0 0; }
@@ -552,6 +553,8 @@ input[type='text'] {
 .preset-grid .choice .muted { font-size: 0.72rem; line-height: 1.4; }
 .plan-cta { position: sticky; bottom: 0; margin-top: auto; padding: 10px 0 12px; display: flex; flex-direction: column; gap: 6px; background: linear-gradient(to top, var(--bg) 70%, transparent); }
 .plan-cta.btn-row { flex-direction: row; }
+.plan-cta.btn-row .btn { white-space: nowrap; }
+.plan-cta.btn-row .btn.primary { flex: 2; }
 .plan-flow .step-dots { margin-top: 4px; }
 .achievement-line { flex-direction: row; justify-content: space-between; align-items: center; }
 .title-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }

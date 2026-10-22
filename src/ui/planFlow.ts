@@ -72,14 +72,14 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
         },
       },
       upgradeArt(kind as never, level, max, 'mini'),
-      h('div', { class: 'choice-text' }, h('strong', {}, level >= max ? `${name} (최고)` : `${name} Lv${level} → Lv${level + 1} · ${cost}`), h('span', { class: 'muted small' }, detail)),
+      h('div', { class: 'choice-text' }, h('strong', {}, level >= max ? `${name} (최고)` : `${name} Lv${level} → Lv${level + 1} · ${cost}`), detail && h('span', { class: 'muted small' }, detail)),
     )
 
   const equipmentList = () =>
     (Object.keys(EQUIPMENT) as EquipmentId[]).map((item) => {
       const level = state.equipment[item]
       const reason = checkEquipment(state, item)
-      return upgradeRow(item, EQUIPMENT[item].name, level, rules.equipment.maxLevel, formatMoney(equipmentCost(item, level)), reason ?? '구매', reason, '훈련 효율이 올라갑니다.', () => {
+      return upgradeRow(item, EQUIPMENT[item].name, level, rules.equipment.maxLevel, formatMoney(equipmentCost(item, level)), reason ?? '', reason, '훈련 효율이 올라갑니다.', () => {
         const r = buyEquipment(state, item)
         if (r.ok) state = r.state
         return r.ok
@@ -175,13 +175,13 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
     const lessonCost = Math.ceil(actionCost({ id: 'private_lesson' }, state))
     return [
       h('div', { class: 'row' }, h('p', { class: 'eyebrow' }, `${state.season}시즌 계획`), guideHelp(ctx, 'plan')),
-      h('p', { class: 'event-text' }, '이번 시즌을 어떻게 보낼지 정하자. 시즌이 시작되면 컨디션에 맞춰 알아서 흘러가고, 대회·이적 같은 큰 일에만 직접 결정한다.'),
+      h('p', { class: 'event-text' }, '이번 시즌을 어떻게 보낼지 정하자. 시즌이 시작되면 컨디션에 맞춰 알아서 흘러가고, 이적 제안 같은 큰 일에만 직접 결정한다.'),
       h('h3', {}, '방침'),
       h(
         'div',
         { class: 'preset-grid' },
         ...PRESETS.map((p) =>
-          h('button', { class: `choice${preset === p.id ? ' selected' : ''}`, type: 'button', 'aria-pressed': String(preset === p.id), onclick: () => ((preset = p.id), draw()) }, h('strong', {}, p.name), h('span', { class: 'muted small' }, p.desc)),
+          h('button', { class: `choice${preset === p.id ? ' selected' : ''}`, type: 'button', 'aria-pressed': String(preset === p.id), onclick: () => ((preset = p.id), draw()) }, h('strong', {}, p.name), h('span', { class: 'muted small' }, p.short)),
         ),
       ),
       h(

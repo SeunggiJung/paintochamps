@@ -59,7 +59,7 @@ export function playerTab(session: GameSession): HTMLElement {
     h('h3', {}, '장비·시설 현황'),
     h(
       'ul',
-      { class: 'plain small' },
+      { class: 'plain small gear-grid' },
       ...(Object.keys(EQUIPMENT) as EquipmentId[]).map((id) => h('li', {}, `${EQUIPMENT[id].name} Lv${state.equipment[id]}/${rules.equipment.maxLevel}`)),
       ...FACILITY_IDS.filter((id) => !FACILITIES[id].onlyOverseas || facilityLevel(state, id) > 0).map((id) => h('li', {}, `${FACILITIES[id].name} Lv${facilityLevel(state, id)}/${FACILITIES[id].maxLevel}`)),
     ),
