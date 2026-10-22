@@ -194,8 +194,8 @@ const CSS = `
 
 let cssInstalled = false
 
-/** 타이틀 화면 가운데에 들어가는 도트 애니메이션 */
-export function titleHero(): HTMLElement {
+/** 이미지가 없을 때 쓰는 도트 애니메이션 (옛 타이틀 장면) */
+export function legacyHero(): HTMLElement {
   if (!cssInstalled) {
     cssInstalled = true
     const style = document.createElement('style')
@@ -210,4 +210,103 @@ export function titleHero(): HTMLElement {
     frame,
     h('div', { class: 'hero-captions', 'aria-hidden': 'true' }, h('span', { class: 'c1' }, '방구석에서 열심히 게임하던 겜돌이가'), h('span', { class: 'c2' }, '대회에서 다 같이 겨루고'), h('span', { class: 'c3' }, '코치·팀원과 연습해서 실력을 키워'), h('span', { class: 'c4' }, '월드 챔피언을 향해!')),
   )
+}
+
+// ---- 이미지 4장(방구석 → 훈련 → 대회 → 우승) 슬라이드 ----
+
+const SCENE_FILES = ['scene-1-room', 'scene-2-train', 'scene-3-match', 'scene-4-win']
+const CAPTIONS = ['방구석에서 열심히 게임하던 겜돌이가', '코치·팀원과 연습해서 실력을 키워', '대회에서 다 같이 겨루고', '월드 챔피언을 향해!']
+
+const found = import.meta.glob('../assets/title/scene-*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>
+
+/** 4장이 모두 있으면 순서대로 주소를, 하나라도 없으면 null (그러면 도트 장면을 쓴다) */
+export function sceneUrls(files: Record<string, string> = found): string[] | null {
+  const urls = SCENE_FILES.map((n) => Object.entries(files).find(([path]) => path.endsWith(`/${n}.webp`))?.[1])
+  return urls.every((u): u is string => !!u) ? urls : null
+}
+
+const HERO_CSS = `
+.hi-frame { position: relative; width: 100%; aspect-ratio: 3 / 2; overflow: hidden; border-radius: var(--radius); background: #000; border: var(--border); box-shadow: var(--shadow); }
+.hi-scene { position: absolute; inset: 0; opacity: 0; }
+.hi-zoom { position: absolute; inset: 0; animation: hiKb 8s ease-in-out infinite alternate; }
+.hi-art { position: absolute; inset: 0; background-size: 100% 100%; }
+.hi-s1 { animation: hiS1 16s infinite; } .hi-s2 { animation: hiS2 16s infinite; } .hi-s3 { animation: hiS3 16s infinite; } .hi-s4 { animation: hiS4 16s infinite; }
+@keyframes hiS1 { 0%,22% { opacity: 1; } 25%,97% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes hiS2 { 0%,22% { opacity: 0; } 25%,47% { opacity: 1; } 50%,100% { opacity: 0; } }
+@keyframes hiS3 { 0%,47% { opacity: 0; } 50%,72% { opacity: 1; } 75%,100% { opacity: 0; } }
+@keyframes hiS4 { 0%,72% { opacity: 0; } 75%,97% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes hiKb { from { transform: scale(1); } to { transform: scale(1.06); } }
+.hi-fx { position: absolute; pointer-events: none; }
+.hi-led { left: 42%; width: 38%; top: -1%; height: 9%; mix-blend-mode: screen; filter: blur(6px); animation: hiLed 7s linear infinite; }
+@keyframes hiLed { 0%,100% { background: radial-gradient(ellipse at 50% 0%, #ff5ac8cc, transparent 70%); } 20% { background: radial-gradient(ellipse at 50% 0%, #ff9f43cc, transparent 70%); } 40% { background: radial-gradient(ellipse at 50% 0%, #ffe27acc, transparent 70%); } 60% { background: radial-gradient(ellipse at 50% 0%, #4cf0c8cc, transparent 70%); } 80% { background: radial-gradient(ellipse at 50% 0%, #4fa3ffcc, transparent 70%); } }
+.hi-glow { background: radial-gradient(ellipse, #5fd1ff66, transparent 70%); mix-blend-mode: screen; animation: hiGlow 2.6s ease-in-out infinite alternate; }
+@keyframes hiGlow { from { opacity: .2; } to { opacity: .9; } }
+.hi-steam { width: 2.6%; height: 9%; background: radial-gradient(ellipse, #ffffffaa, transparent 70%); filter: blur(3px); opacity: 0; animation: hiSteam 3s ease-out infinite; }
+@keyframes hiSteam { 0% { opacity: 0; transform: translateY(0) scaleX(.8); } 25% { opacity: .8; } 100% { opacity: 0; transform: translateY(-70%) scaleX(1.6); } }
+.hi-star { width: 1.1%; aspect-ratio: 1; background: #fff8d6; box-shadow: 0 0 8px 2px #fff8d6aa; border-radius: 1px; animation: hiTw 2.2s steps(2) infinite; }
+@keyframes hiTw { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+.hi-sun { background: radial-gradient(ellipse, #ffe27a77, transparent 65%); mix-blend-mode: screen; animation: hiSun 5s ease-in-out infinite alternate; }
+@keyframes hiSun { from { opacity: .15; } to { opacity: .8; } }
+.hi-beam { mix-blend-mode: screen; filter: blur(10px); animation: hiBeam 3s ease-in-out infinite alternate; }
+@keyframes hiBeam { from { opacity: .15; } to { opacity: .75; } }
+.hi-stick { width: .9%; height: 4.5%; border-radius: 3px; filter: blur(.6px); animation: hiStick 1.2s ease-in-out infinite alternate; }
+@keyframes hiStick { from { opacity: .2; transform: rotate(-12deg); } to { opacity: 1; transform: rotate(12deg); } }
+.hi-conf { top: -6%; width: 1.1%; height: 2%; opacity: .95; animation: hiConf linear infinite; }
+@keyframes hiConf { from { transform: translateY(0) rotate(0); } to { transform: translateY(560%) rotate(540deg); } }
+.hi-fw { border-radius: 50%; mix-blend-mode: screen; filter: blur(8px); animation: hiFw 2.4s ease-out infinite; }
+@keyframes hiFw { 0% { opacity: 0; transform: scale(.4); } 20% { opacity: .9; } 100% { opacity: 0; transform: scale(1.5); } }
+.hi-captions { position: relative; min-height: 1.6em; text-align: center; font-weight: 800; margin-top: 8px; }
+.hi-captions span { position: absolute; left: 0; right: 0; opacity: 0; }
+.hi-captions .c1 { animation: hiS1 16s infinite; } .hi-captions .c2 { animation: hiS2 16s infinite; } .hi-captions .c3 { animation: hiS3 16s infinite; } .hi-captions .c4 { animation: hiS4 16s infinite; color: var(--grade-UR); }
+:root[data-motion='calm'] .hi-zoom, :root[data-motion='calm'] .hi-fx { animation: none !important; }
+:root[data-motion='calm'] .hi-scene, :root[data-motion='calm'] .hi-captions span { animation: none !important; opacity: 0; }
+:root[data-motion='calm'] .hi-s4, :root[data-motion='calm'] .hi-captions .c4 { opacity: 1; }
+`
+
+let heroCssInstalled = false
+
+/** 결정론적 의사 난수(0~1): 장식 위치를 매번 같게 만든다 */
+const frac = (i: number, salt: number) => {
+  const x = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453
+  return x - Math.floor(x)
+}
+
+const fx = (cls: string, x: number, y: number, w = 0, hgt = 0, extra = '') => `<div class="hi-fx ${cls}" style="left:${x}%;top:${y}%;${w ? `width:${w}%;` : ''}${hgt ? `height:${hgt}%;` : ''}${extra}"></div>`
+
+function effects(calm: boolean): string[] {
+  if (calm) return ['', '', '', '']
+  const mons: [number, number, number, number][] = [[17, 39, 14, 15], [32, 39, 22, 16], [58, 39, 20, 16], [80, 39, 18, 16]]
+  const stickColors = ['#ff5a8a', '#5ad0ff', '#ffd34d', '#b980ff', '#4cf0c8']
+  const sticks = Array.from({ length: 26 }, (_, i) => {
+    const col = stickColors[i % 5]
+    return fx('hi-stick', 2 + frac(i, 1) * 96, 76 + frac(i, 2) * 20, 0, 0, `background:${col};box-shadow:0 0 8px ${col};animation-delay:${(i * 0.13).toFixed(2)}s`)
+  }).join('')
+  const confColors = ['#ffd34d', '#ff6b7a', '#4fa3ff', '#ffffff', '#b980ff', '#ffb740']
+  const conf = Array.from({ length: 34 }, (_, i) => fx('hi-conf', 1 + frac(i, 3) * 97, 0, 0, 0, `background:${confColors[i % 6]};animation-duration:${(3 + frac(i, 4) * 2.5).toFixed(2)}s;animation-delay:-${(frac(i, 5) * 5).toFixed(2)}s`)).join('')
+  return [
+    fx('hi-led', 0, 0) + fx('hi-glow', 14, 27, 36, 36) + fx('hi-steam', 11.4, 42) + fx('hi-steam', 12.8, 43, 0, 0, 'animation-delay:1s') + fx('hi-steam', 10.4, 44, 0, 0, 'animation-delay:2s') + fx('hi-star', 88, 14) + fx('hi-star', 81.5, 16.2, 0, 0, 'animation-delay:.6s') + fx('hi-star', 84.5, 18, 0, 0, 'animation-delay:1.2s') + fx('hi-star', 91, 13.6, 0, 0, 'animation-delay:.3s') + fx('hi-sun', 76, 28, 14, 16),
+    mons.map((m, i) => fx('hi-glow', m[0], m[1], m[2], m[3], `animation-delay:${i * 0.5}s`)).join('') + fx('hi-sun', 4, 20, 16, 18),
+    fx('hi-beam', 3, 0, 18, 45, 'background:linear-gradient(100deg,#ffd34d99,transparent 70%)') + fx('hi-beam', 60, 0, 22, 50, 'background:linear-gradient(80deg,#ff5ac899,transparent 70%);animation-delay:.8s') + fx('hi-beam', 78, 0, 20, 45, 'background:linear-gradient(80deg,#b980ff99,transparent 70%);animation-delay:1.6s') + sticks,
+    fx('hi-fw', 6, 6, 20, 26, 'background:radial-gradient(circle,#ffe27acc,transparent 70%)') + fx('hi-fw', 74, 6, 20, 26, 'background:radial-gradient(circle,#ff8ad8cc,transparent 70%);animation-delay:1.2s') + conf,
+  ]
+}
+
+/** urls가 없으면 도트 장면, 있으면 4장 슬라이드(장면별 효과·줌, 16초 주기) */
+export function buildHero(urls: string[] | null): HTMLElement {
+  if (!urls) return legacyHero()
+  if (!heroCssInstalled) {
+    heroCssInstalled = true
+    const style = document.createElement('style')
+    style.textContent = HERO_CSS
+    document.head.append(style)
+  }
+  const fxs = effects(document.documentElement.dataset.motion === 'calm')
+  const frame = h('div', { class: 'hi-frame', role: 'img', 'aria-label': '방구석에서 게임하던 겜돌이가 훈련하고 대회에 나가 우승하는 모습' })
+  frame.innerHTML = urls.map((u, i) => `<div class="hi-scene hi-s${i + 1}"><div class="hi-zoom"><div class="hi-art" style="background-image:url(${u})"></div>${fxs[i]}</div></div>`).join('')
+  return h('div', { class: 'hero' }, frame, h('div', { class: 'hi-captions', 'aria-hidden': 'true' }, ...CAPTIONS.map((t, i) => h('span', { class: `c${i + 1}` }, t))))
+}
+
+/** 타이틀 화면 가운데 장면: 이미지 4장이 있으면 슬라이드, 없으면 도트 애니메이션 */
+export function titleHero(): HTMLElement {
+  return buildHero(sceneUrls())
 }
