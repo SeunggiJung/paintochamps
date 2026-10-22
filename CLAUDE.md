@@ -6,7 +6,7 @@
 
 사용자는 컨텍스트를 자주 초기화하거나 **새 대화창을 연다.** 그 경우 **다른 어떤 작업보다 먼저** 다음을 한다 (사용자 지시, 2026-10-22).
 
-1. 이 문서를 읽은 직후, **가장 최근 날짜의 `docs/handover-*.md`를 읽는다.** 지금 최신은 **`docs/handover-2026-10-22-redesign.md`**(UI 전체 리디자인: 구현 완료, 사용자 직접 플레이 확인 대기)이다. 읽는 순서는 그 문서의 §0 → §1(지금 상태·**대기 중인 질문**) → 필요한 §2.
+1. 이 문서를 읽은 직후, **가장 최근 날짜의 `docs/handover-*.md`를 읽는다.** 지금 최신은 **`docs/handover-2026-10-22-promptpilot.md`**(promptpilot MCP로 타이틀 이미지 예시 만들기 — 새 세션을 연 이유와 지금 상태)이고, 그 배경인 UI 전체 리디자인(구현 완료)은 `docs/handover-2026-10-22-redesign.md`에 있다. 읽는 순서는 그 문서의 §0 → §1(지금 할 일) → 필요한 §2~§7. 리디자인 문서는 필요할 때만.
 2. **사용자의 첫 메시지는 인수인계의 '대기 중인 질문'에 대한 답일 수 있다**(이전 창에서 받은 질문에 새 창에서 답하기로 했다). "Native로 시작", "그걸로 가자", "1번"처럼 맥락이 없는 짧은 말이면 그 문서의 질문 목록과 맞춰 해석해서 흐름을 이어 간다. 애매하면 되묻되, 이미 확정된 것은 다시 묻지 않는다.
 3. 작업하는 동안 **정해진 것·남은 질문을 인수인계에 즉시 기록한다.** 새 인수인계 문서를 만들면 이 §0의 "지금 최신"을 함께 고친다.
 4. 서브에이전트는 사용자가 요청할 때만 쓴다. push는 사용자가 요청할 때만 한다(§9).
@@ -71,7 +71,7 @@ Windows에서 Git Bash를 쓴다. 환경변수는 `VAR=값 명령` 형태.
 
 `src/sim/` — 난이도 측정: `bot.ts`(봇 3종) `report.ts`(집계) `balance.test.ts`(회귀 테스트)
 
-`docs/` — **`handover-2026-10-22-redesign.md` 최신 인수인계**(UI 전체 리디자인: 새 세션 시작 절차·지금 상태·대기 중인 질문·확정 사항·시안 위치), `superpowers/specs/2026-10-22-ui-redesign-design.md` 리디자인 설계 문서, `superpowers/plans/2026-10-22-ui-redesign.md` 구현 계획(작업 24개), `redesign-mockups/` 시안 HTML(07~25)과 `redesign-baseline.md` 현재 화면 기준선, `handover-2026-10-21.md` 오늘 작업·남은 일·주의점 인수인계, `market-career-plan.md` 경력·구단 시장·업적 상점·개최지 기획과 시장조사(2026-10-21), `polish-plan.md` 플레이 감성 마무리 계획과 AI 이미지 도구 요청서, `design.md` 기획서 전문, `ending-images.md` 엔딩·도감 이미지 장면 목록, `feedback.md` 테스트 플레이 피드백·우선순위, `early-career-plan.md`·`career-pacing-plan.md`·`season-calendar-plan.md` 개편안, `money-economy-plan.md` 돈 소비처·수입원(광고·콜라보) 확장 기획 초안(2026-10-20, 결정 대기), `overseas-league-plan.md` 해외 1부 리그·해외 이적 기획(2026-10-20, 구현 현황은 §12), `images/` 게임 루프·로드맵 SVG
+`docs/` — **`handover-2026-10-22-promptpilot.md` 최신 인수인계**(새 세션 시작 절차·할 일·promptpilot 정보·이미지 교체 방법), `handover-2026-10-22-redesign.md` UI 리디자인 인수인계(UI 전체 리디자인: 새 세션 시작 절차·지금 상태·대기 중인 질문·확정 사항·시안 위치), `superpowers/specs/2026-10-22-ui-redesign-design.md` 리디자인 설계 문서, `superpowers/plans/2026-10-22-ui-redesign.md` 구현 계획(작업 24개), `redesign-mockups/` 시안 HTML(07~25)과 `redesign-baseline.md` 현재 화면 기준선, `handover-2026-10-21.md` 오늘 작업·남은 일·주의점 인수인계, `market-career-plan.md` 경력·구단 시장·업적 상점·개최지 기획과 시장조사(2026-10-21), `polish-plan.md` 플레이 감성 마무리 계획과 AI 이미지 도구 요청서, `design.md` 기획서 전문, `ending-images.md` 엔딩·도감 이미지 장면 목록, `feedback.md` 테스트 플레이 피드백·우선순위, `early-career-plan.md`·`career-pacing-plan.md`·`season-calendar-plan.md` 개편안, `money-economy-plan.md` 돈 소비처·수입원(광고·콜라보) 확장 기획 초안(2026-10-20, 결정 대기), `overseas-league-plan.md` 해외 1부 리그·해외 이적 기획(2026-10-20, 구현 현황은 §12), `images/` 게임 루프·로드맵 SVG
 
 ## 5. 게임 진행 API (2단계 UI가 부를 순서)
 
