@@ -11,6 +11,10 @@ body {
 }
 
 #app { max-width: 480px; margin: 0 auto; }
+@media (min-width: 900px) {
+  body { background: var(--page-bg); background-image: none; }
+  #app { max-width: 800px; min-height: 100dvh; background: var(--bg); background-image: var(--bg-image, none); box-shadow: 0 0 40px #0004; }
+}
 
 .screen { padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px; min-height: 100dvh; }
 .title { justify-content: center; text-align: center; }
@@ -499,3 +503,14 @@ input[type='text'] {
 .item-art.room .item-svg { width: 64px; }
 .item-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .item-text .chip { margin-left: 6px; }
+
+.segmented { display: flex; gap: 4px; padding: 4px; background: var(--panel-2); border-radius: var(--radius); }
+.segmented-btn { flex: 1; position: relative; min-height: 40px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); font: inherit; font-weight: 600; cursor: pointer; }
+.segmented-btn[aria-selected='true'] { background: var(--panel); color: var(--text); box-shadow: var(--shadow); }
+.segmented-btn .dot, .tabbar .dot { position: absolute; top: 6px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
+.step-dots { display: flex; gap: 6px; justify-content: center; }
+.step-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--track); }
+.step-dots i.on { background: var(--accent); }
+.chip.alert { background: var(--warn-bg); color: var(--warn-text); }
+.section-header { display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px; }
+.section-header h3 { margin: 0; }
