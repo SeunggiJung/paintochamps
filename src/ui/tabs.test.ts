@@ -11,6 +11,7 @@ import { playerTab } from './tabs/playerTab.ts'
 import { seasonTab } from './tabs/seasonTab.ts'
 import { codexScreen } from './codex.ts'
 import { planFlow } from './planFlow.ts'
+import { seasonEnd } from './seasonEnd.ts'
 import { ACTIONS } from '../engine/turn.ts'
 import { endingDef } from '../engine/endings.ts'
 import { emptyMeta } from '../save/storage.ts'
@@ -192,5 +193,42 @@ describe('시즌 계획 흐름', () => {
     find(root, '지출 계획')!.click()
     expect(find(root, '광고')).toBeUndefined()
     expect(find(root, '장비')).toBeTruthy()
+  })
+})
+
+describe('시즌 종료 단계', () => {
+  const ended = (patch: Partial<GameState> = {}) => baseState({ turnInSeason: 4, ...patch })
+  const endCtx = () => {
+    const toSeason = vi.fn()
+    const ctx = { storage: memory(), meta: emptyMeta(), toSeason, toTitle: vi.fn() } as unknown as Ctx
+    return { ctx, toSeason }
+  }
+
+  it('시험이 없으면 시험 카드 없이 결산 버튼만 있다', () => {
+    const { ctx } = endCtx()
+    const root = seasonEnd(ctx, ended())
+    expect(root.textContent).toContain('시즌 종료')
+    expect(root.querySelector('.prep-card')).toBeNull()
+    expect(find(root, '시즌 결산 보기')).toBeTruthy()
+  })
+
+  it('시험이 있고 준비를 안 골랐으면 확인 시트가 뜨고 결산으로 안 간다', async () => {
+    const { ctx, toSeason } = endCtx()
+    const root = seasonEnd(ctx, ended({ stage: 'amateur_team' }))
+    document.body.append(root)
+    expect(root.querySelector('.prep-card')).not.toBeNull()
+    find(root, '시즌 결산 보기')!.click()
+    await Promise.resolve()
+    expect(document.querySelector('.overlay')).not.toBeNull()
+    expect(toSeason).not.toHaveBeenCalled()
+  })
+
+  it('준비를 골랐으면 바로 결산으로 간다', async () => {
+    const { ctx, toSeason } = endCtx()
+    const root = seasonEnd(ctx, ended({ stage: 'amateur_team', testPrep: 'focus' }))
+    document.body.append(root)
+    find(root, '시즌 결산 보기')!.click()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(toSeason).toHaveBeenCalledTimes(1)
   })
 })

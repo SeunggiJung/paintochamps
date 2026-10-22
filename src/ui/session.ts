@@ -7,7 +7,7 @@ import { rollMiniGame } from '../engine/minigame.ts'
 import { canNegotiate } from '../engine/negotiation.ts'
 import { autoTurn } from '../engine/plan.ts'
 import { genrePower } from '../engine/power.ts'
-import { acceptOffer, eventsFor, requestTransfer, rollMidSeasonOffer, rollMidSeasonPromotion, stageName, transferBlocker } from '../engine/season.ts'
+import { acceptOffer, requestTransfer, rollMidSeasonOffer, rollMidSeasonPromotion, stageName, transferBlocker } from '../engine/season.ts'
 import type { ActionId, GameState } from '../engine/state.ts'
 import { applyCoachSwap, coachSwapOffer, trainingValue, type CoachOffer } from '../engine/training.ts'
 import { ACTIONS, ageShiftPerTurn, turnsPerSeason } from '../engine/turn.ts'
@@ -22,7 +22,6 @@ import { showContract } from './contractScene.ts'
 import { h } from './dom.ts'
 import { runEvent } from './eventFlow.ts'
 import { offerMiniGame } from './miniGame.ts'
-import { cleanTeamName, TEAM_NAME_MAX } from './newGame.ts'
 import { openNegotiation } from './negotiationView.ts'
 import { offerButton } from './offerView.ts'
 import { actionTags } from './preview.ts'
@@ -30,6 +29,7 @@ import { outfitLook } from './roomScene.ts'
 import { openSheet } from './sheet.ts'
 import { openShop as openShopSheet } from './shopSheet.ts'
 import { playSfx, vibrate } from './sound.ts'
+import { askCafeTeamName } from './teamNameSheet.ts'
 import { turnChangeGraph } from './turnResult.ts'
 
 /** 계약 유형별 촬영 횟수 */
@@ -186,27 +186,7 @@ export class GameSession {
 
   /** PC방 대회에 처음 나가기 전에 팀 이름을 직접 짓게 한다. */
   async askTeamName(): Promise<void> {
-    const s = this.state
-    if (s.cafeTeamName || s.academyInvite || !eventsFor(s).some((e) => e.field?.names === 'cafe')) return
-    const input = h('input', { type: 'text', maxLength: TEAM_NAME_MAX, value: `${s.name}팀`, autocomplete: 'off', 'aria-label': '팀 이름' })
-    const name = await openSheet<string>((close) =>
-      h(
-        'form',
-        {
-          class: 'stack-tight',
-          onsubmit: (e: Event) => {
-            e.preventDefault()
-            close(cleanTeamName(input.value) ?? `${s.name}팀`)
-          },
-        },
-        h('p', { class: 'eyebrow' }, 'PC방 대회 출전'),
-        h('p', { class: 'event-text' }, '친구들과 PC방 대회에 나가기로 했다. 팀 이름은 뭐로 할까?'),
-        input,
-        h('button', { class: 'btn primary', type: 'submit' }, '이 이름으로 출전'),
-      ),
-    )
-    this.state = { ...this.state, cafeTeamName: name }
-    saveGame(this.ctx.storage, this.state)
+    this.state = await askCafeTeamName(this.ctx.storage, this.state)
   }
 
   /** 코치의 훈련 교체 제안: 부족한 능력치를 채워 주는 후보 중 하나로 바꾸거나 지금 훈련을 유지한다. 어느 쪽이든 이번 시즌 제안은 끝난다. */

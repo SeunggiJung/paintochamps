@@ -5,10 +5,10 @@ import { loadGame, loadMeta, markGuideDone, type KeyValueStorage } from '../save
 import { codexScreen } from './codex.ts'
 import { endingScreen } from './ending.ts'
 import { createScreen, type NewGameDraft } from './create.ts'
+import { seasonEnd } from './seasonEnd.ts'
 import { planFlow } from './planFlow.ts'
 import { runGuide } from './guide.ts'
 import { gachaScreen } from './gachaScreen.ts'
-import { homeScreen } from './home.ts'
 import { GameSession } from './session.ts'
 import { homeTab } from './tabs/homeTab.ts'
 import { playerTab } from './tabs/playerTab.ts'
@@ -51,6 +51,8 @@ export interface Ctx {
   /** 하단 탭 화면으로 이동 (탭 뷰는 이후 작업에서 연결) */
   showTab(tab: TabId): void
   /** 엔딩·업적 도감 (back이 없으면 타이틀로 돌아간다) */
+  /** 시즌 마지막 턴 뒤의 '시즌 종료' 화면 (시험 준비 + 결산 보기) */
+  toSeasonEnd(state: GameState): void
   /** 시즌 계획 전체 화면 (① 계획 → ② 지출 계획) */
   toPlan(state: GameState): void
   toCodex(back?: () => void): void
@@ -124,8 +126,12 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
         ctx.toPlan(state)
         return
       }
-      if (state.finished || state.turnInSeason >= turnsPerSeason(state.mode)) {
-        show(homeScreen(ctx, state), true)
+      if (!state.finished && state.turnInSeason >= turnsPerSeason(state.mode)) {
+        ctx.toSeasonEnd(state)
+        return
+      }
+      if (state.finished) {
+        ctx.toTitle()
         return
       }
       session = new GameSession(ctx, state)
@@ -141,6 +147,7 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     },
     toSeason: (state) => show(seasonScreen(ctx, state), true),
     toEnding: (state, info) => show(endingScreen(ctx, state, info), true),
+    toSeasonEnd: (state) => show(seasonEnd(ctx, state), true),
     toPlan: (state) => show(planFlow(ctx, state), true),
     showTab: (tab) => paintTab(tab),
     toCodex: (back) => show(codexScreen(ctx, back ?? (() => ctx.toTitle()))),
