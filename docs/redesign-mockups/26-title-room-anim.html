@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>타이틀 1장면 도트 애니메이션 시안</title>
+<style>
+  body { margin: 0; background: #1b1b2a; color: #eee; font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; }
+  main { width: min(900px, 94vw); }
+  h1 { font-size: 15px; font-weight: 600; margin: 16px 0 8px; }
+  p { font-size: 13px; color: #aab; margin: 8px 0 0; line-height: 1.6; }
+  .frame { position: relative; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 12px; }
+  .frame img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+  /* 좌표는 이미지 기준 퍼센트 */
+  #screen { position: absolute; left: 33.8%; top: 37.5%; width: 30.2%; height: 24.5%; image-rendering: pixelated; mix-blend-mode: multiply; }
+  .glow { position: absolute; left: 22%; top: 24%; width: 54%; height: 52%; background: radial-gradient(closest-side, rgba(255,230,140,.16), transparent); mix-blend-mode: soft-light; animation: pulse 2.4s steps(6) infinite; pointer-events: none; }
+  @keyframes pulse { 50% { opacity: .45; } }
+  .sp { position: absolute; width: 1.1%; aspect-ratio: 1; background: #fff6b0; animation: tw 1.6s steps(2) infinite; }
+  .sp::before, .sp::after { content: ""; position: absolute; background: inherit; }
+  .sp::before { left: -100%; right: -100%; top: 33%; bottom: 33%; }
+  .sp::after { top: -100%; bottom: -100%; left: 33%; right: 33%; }
+  @keyframes tw { 0%,100% { opacity: 0; transform: scale(.6); } 50% { opacity: 1; transform: scale(1); } }
+  .z { position: absolute; font: 700 clamp(10px, 2.4vw, 20px)/1 monospace; color: #fff; text-shadow: 1px 1px 0 #4a2c1a, -1px -1px 0 #4a2c1a, 1px -1px 0 #4a2c1a, -1px 1px 0 #4a2c1a; opacity: 0; animation: zz 3.6s steps(9) infinite; }
+  @keyframes zz { 0% { opacity: 0; transform: translate(0,0); } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(14px,-34px); } }
+  /* 머리만 잘라 낸 복제본을 한 칸씩 까딱 */
+  .head { position: absolute; left: 41%; top: 30%; width: 16.3%; height: 25%; background: url(title-pp-1-room.jpg) 49% 40% / 613% 400% no-repeat; image-rendering: pixelated; animation: nod 1.2s steps(1) infinite; }
+  @keyframes nod { 0% { transform: translateY(0); } 25% { transform: translateY(.5%); } 50% { transform: translate(-.25%,.3%); } 75% { transform: translate(.25%,.5%); } }
+  /* 키보드·마우스 불빛이 번쩍 */
+  .key { position: absolute; width: 1.6%; height: 1%; background: #9fe8ff; mix-blend-mode: screen; animation: kb .45s steps(1) infinite; }
+  @keyframes kb { 0% { opacity: .9; } 50% { opacity: .1; } }
+  /* 컵라면 김 */
+  .steam { position: absolute; width: .9%; aspect-ratio: 1; background: rgba(255,255,255,.8); animation: st 2s steps(8) infinite; opacity: 0; }
+  @keyframes st { 0% { opacity: 0; transform: translate(0,0); } 20% { opacity: .9; } 100% { opacity: 0; transform: translate(6px,-34px); } }
+  /* 머리 위 이모티콘 */
+  .emo { position: absolute; left: 50%; top: 19%; font: 800 clamp(14px, 3.4vw, 30px)/1 monospace; color: #fff; text-shadow: 2px 2px 0 #c2410c, -2px -2px 0 #c2410c, 2px -2px 0 #c2410c, -2px 2px 0 #c2410c; opacity: 0; animation: emo 6s steps(1) infinite; }
+  @keyframes emo { 0%,3% { opacity: 0; } 4%,12% { opacity: 1; transform: translateY(-4px); } 13%,100% { opacity: 0; } }
+  .cloud { position: absolute; left: 4%; top: 6%; width: 17%; height: 28%; overflow: hidden; }
+  .cloud i { position: absolute; top: 20%; width: 26%; height: 9%; background: rgba(255,255,255,.75); box-shadow: 6px -6px 0 rgba(255,255,255,.75), 12px 0 0 rgba(255,255,255,.75); animation: drift 9s linear infinite; }
+  @keyframes drift { from { left: -30%; } to { left: 110%; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>타이틀 1장면 — 방구석에서 열심히 게임하는 겜돌이 (시안, 4초 장면)</h1>
+  <div class="frame">
+    <img src="title-pp-1-room.jpg" alt="">
+    <div class="head"></div>
+    <canvas id="screen" width="94" height="52"></canvas>
+    <div class="glow"></div>
+    <div class="key" style="left:33.4%;top:73.2%"></div>
+    <div class="key" style="left:35.2%;top:73.9%;animation-delay:.15s"></div>
+    <div class="key" style="left:67.2%;top:73.2%;animation-delay:.3s"></div>
+    <div class="steam" style="left:25.6%;top:63%"></div>
+    <div class="steam" style="left:26.8%;top:63%;animation-delay:.7s"></div>
+    <div class="steam" style="left:24.6%;top:63%;animation-delay:1.3s"></div>
+    <div class="emo" id="emo">!</div>
+    <div class="cloud"><i></i></div>
+    <div id="fx"></div>
+  </div>
+  <p>모니터 화면의 도트 게임, 모니터 빛 깜빡임, 창밖 구름, 반짝이 입자, 고양이 zzz를 얹은 시안이에요. 사진은 그대로고 효과만 코드로 겹쳤어요.</p>
+</main>
+<script>
+// 효과 배치: 반짝이·zzz
+const fx = document.getElementById('fx');
+[[40,18,0],[58,14,.5],[48,26,1.1],[70,40,.3],[30,52,.8],[62,56,1.3],[80,22,.6],[24,30,1.4]].forEach(([x,y,d]) => {
+  const s = document.createElement('div'); s.className = 'sp';
+  s.style.cssText = `left:${x}%;top:${y}%;animation-delay:${d}s`; fx.appendChild(s);
+});
+[[88,64,0],[91,58,1.2],[94,52,2.4]].forEach(([x,y,d]) => {
+  const z = document.createElement('div'); z.className = 'z'; z.textContent = 'z';
+  z.style.cssText = `left:${x}%;top:${y}%;animation-delay:${d}s`; fx.appendChild(z);
+});
+
+// 이모티콘은 돌아가며 바뀐다
+const emos = ['!', '♥', '★', 'GG'];
+let ei = 0; setInterval(() => { document.getElementById('emo').textContent = emos[ei++ % emos.length]; }, 6000);
+
+// 모니터 속 도트 러너 게임 (multiply로 합성: 어두운 머리 부분은 그대로 가려진다)
+const c = document.getElementById('screen'), g = c.getContext('2d');
+const W = c.width, H = c.height;
+let t = 0;
+const rect = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), w, h); };
+function frame() {
+  t++;
+  rect(0, 0, W, H, '#8fd3ff');
+  rect(0, 0, W, 14, '#6cc0ff');
+  // 구름
+  for (let i = 0; i < 3; i++) { const x = ((i * 40 - t * .4) % (W + 20) + W + 20) % (W + 20) - 10; rect(x, 8 + i * 6, 12, 3, '#ffffff'); rect(x + 3, 6 + i * 6, 6, 2, '#ffffff'); }
+  // 먼 언덕
+  for (let x = 0; x < W; x += 2) { const h = 8 + Math.sin((x + t * .8) / 9) * 3; rect(x, H - 16 - h, 2, h + 1, '#6fcf7a'); }
+  // 땅
+  rect(0, H - 14, W, 14, '#c98a4a'); rect(0, H - 14, W, 3, '#4cbf5a');
+  for (let x = 0; x < W; x += 6) rect(((x - t * 2) % W + W) % W, H - 7, 3, 1, '#a8693a');
+  // 코인
+  for (let i = 0; i < 4; i++) { const x = ((i * 26 - t * 2) % (W + 10) + W + 10) % (W + 10) - 5; const y = H - 28 - (i % 2) * 8; rect(x, y, 4, 4, '#ffd23a'); rect(x + 1, y + 1, 2, 2, '#fff2a8'); }
+  // 장애물
+  const ox = ((70 - t * 2) % (W + 20) + W + 20) % (W + 20) - 10;
+  rect(ox, H - 22, 7, 8, '#e0455a'); rect(ox + 1, H - 24, 5, 2, '#e0455a'); rect(ox + 2, H - 20, 1, 1, '#fff'); rect(ox + 4, H - 20, 1, 1, '#fff');
+  // 주인공: 달리고 가끔 점프
+  const phase = t % 60, jump = phase > 40 ? Math.sin((phase - 40) / 20 * Math.PI) * 14 : 0;
+  const hx = 18, hy = H - 24 - jump;
+  rect(hx, hy, 7, 6, '#3b7bff'); rect(hx + 1, hy - 3, 5, 3, '#ffd9b0'); rect(hx + 1, hy - 4, 5, 1, '#5a3418');
+  const leg = Math.floor(t / 3) % 2; rect(hx + (leg ? 0 : 3), hy + 6, 2, 3, '#26418f'); rect(hx + (leg ? 4 : 1), hy + 6, 2, 3, '#26418f');
+  // HUD
+  rect(2, 2, 22, 4, '#ffffff'); rect(3, 3, 14 + Math.floor(Math.sin(t / 30) * 3), 2, '#3ec65a');
+  rect(W - 20, 2, 18, 5, '#ffffff'); rect(W - 18, 3, 3, 3, '#ffd23a'); rect(W - 12, 4, 8, 1, '#7a7a7a');
+}
+setInterval(frame, 90); frame();
+</script>
+</body>
+</html>
