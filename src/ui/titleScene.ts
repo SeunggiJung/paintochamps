@@ -253,6 +253,18 @@ const HERO_CSS = `
 @keyframes hiConf { from { transform: translateY(0) rotate(0); } to { transform: translateY(560%) rotate(540deg); } }
 .hi-fw { border-radius: 50%; mix-blend-mode: screen; filter: blur(8px); animation: hiFw 2.4s ease-out infinite; }
 @keyframes hiFw { 0% { opacity: 0; transform: scale(.4); } 20% { opacity: .9; } 100% { opacity: 0; transform: scale(1.5); } }
+.hi-head { background-size: 512.8% 377.4%; background-position: 32.3% 44.9%; background-repeat: no-repeat; image-rendering: pixelated; animation: hiNod 1.2s steps(1) infinite; }
+@keyframes hiNod { 0% { transform: translateY(0); } 25% { transform: translateY(.5%); } 50% { transform: translate(-.25%, .3%); } 75% { transform: translate(.25%, .5%); } }
+.hi-z { font: 700 clamp(9px, 2.4vw, 16px)/1 monospace; color: #fff; text-shadow: 1px 1px 0 #7a3a10, -1px -1px 0 #7a3a10, 1px -1px 0 #7a3a10, -1px 1px 0 #7a3a10; opacity: 0; animation: hiZ 3.6s steps(9) infinite; }
+.hi-z::before { content: 'z'; }
+@keyframes hiZ { 0% { opacity: 0; transform: translate(0, 0); } 15%, 80% { opacity: 1; } 100% { opacity: 0; transform: translate(12px, -30px); } }
+.hi-strip { background: linear-gradient(#fff0aa00, #fff0aa48, #fff0aa00); mix-blend-mode: screen; animation: hiFlick 1.4s steps(1) infinite; }
+@keyframes hiFlick { 0% { opacity: 1; } 30% { opacity: .45; } 55% { opacity: .9; } 80% { opacity: .5; } }
+.hi-sweep { overflow: hidden; mix-blend-mode: screen; }
+.hi-sweep::after { content: ''; position: absolute; top: 0; bottom: 0; width: 30%; left: -40%; background: linear-gradient(100deg, transparent, #ffffff70, transparent); animation: hiSweep 3s linear infinite; }
+@keyframes hiSweep { to { left: 130%; } }
+.hi-key { width: 1.4%; height: .9%; background: #aaeeff; mix-blend-mode: screen; animation: hiKey .35s steps(1) infinite; }
+@keyframes hiKey { 50% { opacity: .1; } }
 .hi-captions { position: relative; min-height: 1.6em; text-align: center; font-weight: 800; margin-top: 8px; }
 .hi-captions span { position: absolute; left: 0; right: 0; opacity: 0; }
 .hi-captions .c1 { animation: hiS1 16s infinite; } .hi-captions .c2 { animation: hiS2 16s infinite; } .hi-captions .c3 { animation: hiS3 16s infinite; } .hi-captions .c4 { animation: hiS4 16s infinite; color: var(--grade-UR); }
@@ -271,21 +283,23 @@ const frac = (i: number, salt: number) => {
 
 const fx = (cls: string, x: number, y: number, w = 0, hgt = 0, extra = '') => `<div class="hi-fx ${cls}" style="left:${x}%;top:${y}%;${w ? `width:${w}%;` : ''}${hgt ? `height:${hgt}%;` : ''}${extra}"></div>`
 
-function effects(calm: boolean): string[] {
+function effects(calm: boolean, urls: string[]): string[] {
   if (calm) return ['', '', '', '']
-  const mons: [number, number, number, number][] = [[17, 39, 14, 15], [32, 39, 22, 16], [58, 39, 20, 16], [80, 39, 18, 16]]
-  const stickColors = ['#ff5a8a', '#5ad0ff', '#ffd34d', '#b980ff', '#4cf0c8']
-  const sticks = Array.from({ length: 26 }, (_, i) => {
-    const col = stickColors[i % 5]
-    return fx('hi-stick', 2 + frac(i, 1) * 96, 76 + frac(i, 2) * 20, 0, 0, `background:${col};box-shadow:0 0 8px ${col};animation-delay:${(i * 0.13).toFixed(2)}s`)
-  }).join('')
+  // 응원봉: 대회 장면 아래쪽 관중석(좌표는 장면 3 이미지 기준)
+  const stickSpots: [number, number, string][] = [[3.9, 82, '#ffb347'], [18.9, 82, '#8fd0ff'], [37.1, 83, '#ffb347'], [59.9, 82, '#8fd0ff'], [74.9, 84, '#ffb347'], [83.3, 82, '#8fd0ff']]
+  const sticks = stickSpots.map(([x, y, col], i) => fx('hi-stick', x, y, 0, 0, `background:${col};box-shadow:0 0 8px ${col};animation-delay:${(i * 0.15).toFixed(2)}s`)).join('')
+  const keys = [9, 14, 19, 24, 60, 66, 72, 78, 84].map((x, i) => fx('hi-key', x, 77 + (i % 2) * 0.5, 0, 0, `animation-delay:${((i % 4) * 0.09).toFixed(2)}s`)).join('')
   const confColors = ['#ffd34d', '#ff6b7a', '#4fa3ff', '#ffffff', '#b980ff', '#ffb740']
   const conf = Array.from({ length: 34 }, (_, i) => fx('hi-conf', 1 + frac(i, 3) * 97, 0, 0, 0, `background:${confColors[i % 6]};animation-duration:${(3 + frac(i, 4) * 2.5).toFixed(2)}s;animation-delay:-${(frac(i, 5) * 5).toFixed(2)}s`)).join('')
+  const bulbs = [[3.3, 15.6], [8.5, 19.5], [24.7, 23.4], [32.5, 22.5], [39.7, 18], [45.2, 12.7]].map(([x, y], i) => fx('hi-star', x, y, 0, 0, `animation-delay:${(i * 0.4).toFixed(1)}s`)).join('')
+  const sparkles = (spots: number[][]) => spots.map(([x, y, d]) => fx('hi-star', x, y, 0, 0, `animation-delay:${d}s`)).join('')
+  // 방구석: 머리를 한 칸씩 까딱(같은 그림의 머리 부분을 잘라 낸 복제본)
+  const head = `<div class="hi-fx hi-head" style="left:26%;top:33%;width:19.5%;height:26.5%;background-image:url(${urls[0]})"></div>`
   return [
-    fx('hi-led', 0, 0) + fx('hi-glow', 14, 27, 36, 36) + fx('hi-steam', 11.4, 42) + fx('hi-steam', 12.8, 43, 0, 0, 'animation-delay:1s') + fx('hi-steam', 10.4, 44, 0, 0, 'animation-delay:2s') + fx('hi-star', 88, 14) + fx('hi-star', 81.5, 16.2, 0, 0, 'animation-delay:.6s') + fx('hi-star', 84.5, 18, 0, 0, 'animation-delay:1.2s') + fx('hi-star', 91, 13.6, 0, 0, 'animation-delay:.3s') + fx('hi-sun', 76, 28, 14, 16),
-    mons.map((m, i) => fx('hi-glow', m[0], m[1], m[2], m[3], `animation-delay:${i * 0.5}s`)).join('') + fx('hi-sun', 4, 20, 16, 18),
-    fx('hi-beam', 3, 0, 18, 45, 'background:linear-gradient(100deg,#ffd34d99,transparent 70%)') + fx('hi-beam', 60, 0, 22, 50, 'background:linear-gradient(80deg,#ff5ac899,transparent 70%);animation-delay:.8s') + fx('hi-beam', 78, 0, 20, 45, 'background:linear-gradient(80deg,#b980ff99,transparent 70%);animation-delay:1.6s') + sticks,
-    fx('hi-fw', 6, 6, 20, 26, 'background:radial-gradient(circle,#ffe27acc,transparent 70%)') + fx('hi-fw', 74, 6, 20, 26, 'background:radial-gradient(circle,#ff8ad8cc,transparent 70%);animation-delay:1.2s') + conf,
+    head + fx('hi-glow', 8, 38, 28, 36) + bulbs + fx('hi-sun', 55, 8, 42, 46) + fx('hi-steam', 92, 68) + fx('hi-steam', 93.4, 68, 0, 0, 'animation-delay:.7s') + fx('hi-steam', 94.8, 68, 0, 0, 'animation-delay:1.3s') + fx('hi-z', 66, 68, 0, 0, 'animation-delay:0s') + fx('hi-z', 69, 63, 0, 0, 'animation-delay:1.2s') + fx('hi-z', 72, 58, 0, 0, 'animation-delay:2.4s') + sparkles([[10, 22, 0], [30, 12, 0.5], [52, 52, 0.3], [60, 18, 0.8], [84, 60, 0.6], [20, 52, 1.4]]),
+    fx('hi-sun', 58, 0, 42, 62) + fx('hi-strip', 0, 66, 100, 22) + fx('hi-sweep', 21.8, 16, 25, 40.5) + sparkles([[8, 12, 0], [16, 38, 0.7], [48, 8, 1.2], [56, 52, 0.4], [66, 12, 0.9], [78, 32, 1.5], [90, 50, 0.2]]),
+    fx('hi-beam', 6, -6, 22, 70, 'background:linear-gradient(100deg,#ffc85aaa,transparent 75%)') + fx('hi-beam', 72, -6, 22, 70, 'background:linear-gradient(80deg,#78c8ffaa,transparent 75%);animation-delay:1.6s') + fx('hi-glow', 28, 10, 35, 30, 'animation-duration:1.8s') + keys + sticks + sparkles([[6, 10, 0], [22, 14, 0.6], [48, 8, 1.1], [72, 12, 0.3], [90, 16, 0.9]]),
+    fx('hi-fw', 6, 7, 18, 26, 'background:radial-gradient(circle,#ffe27acc,transparent 70%)') + fx('hi-fw', 70, 10, 18, 26, 'background:radial-gradient(circle,#ffc060cc,transparent 70%);animation-delay:1.2s') + fx('hi-sun', 36, 6, 28, 36) + conf,
   ]
 }
 
@@ -298,7 +312,7 @@ export function buildHero(urls: string[] | null): HTMLElement {
     style.textContent = HERO_CSS
     document.head.append(style)
   }
-  const fxs = effects(document.documentElement.dataset.motion === 'calm')
+  const fxs = effects(document.documentElement.dataset.motion === 'calm', urls)
   const frame = h('div', { class: 'hi-frame', role: 'img', 'aria-label': '방구석에서 게임하던 겜돌이가 훈련하고 대회에 나가 우승하는 모습' })
   frame.innerHTML = urls.map((u, i) => `<div class="hi-scene hi-s${i + 1}"><div class="hi-zoom"><div class="hi-art" style="background-image:url(${u})"></div>${fxs[i]}</div></div>`).join('')
   return h('div', { class: 'hero' }, frame, h('div', { class: 'hi-captions', 'aria-hidden': 'true' }, ...CAPTIONS.map((t, i) => h('span', { class: `c${i + 1}` }, t))))
