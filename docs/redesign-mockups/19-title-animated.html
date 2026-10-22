@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>타이틀 이미지 애니메이션 시안</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#c9ced9; font-family:Pretendard,'Noto Sans KR','Malgun Gothic',system-ui,sans-serif; padding:24px 16px 60px; color:#1b2230; }
+  h1 { font-size:22px; margin:0 0 4px; } .lead { color:#3d4559; font-size:13.5px; margin:0 0 12px; max-width:820px; line-height:1.55; }
+  .ctl { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 14px; } .ctl button { font:inherit; font-weight:700; padding:8px 14px; border-radius:10px; border:2px solid #1b2230; background:#fff; cursor:pointer; } .ctl button.on { background:#1b2230; color:#fff; }
+  .wrap { display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start; }
+  .frame { position:relative; width:760px; max-width:100%; aspect-ratio:3/2; border-radius:16px; overflow:hidden; box-shadow:0 8px 28px #0005; background:#000; }
+  .frame .zoom { position:absolute; inset:0; transform-origin:62% 55%; }
+  .frame .art { position:absolute; inset:0; background:url(title-cellcog-1.png) center/100% 100% no-repeat; }
+  .anim .zoom { animation:kb 16s ease-in-out infinite alternate; }
+  @keyframes kb { from { transform:scale(1); } to { transform:scale(1.07); } }
+  /* 좌표는 이미지 가로세로의 % */
+  .fx { position:absolute; pointer-events:none; opacity:0; } .anim .fx { opacity:1; }
+  /* 천장 LED: 색이 바뀌는 빛 */
+  .led { left:42%; width:38%; top:-1%; height:9%; background:radial-gradient(ellipse at 50% 0%, #ff9f43cc, transparent 70%); mix-blend-mode:screen; filter:blur(6px); }
+  .anim .led { animation:led 7s linear infinite; }
+  @keyframes led { 0% { background:radial-gradient(ellipse at 50% 0%, #ff5ac8cc, transparent 70%); } 20% { background:radial-gradient(ellipse at 50% 0%, #ff9f43cc, transparent 70%); } 40% { background:radial-gradient(ellipse at 50% 0%, #ffe27acc, transparent 70%); } 60% { background:radial-gradient(ellipse at 50% 0%, #4cf0c8cc, transparent 70%); } 80% { background:radial-gradient(ellipse at 50% 0%, #4fa3ffcc, transparent 70%); } 100% { background:radial-gradient(ellipse at 50% 0%, #ff5ac8cc, transparent 70%); } }
+  /* 모니터 불빛 번짐 */
+  .glow { left:14%; top:27%; width:36%; height:36%; background:radial-gradient(ellipse, #5fd1ff66, transparent 70%); mix-blend-mode:screen; }
+  .anim .glow { animation:glow 2.6s ease-in-out infinite alternate; }
+  @keyframes glow { from { opacity:.25; } to { opacity:.9; } }
+  .scan { left:17.8%; top:30.5%; width:20.5%; height:23.5%; overflow:hidden; mix-blend-mode:screen; }
+  .scan i { position:absolute; left:0; right:0; height:14%; background:linear-gradient(transparent,#bff4ffaa,transparent); animation:scan 3.2s linear infinite; }
+  @keyframes scan { from { top:-20%; } to { top:110%; } }
+  /* 컵라면 김 */
+  .steam { width:2.6%; height:9%; bottom:auto; background:radial-gradient(ellipse, #ffffffaa, transparent 70%); filter:blur(3px); opacity:0; }
+  .anim .steam { animation:steam 3s ease-out infinite; }
+  .s1 { left:11.4%; top:42%; } .s2 { left:12.8%; top:43%; animation-delay:1s !important; } .s3 { left:10.4%; top:44%; animation-delay:2s !important; }
+  @keyframes steam { 0% { opacity:0; transform:translateY(0) scaleX(.8); } 25% { opacity:.8; } 100% { opacity:0; transform:translateY(-70%) scaleX(1.6); } }
+  /* 창밖 별 반짝임 */
+  .star { width:1.1%; aspect-ratio:1; background:#fff8d6; box-shadow:0 0 8px 2px #fff8d6aa; border-radius:1px; }
+  .anim .star { animation:tw 2.2s steps(2) infinite; }
+  .st1 { left:88%; top:14%; } .st2 { left:81.5%; top:16.2%; animation-delay:.6s !important; } .st3 { left:84.5%; top:18%; animation-delay:1.2s !important; } .st4 { left:91%; top:13.6%; animation-delay:.3s !important; }
+  @keyframes tw { 0%,100% { opacity:1; } 50% { opacity:0; } }
+  /* 노을빛이 천천히 흔들림 */
+  .sun { left:76%; top:28%; width:14%; height:16%; background:radial-gradient(ellipse, #ffe27a77, transparent 65%); mix-blend-mode:screen; }
+  .anim .sun { animation:sun 5s ease-in-out infinite alternate; }
+  @keyframes sun { from { opacity:.15; } to { opacity:.8; } }
+  /* 고양이 숨쉬기: 같은 그림의 고양이 부분만 잘라 살짝 부풀림 */
+  .cat { left:84.5%; top:49.5%; width:11.5%; height:11.5%; overflow:hidden; border-radius:40% 40% 30% 30%; transform-origin:50% 100%; background:url(title-cellcog-1.png) no-repeat; background-size:869.6% 869.6%; background-position:95.7% 56.1%; }
+  .anim .cat { animation:breath 3.2s ease-in-out infinite; }
+  @keyframes breath { 0%,100% { transform:scaleY(1); } 50% { transform:scaleY(1.035); } }
+  /* 먼지 입자 */
+  .dust { width:.5%; aspect-ratio:1; background:#ffe9b8; border-radius:50%; box-shadow:0 0 6px #ffe9b8; }
+  .anim .dust { animation:dust 9s linear infinite; }
+  @keyframes dust { 0% { opacity:0; transform:translate(0,0); } 20% { opacity:.8; } 100% { opacity:0; transform:translate(30px,-60px); } }
+  .d1 { left:58%; top:70%; } .d2 { left:68%; top:62%; animation-delay:2s !important; } .d3 { left:45%; top:58%; animation-delay:4s !important; } .d4 { left:75%; top:75%; animation-delay:6s !important; }
+  .notes { background:#fff; border-radius:14px; padding:14px 18px; max-width:760px; font-size:13px; line-height:1.65; margin-top:18px; }
+  .tog { margin-left:4px; }
+</style>
+<body>
+<h1>타이틀 이미지 + 가벼운 애니메이션 (A안)</h1>
+<p class="lead">정지 그림 위에 CSS 효과만 얹었어요. 천장 LED 색 변화 · 모니터 불빛과 스캔 · 컵라면 김 · 창밖 별과 노을빛 · 고양이 숨쉬기 · 먼지 · 천천히 다가가는 줌. 아래 버튼으로 끄고 켜며 비교해 보세요.</p>
+<div class="ctl"><button id="on" class="on">애니메이션 켜기</button><button id="off">끄기 (정지 그림)</button></div>
+<div class="wrap">
+  <div class="frame anim" id="fr">
+    <div class="zoom">
+    <div class="art"></div>
+    <div class="fx led"></div><div class="fx glow"></div><div class="fx scan"><i></i></div>
+    <div class="fx steam s1"></div><div class="fx steam s2"></div><div class="fx steam s3"></div>
+    <div class="fx star st1"></div><div class="fx star st2"></div><div class="fx star st3"></div><div class="fx star st4"></div>
+    <div class="fx sun"></div><div class="fx cat"></div>
+    <div class="fx dust d1"></div><div class="fx dust d2"></div><div class="fx dust d3"></div><div class="fx dust d4"></div>
+    </div>
+  </div>
+</div>
+<div class="notes"><b>한계</b>: 소년이 타자 치는 손동작이나 몸의 움직임은 이 방식으로는 안 돼요(그림이 한 장이라서). 그건 AI 영상 루프(B안)가 필요해요. 이 효과들은 장면이 4개 모두 있어도 장면마다 비슷한 방식으로 얹을 수 있어요(대회=조명 빔·관중 라이트스틱 깜빡임, 우승=금빛 폭죽 내리기).</div>
+<script>
+  const fr = document.getElementById('fr')
+  document.getElementById('on').onclick = () => { fr.classList.add('anim'); on.classList.add('on'); off.classList.remove('on') }
+  document.getElementById('off').onclick = () => { fr.classList.remove('anim'); off.classList.add('on'); on.classList.remove('on') }
+</script>
+</body>
+</html>

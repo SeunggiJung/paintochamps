@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>엔딩 화면 구조 시안</title>
+<style>
+  :root { --bg:#eef1f6; --card:#fff; --text:#1b2230; --sub:#6b7486; --pri:#3b6cff; --line:#e3e7ef; --gold:#f5b700; --goldbg:#fff6d6; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d9dee8; font-family:Pretendard,'Malgun Gothic',system-ui,sans-serif; color:var(--text); padding:24px 16px 60px; }
+  h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:17px; margin:34px 0 4px; } .lead { color:#4a5266; font-size:13.5px; margin:0 0 14px; max-width:780px; line-height:1.55; }
+  .row { display:flex; gap:22px; flex-wrap:wrap; align-items:flex-start; }
+  .col { text-align:center; } .cap { font-weight:700; font-size:13px; margin:8px 0 2px; } .dsc { font-size:12px; color:#4a5266; max-width:300px; margin:0 auto; line-height:1.45; }
+  .phone { width:320px; height:640px; background:var(--bg); border:6px solid #1b2230; border-radius:26px; overflow:hidden; position:relative; display:flex; flex-direction:column; text-align:left; box-shadow:0 8px 24px #0003; }
+  .top { display:flex; align-items:center; justify-content:space-between; padding:10px 14px 4px; font-size:12px; color:var(--sub); }
+  .gear { width:26px; height:26px; border-radius:50%; background:#fff; display:grid; place-items:center; font-size:14px; border:1px solid var(--line); }
+  .dots { display:flex; gap:5px; } .dots i { width:22px; height:4px; border-radius:2px; background:#cbd2e0; } .dots i.on { background:var(--pri); }
+  .body { flex:1; overflow:hidden; padding:6px 14px 0; display:flex; flex-direction:column; gap:10px; }
+  .card { background:var(--card); border-radius:16px; padding:12px 14px; border:1px solid var(--line); }
+  .art { height:140px; border-radius:12px; background:linear-gradient(#6a4fc0,#8a63d8 60%,#3b2f6e); display:grid; place-items:center; font-size:46px; position:relative; }
+  .art small { position:absolute; bottom:6px; left:0; right:0; text-align:center; color:#ffffffcc; font-size:10px; }
+  .chip { display:inline-block; font-size:11px; font-weight:700; padding:3px 8px; border-radius:99px; background:#e8efff; color:var(--pri); } .chip.gold { background:var(--goldbg); color:#a47500; }
+  .title { font-size:20px; font-weight:800; margin:8px 0 4px; } .muted { color:var(--sub); font-size:12.5px; line-height:1.5; } .eyebrow { font-size:11px; color:var(--sub); font-weight:700; letter-spacing:.04em; }
+  .bar { padding:10px 14px 14px; background:linear-gradient(transparent,var(--bg) 30%); display:flex; gap:8px; }
+  .btn { flex:1; border:0; border-radius:14px; padding:13px 8px; font-weight:700; font-size:14px; background:#fff; border:1px solid var(--line); color:var(--text); text-align:center; }
+  .btn.pri { background:var(--pri); color:#fff; border-color:var(--pri); }
+  .badges { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .badge { background:#fff; border:1px solid var(--line); border-radius:12px; padding:9px 10px; font-size:12.5px; font-weight:700; } .badge.new { background:var(--goldbg); border-color:#f0d680; } .badge span { display:block; font-weight:400; color:var(--sub); font-size:11px; margin-top:2px; }
+  .kv { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:13px; } .kv:last-child { border:0; } .kv span { color:var(--sub); } .kv b { font-weight:700; }
+  .seg { display:flex; background:#e1e6f0; border-radius:12px; padding:3px; } .seg div { flex:1; text-align:center; font-size:12.5px; font-weight:700; padding:7px 0; border-radius:10px; color:var(--sub); } .seg div.on { background:#fff; color:var(--text); box-shadow:0 1px 3px #0002; }
+  .tl { display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--line); font-size:12.5px; } .tl:last-child { border:0; } .tl b { min-width:58px; } .tl span { color:var(--sub); }
+  .more { text-align:center; color:var(--pri); font-weight:700; font-size:12.5px; padding:6px 0 2px; }
+  .tabbar { display:flex; border-top:1px solid var(--line); background:#fff; } .tabbar div { flex:1; text-align:center; padding:8px 0 10px; font-size:10.5px; color:var(--sub); } .tabbar div.on { color:var(--pri); font-weight:700; } .tabbar i { display:block; font-style:normal; font-size:16px; }
+  .note { margin-top:26px; background:#fff; border-radius:14px; padding:14px 18px; max-width:780px; font-size:13px; line-height:1.6; }
+  .note b { color:#1b2230; }
+</style>
+<body>
+<h1>엔딩 화면 구조 시안 <span style="font-weight:400;font-size:14px;color:#4a5266">(지금 8,479px → 한 번에 한 덩어리만)</span></h1>
+<p class="lead">지금은 그림·문구 → 업적 카드 여러 장 → 경력 → 요약 → 시즌별 기록이 한 열로 쭉 이어져요. 같은 내용을 두 가지 방식으로 나눠 봤어요. 테마 A(밝은 카드) 기준이고, 도트 그림은 지금 것을 그대로 써요(여기선 자리표시).</p>
+
+<h2>안 1. 단계로 넘기기 — 킥루의 점 단계처럼, 한 장씩 "다음"</h2>
+<p class="lead">엔딩은 이야기의 마무리라서 결말 → 업적 → 기록 순으로 한 장씩 넘겨요. 폭죽은 첫 장에서만 터져요. 단계마다 높이가 화면 한 장 안에 들어와요.</p>
+<div class="row">
+  <div class="col"><div class="phone">
+    <div class="top"><span>커리어 종료</span><div class="dots"><i class="on"></i><i></i><i></i></div><div class="gear">⚙</div></div>
+    <div class="body">
+      <div class="card" style="background:var(--goldbg);border-color:#f0d680"><div class="art">🏆<small>엔딩 일러스트 (원클럽 레전드)</small></div><span class="chip gold" style="margin-top:8px">도감에 새로 기록!</span><div class="title">원클럽 레전드</div><div class="muted">트로피를 들어 올린 그 팀은 처음 입단했던 바로 그 팀이었다. 방구석에서 시작한 소년은 한 팀의 전설이 되었다.</div></div>
+    </div>
+    <div class="bar"><div class="btn pri">다음 · 달성한 업적 (4)</div></div>
+  </div><div class="cap">① 결말</div><div class="dsc">그림·엔딩 이름·문구만. 지금 맨 위 카드 하나.</div></div>
+
+  <div class="col"><div class="phone">
+    <div class="top"><span>달성한 업적</span><div class="dots"><i class="on"></i><i class="on"></i><i></i></div><div class="gear">⚙</div></div>
+    <div class="body">
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div class="eyebrow">업적 토큰</div><div class="title" style="margin:2px 0 0">🪙 +33</div></div><div class="muted" style="max-width:130px;text-align:right">타이틀의 업적 상점에서 쓸 수 있어요</div></div>
+      <div class="badges">
+        <div class="badge new">🏅 골든로드<span>새로 달성</span></div><div class="badge new">🏅 왕조<span>새로 달성</span></div>
+        <div class="badge new">🏅 우승 청부사<span>새로 달성</span></div><div class="badge">🏅 1부 터줏대감<span>재달성</span></div>
+        <div class="badge">🏅 철인<span>재달성</span></div><div class="badge">🏅 원클럽맨<span>재달성</span></div>
+      </div>
+      <div class="muted" style="text-align:center">업적을 누르면 설명이 열려요</div>
+    </div>
+    <div class="bar"><div class="btn">이전</div><div class="btn pri">다음 · 커리어 기록</div></div>
+  </div><div class="cap">② 업적</div><div class="dsc">큰 카드 여러 장 대신 2열 배지. 새로 딴 것만 금색. 누르면 설명.</div></div>
+
+  <div class="col"><div class="phone">
+    <div class="top"><span>커리어 기록</span><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i></div><div class="gear">⚙</div></div>
+    <div class="body">
+      <div class="seg"><div class="on">요약</div><div>수상</div><div>구단</div><div>시즌별</div></div>
+      <div class="card">
+        <div class="kv"><span>선수</span><b>김겜돌 · AOS · 표준</b></div>
+        <div class="kv"><span>마지막 나이</span><b>30세 (15시즌)</b></div>
+        <div class="kv"><span>가장 높이 오른 곳</span><b>프로 1부</b></div>
+        <div class="kv"><span>월드 챔피언십</span><b>우승 3회</b></div>
+        <div class="kv"><span>최종 자산</span><b>S등급 (48억)</b></div>
+        <div class="kv"><span>능력치 뽑기</span><b>한 번에 확정</b></div>
+      </div>
+    </div>
+    <div class="bar"><div class="btn">결과 카드</div><div class="btn">도감</div><div class="btn pri">타이틀로</div></div>
+  </div><div class="cap">③ 기록</div><div class="dsc">요약·수상·구단·시즌별을 위 세그먼트로 전환. 한 번에 하나만 보여요.</div></div>
+</div>
+
+<h2>안 2. 한 화면 + 접이식 — 스크롤은 유지하되 짧게</h2>
+<p class="lead">단계 없이 지금처럼 한 화면이에요. 대신 업적은 배지 한 줄, 기록은 세그먼트 탭으로 묶어서 전체 길이를 화면 2~3장 분량으로 줄여요. 처음부터 끝까지 한눈에 훑고 싶을 때 편해요.</p>
+<div class="row">
+  <div class="col"><div class="phone">
+    <div class="top"><span>커리어 종료</span><div class="gear">⚙</div></div>
+    <div class="body" style="overflow:hidden">
+      <div class="card" style="background:var(--goldbg);border-color:#f0d680"><div class="art" style="height:110px">🏆</div><span class="chip gold" style="margin-top:8px">도감에 새로 기록!</span><div class="title" style="font-size:18px">원클럽 레전드</div><div class="muted">트로피를 들어 올린 그 팀은 처음 입단했던 바로 그 팀이었다…</div></div>
+      <div class="card"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">🏅 업적 4개 · 🪙 +33</b><span class="chip">전체 보기</span></div><div class="muted" style="margin-top:4px">골든로드 · 왕조 · 우승 청부사 외 1</div></div>
+      <div class="seg"><div class="on">요약</div><div>수상</div><div>구단</div><div>시즌별</div></div>
+      <div class="card"><div class="kv"><span>월드 챔피언십</span><b>우승 3회</b></div><div class="kv"><span>최종 자산</span><b>S등급</b></div><div class="more">더 보기</div></div>
+    </div>
+    <div class="bar"><div class="btn">결과 카드</div><div class="btn pri">타이틀로</div></div>
+  </div><div class="cap">한 화면 (맨 위)</div><div class="dsc">그림 → 업적 한 줄 → 기록 탭. 약 1.5~2화면 분량.</div></div>
+
+  <div class="col"><div class="phone">
+    <div class="top"><span>커리어 종료</span><div class="gear">⚙</div></div>
+    <div class="body">
+      <div class="seg"><div>요약</div><div>수상</div><div>구단</div><div class="on">시즌별</div></div>
+      <div class="card">
+        <div class="tl"><b>16세</b><span>PC방 대회 4강</span></div><div class="tl"><b>19세</b><span>프로 2부 우승 · MVP</span></div>
+        <div class="tl"><b>22세</b><span>월드 챔피언십 우승 🏆</span></div><div class="tl"><b>25세</b><span>월드 챔피언십 우승 🏆 · 평점 9.1</span></div>
+        <div class="tl"><b>27세</b><span>월드 4강</span></div><div class="more">20~30세 펼치기</div>
+      </div>
+    </div>
+    <div class="bar"><div class="btn">결과 카드</div><div class="btn pri">타이틀로</div></div>
+  </div><div class="cap">시즌별 탭</div><div class="dsc">지금 카드 15장이 한 줄 타임라인으로. 오래된 시즌은 접어 둬요.</div></div>
+</div>
+
+<div class="note">
+  <b>비교</b><br>
+  <b>안 1(단계)</b>: 엔딩 연출이 가장 살아나고 화면마다 한 가지만 보여서 모바일에 깔끔해요. 대신 "다음"을 세 번 눌러야 하고, 기록만 다시 보고 싶을 때는 단계를 거슬러야 해요.<br>
+  <b>안 2(한 화면)</b>: 구조가 단순하고 스크롤로 훑기 좋지만, 엔딩의 "마무리" 느낌이 약해요.<br>
+  <b>절충 가능</b>: 첫 장(결말)만 단계로 두고, 그 뒤 업적·기록은 안 2처럼 한 화면에 두는 방법도 있어요.
+</div>
+</body>
+</html>

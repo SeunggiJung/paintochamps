@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>연출 화면 틀 시안</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#c9ced9; font-family:Pretendard,'Noto Sans KR','Malgun Gothic',system-ui,sans-serif; padding:24px 16px 60px; color:#1b2230; }
+  h1 { font-size:22px; margin:0 0 4px; } .lead { color:#3d4559; font-size:13.5px; margin:0 0 12px; max-width:860px; line-height:1.55; }
+  .themes { display:flex; gap:8px; margin:6px 0 10px; position:sticky; top:0; padding:8px 0; background:#c9ced9; z-index:5; }
+  .themes button { font:inherit; font-weight:700; padding:8px 14px; border-radius:10px; border:2px solid #1b2230; background:#fff; cursor:pointer; } .themes button.on { background:#1b2230; color:#fff; }
+  .row { display:flex; gap:22px; flex-wrap:wrap; align-items:flex-start; } .col { text-align:center; } .cap { font-weight:700; font-size:13px; margin:8px 0 2px; } .dsc { font-size:12px; color:#3d4559; max-width:320px; margin:0 auto; line-height:1.45; }
+  body.A { --acc:#3182f6; --acc2:#8cc4ff; } body.B { --acc:#ff8a3d; --acc2:#ffd45e; } body.C { --acc:#8f6bff; --acc2:#b9a6ff; }
+  /* 연출 틀은 테마와 상관없이 어두운 시네마 틀. 강조색만 테마를 따른다. */
+  .cin { width:340px; height:690px; border-radius:26px; overflow:hidden; position:relative; background:radial-gradient(120% 70% at 50% 0%,#252a5c 0%,#0d1024 65%); color:#fff; box-shadow:0 8px 28px #0006; display:flex; flex-direction:column; text-align:left; }
+  .ctop { display:flex; justify-content:space-between; align-items:center; padding:14px 14px 6px; z-index:3; } .chip { font-size:11.5px; font-weight:800; padding:5px 11px; border-radius:99px; background:#ffffff1f; backdrop-filter:blur(4px); } .skip { font-size:12px; font-weight:800; padding:6px 13px; border-radius:99px; background:#ffffff26; border:1px solid #ffffff44; }
+  .stage { margin:6px 14px; border-radius:16px; overflow:hidden; border:2px solid #ffffff22; background:linear-gradient(#6a4fc0,#8a63d8 60%,#3b2f6e); display:grid; place-items:center; font-size:12px; color:#ffffffbb; text-align:center; position:relative; }
+  .stage em { font-style:normal; font-size:44px; display:block; margin-bottom:6px; }
+  .stage { flex:none !important; aspect-ratio:8/5; margin-top:auto; } .cbot { padding:10px 16px 18px; z-index:3; margin-bottom:auto; }
+  .stage.tall { flex:1 !important; aspect-ratio:auto; margin-top:6px; } .stage.tall ~ .cbot { margin-bottom:0; }
+  .prog { height:8px; border-radius:99px; background:#ffffff1f; overflow:hidden; margin:8px 0 4px; } .prog i { display:block; height:100%; width:55%; background:linear-gradient(90deg,var(--acc),var(--acc2)); border-radius:99px; }
+  .tl { display:flex; justify-content:space-between; font-size:10.5px; color:#ffffff99; } .tl b { color:#fff; }
+  .big { font-size:20px; font-weight:800; text-align:center; } .sub { text-align:center; font-size:12.5px; color:#c9d0ff; margin-top:4px; }
+  .score { display:flex; align-items:center; justify-content:space-between; margin:4px 14px 0; padding:9px 14px; background:#00000066; border:1px solid #ffffff22; border-radius:14px; } .score .t { font-weight:800; font-size:13px; } .score .t.b { color:#8cc4ff; } .score .t.r { color:#ff8a9a; } .score .n { font-size:24px; font-weight:900; letter-spacing:2px; } .score .set { font-size:10.5px; color:#ffffffaa; text-align:center; }
+  .say { background:#000000aa; border:1px solid #ffffff22; border-radius:14px; padding:11px 13px; font-size:13px; line-height:1.55; } .say b { color:var(--acc2); font-size:11px; display:block; margin-bottom:2px; }
+  .banner { text-align:center; padding:0 14px; } .banner .tag { display:inline-block; font-size:11px; font-weight:800; padding:3px 10px; border-radius:99px; background:var(--acc); color:#fff; margin-bottom:6px; }
+  .hud { display:flex; justify-content:space-between; align-items:center; margin:2px 14px; } .hud .m { background:#ffffff1f; padding:6px 12px; border-radius:11px; font-size:12px; font-weight:800; } .hud .m span { color:#ffffff99; font-weight:600; margin-right:4px; }
+  .tgt { position:absolute; width:34px; height:34px; border-radius:50%; background:radial-gradient(circle,#fff 0 18%,#ff5a6e 19% 45%,#fff 46% 62%,#ff5a6e 63%); border:2px solid #fff3; }
+  .note { font-size:11px; color:#c9d0ff; text-align:center; margin-top:8px; }
+  .spec { background:#fff; border-radius:14px; padding:14px 18px; max-width:880px; font-size:13px; line-height:1.65; margin-top:22px; }
+  .spec table { border-collapse:collapse; width:100%; font-size:12.5px; margin-top:6px; } .spec td, .spec th { border-bottom:1px solid #e3e7ef; padding:6px 8px; text-align:left; vertical-align:top; } .spec th { background:#1b2230; color:#fff; }
+</style>
+<body class="A">
+<h1>연출 화면 틀 — 진행 · 결승 중계 · 계약 · 미니게임</h1>
+<p class="lead">연출 화면은 <b>탭 바 없는 전체 화면</b>이고, 안쪽 도트 그림은 그대로예요. 바깥 틀만 새로 잡았어요: <b>테마와 상관없이 늘 어두운 극장 같은 틀</b>(연출에 집중되게), 강조색(진행 막대·태그)만 테마를 따라가요. 오른쪽 위는 항상 <b>스킵 ⏩</b>. 위 버튼으로 강조색을 바꿔 보세요.</p>
+<div class="themes"><button class="on" data-t="A">A 파랑</button><button data-t="B">B 주황</button><button data-t="C">C 보라</button></div>
+<div class="row">
+
+  <div class="col"><div class="cin">
+    <div class="ctop"><span class="chip">2026시즌 · MSI</span><span class="skip">스킵 ⏩</span></div>
+    <div class="stage" style="flex:1"><div><em>🎮</em>(시간이 흐르는 도트 장면)</div></div>
+    <div class="cbot"><div class="big">MSI 진행 중…</div><div class="sub">로드 투 MSI 3위로 통과했어요</div><div class="prog"><i></i></div><div class="tl"><span>시즌 시작</span><b>3~4월</b><span>월드</span></div></div>
+  </div><div class="cap">① 시간 흐름 진행</div><div class="dsc">대회가 진행되는 동안 시즌 진행 막대와 한 줄 안내. 대회 하나가 끝나면 결과 카드(가운데 카드)가 떠요.</div></div>
+
+  <div class="col"><div class="cin">
+    <div class="ctop"><span class="chip">MSI 결승</span><span class="skip">스킵 ⏩</span></div>
+    <div class="score"><div class="t b">KIWOOM DRX</div><div class="set">3세트<div class="n">1 : 1</div></div><div class="t r">Gen.G</div></div>
+    <div class="stage" style="flex:1"><div><em>⚔️</em>(결승 도트 장면 + 선수들)</div></div>
+    <div class="cbot"><div class="say"><b>중계</b>"마지막 교전에서 판단력 싸움이 갈립니다! 상대 진영이 흔들려요!"</div><div class="note">멘트는 탭하면 다음으로 넘어가요</div></div>
+  </div><div class="cap">② 결승 중계</div><div class="dsc">위에 스코어보드, 가운데 도트 장면, 아래에 해설 멘트. 끝나면 가운데 카드로 우승·준우승 결과.</div></div>
+
+  <div class="col"><div class="cin">
+    <div class="ctop"><span class="chip">계약</span><span class="skip">스킵 ⏩</span></div>
+    <div class="banner" style="margin-top:6px"><span class="tag">입단 확정</span></div>
+    <div class="stage" style="flex:1"><div><em>🤝</em>(서명 → 도장 → 악수 도트 장면)</div></div>
+    <div class="cbot"><div class="big">Gen.G 입단</div><div class="sub">월급 3,200만/턴 · 계약 완료</div></div>
+  </div><div class="cap">③ 계약</div><div class="dsc">입단·이적 확정 때. 서명·도장·악수 연출 위에 팀 이름과 월급을 보여요.</div></div>
+
+  <div class="col"><div class="cin">
+    <div class="ctop"><span class="chip">쉬는 시간 · 사격</span><span class="skip">건너뛰기</span></div>
+    <div class="hud"><div class="m"><span>점수</span>420</div><div class="m"><span>남은 시간</span>0:12</div></div>
+    <div class="stage tall" style="flex:1"><div style="position:absolute;inset:0">
+      <div class="tgt" style="left:50px;top:80px"></div><div class="tgt" style="left:210px;top:150px"></div><div class="tgt" style="left:110px;top:290px"></div><div class="tgt" style="left:230px;top:380px"></div></div></div>
+    <div class="cbot"><div class="note" style="margin-top:0">잘하면 다음 턴 훈련 효율이 올라요. 건너뛰어도 손해 없어요.</div></div>
+  </div><div class="cap">④ 미니게임</div><div class="dsc">위에 점수·시간 HUD, 가운데 게임판. 건너뛰기 버튼이 항상 있고 손해가 없다는 문구를 아래에.</div></div>
+
+</div>
+<div class="spec"><b>적용 범위</b>
+  <table><tr><th>연출</th><th>지금 코드</th><th>새 틀</th></tr>
+  <tr><td>시간 흐름 진행</td><td>calendarUi · 가운데 팝업</td><td>① 전체 화면(탭 바 없음), 스킵 ⏩</td></tr>
+  <tr><td>결승 중계</td><td>broadcast · broadcastScene</td><td>② 스코어보드 + 도트 장면 + 멘트</td></tr>
+  <tr><td>계약</td><td>contractScene</td><td>③ 팀 이름·월급 자막</td></tr>
+  <tr><td>광고 촬영</td><td>adShoot</td><td>③과 같은 틀(제목 '광고 촬영')</td></tr>
+  <tr><td>미니게임 5종</td><td>miniGame</td><td>④ HUD 틀(사격·짝 맞추기·반응속도·숫자 순서·패턴 기억 공통)</td></tr></table>
+  <div style="margin-top:10px"><b>물어보고 싶은 것</b>: 연출 틀을 <b>테마와 상관없이 늘 어두운 극장 틀</b>로 통일(강조색만 테마)해도 괜찮을까요? 밝은 테마 A에서도 연출 때는 어두워져요.</div></div>
+<script>
+  document.querySelectorAll('.themes button').forEach(b => b.onclick = () => { document.body.className = b.dataset.t; document.querySelectorAll('.themes button').forEach(x => x.classList.toggle('on', x === b)) })
+</script>
+</body>
+</html>

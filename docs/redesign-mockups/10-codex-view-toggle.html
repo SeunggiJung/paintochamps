@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>도감 보기 전환 시안</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#c9ced9; font-family:Pretendard,'Noto Sans KR','Malgun Gothic',system-ui,sans-serif; padding:24px 16px 60px; color:#1b2230; }
+  h1 { font-size:22px; margin:0 0 4px; } .lead { color:#3d4559; font-size:13.5px; margin:0 0 10px; max-width:800px; line-height:1.55; }
+  h2 { font-size:17px; margin:26px 0 4px; }
+  .themes { display:flex; gap:8px; margin:6px 0 4px; position:sticky; top:0; padding:8px 0; background:#c9ced9; z-index:5; }
+  .themes button { font:inherit; font-weight:700; padding:8px 14px; border-radius:10px; border:2px solid #1b2230; background:#fff; cursor:pointer; } .themes button.on { background:#1b2230; color:#fff; }
+  .row { display:flex; gap:22px; flex-wrap:wrap; align-items:flex-start; }
+  .col { text-align:center; } .cap { font-weight:700; font-size:13px; margin:8px 0 2px; } .dsc { font-size:12px; color:#3d4559; max-width:320px; margin:0 auto; line-height:1.45; }
+
+  .phone { width:340px; height:680px; border-radius:26px; overflow:hidden; position:relative; display:flex; flex-direction:column; text-align:left; box-shadow:0 8px 28px rgba(0,0,0,.25); }
+  .top { display:flex; justify-content:space-between; align-items:center; padding:12px 16px 2px; font-size:12px; font-weight:700; }
+  .gear { width:28px; height:28px; display:grid; place-items:center; font-size:15px; }
+  .body { flex:1; overflow:hidden; padding:4px 14px 0; display:flex; flex-direction:column; gap:10px; }
+  .big { font-size:20px; font-weight:800; margin:0; } .muted { font-size:12.5px; line-height:1.45; }
+  .card { padding:11px 13px; }
+  .seg { display:flex; padding:3px; gap:2px; } .seg div { flex:1; text-align:center; font-size:12.5px; font-weight:700; padding:7px 0; }
+  .prog { height:8px; border-radius:99px; overflow:hidden; margin-top:6px; } .prog i { display:block; height:100%; width:25%; }
+  .chip { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .tile { padding:8px; text-align:center; } .tile .th { height:70px; display:grid; place-items:center; font-size:26px; margin-bottom:6px; } .tile b { font-size:12.5px; display:block; } .tile span { font-size:11px; }
+  .th.on { background:linear-gradient(#6a4fc0,#8a63d8 60%,#3b2f6e); } .th.lock { font-weight:800; opacity:.9; }
+  .li { display:flex; gap:10px; align-items:center; padding:8px 0; } .li .th { width:54px; height:42px; display:grid; place-items:center; font-size:20px; flex:none; } .li .t { flex:1; min-width:0; } .li b { font-size:13px; display:block; } .li span { font-size:11.5px; }
+  .tabbar { display:flex; } .tabbar div { flex:1; text-align:center; padding:8px 0 10px; font-size:10.5px; } .tabbar i { display:block; font-style:normal; font-size:17px; }
+  .dim { position:absolute; inset:0; background:rgba(10,12,25,.55); }
+  .sheet { position:absolute; left:0; right:0; bottom:0; padding:12px 16px 18px; }
+  .grab { width:38px; height:4px; border-radius:2px; margin:0 auto 10px; opacity:.4; background:currentColor; }
+  .sheet .th { height:96px; display:grid; place-items:center; font-size:38px; margin-bottom:8px; background:linear-gradient(#6a4fc0,#8a63d8 60%,#3b2f6e); }
+  .btnw { text-align:center; padding:12px; font-weight:800; margin-top:10px; font-size:14px; }
+
+  /* A */
+  body.A .phone { background:#f2f4f6; color:#191f28; } body.A .muted, body.A .top, body.A .tile span, body.A .li span { color:#8b95a1; }
+  body.A .card { background:#fff; border-radius:18px; } body.A .gear { background:#fff; border-radius:50%; }
+  body.A .seg { background:#e5e8eb; border-radius:12px; } body.A .seg div { color:#6b7684; border-radius:10px; } body.A .seg .on { background:#fff; color:#191f28; box-shadow:0 1px 3px #0002; }
+  body.A .prog { background:#e5e8eb; } body.A .prog i { background:#3182f6; } body.A .chip { background:#e8f3ff; color:#1b64da; border-radius:99px; }
+  body.A .th { border-radius:12px; } body.A .th.lock { background:#e5e8eb; color:#b0b8c1; } body.A .li { border-bottom:1px solid #eef0f3; } body.A .li:last-child { border:0; }
+  body.A .tabbar { background:#fff; border-top:1px solid #e5e8eb; color:#8b95a1; } body.A .tabbar .on { color:#3182f6; font-weight:700; }
+  body.A .sheet { background:#fff; border-radius:24px 24px 0 0; } body.A .btnw { background:#3182f6; color:#fff; border-radius:14px; }
+  /* B */
+  body.B .phone { background:#fff1d6; color:#3b2a20; } body.B .muted, body.B .top, body.B .tile span, body.B .li span { color:#8a6a55; }
+  body.B .card { background:#fffdf4; border:3px solid #5b3a29; border-radius:10px; box-shadow:0 4px 0 #5b3a29; } body.B .gear { background:#fffdf4; border:3px solid #5b3a29; border-radius:8px; box-shadow:0 2px 0 #5b3a29; }
+  body.B .seg { background:#f0dcc0; border:3px solid #5b3a29; border-radius:10px; } body.B .seg div { color:#8a6a55; border-radius:6px; } body.B .seg .on { background:#ff8a3d; color:#fff; box-shadow:0 2px 0 #5b3a29; }
+  body.B .prog { background:#f0dcc0; border:2px solid #5b3a29; height:12px; } body.B .prog i { background:repeating-linear-gradient(90deg,#ff8a3d 0 8px,#ffa860 8px 10px); }
+  body.B .chip { background:#ffd45e; border:2px solid #5b3a29; color:#5b3a29; border-radius:6px; }
+  body.B .th { border:2px solid #5b3a29; border-radius:6px; } body.B .th.lock { background:#f0dcc0; color:#b89a7c; } body.B .li { border-bottom:2px dashed #e6cfa8; } body.B .li:last-child { border:0; }
+  body.B .tabbar { background:#fffdf4; border-top:3px solid #5b3a29; color:#8a6a55; } body.B .tabbar .on { color:#d9480f; font-weight:800; }
+  body.B .sheet { background:#fffdf4; border:3px solid #5b3a29; border-bottom:0; border-radius:16px 16px 0 0; } body.B .btnw { background:#ff8a3d; color:#fff; border:3px solid #5b3a29; border-radius:10px; box-shadow:0 4px 0 #5b3a29; }
+  /* C */
+  body.C .phone { background:radial-gradient(120% 60% at 50% 0%,#2b2f6b 0%,#14172f 60%); color:#eef0ff; } body.C .muted, body.C .top, body.C .tile span, body.C .li span { color:#9aa3d6; }
+  body.C .card { background:rgba(36,42,92,.72); border:1px solid #3b4490; border-radius:16px; } body.C .gear { background:#232a5c; border-radius:50%; }
+  body.C .seg { background:#10132b; border-radius:12px; } body.C .seg div { color:#8d96d0; border-radius:10px; } body.C .seg .on { background:#2f3a85; color:#fff; }
+  body.C .prog { background:#10132b; } body.C .prog i { background:linear-gradient(90deg,#6c8cff,#a78bfa); } body.C .chip { background:rgba(255,207,90,.16); color:#ffcf5a; border-radius:99px; }
+  body.C .th { border-radius:12px; } body.C .th.lock { background:#10132b; color:#4b5499; } body.C .li { border-bottom:1px solid #2f3880; } body.C .li:last-child { border:0; }
+  body.C .tabbar { background:#10132b; border-top:1px solid #2f3880; color:#8d96d0; } body.C .tabbar .on { color:#8fb0ff; font-weight:700; }
+  body.C .sheet { background:#1b2050; border-top:1px solid #3b4490; border-radius:24px 24px 0 0; } body.C .btnw { background:linear-gradient(90deg,#5b8cff,#8f6bff); color:#fff; border-radius:14px; }
+
+  .corner { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+  .vt { display:flex; padding:2px; gap:2px; }
+  .vt span { width:28px; height:24px; display:grid; place-items:center; font-size:14px; cursor:pointer; user-select:none; }
+  body.A .vt { background:#e5e8eb; border-radius:9px; } body.A .vt span { color:#8b95a1; border-radius:7px; } body.A .vt .on { background:#fff; color:#3182f6; box-shadow:0 1px 2px #0002; }
+  body.B .vt { background:#f0dcc0; border:2px solid #5b3a29; border-radius:8px; } body.B .vt span { color:#8a6a55; border-radius:4px; } body.B .vt .on { background:#ff8a3d; color:#fff; }
+  body.C .vt { background:#10132b; border-radius:9px; } body.C .vt span { color:#8d96d0; border-radius:7px; } body.C .vt .on { background:#2f3a85; color:#fff; }
+  .top { align-items:flex-start; }
+  .top .ttl { padding-top:4px; }
+  .view-tile .only-list, .view-list .only-tile { display:none; }
+  .hint { position:absolute; right:12px; top:78px; font-size:10px; font-weight:700; padding:3px 7px; border-radius:6px; background:#1b2230; color:#fff; opacity:.85; }
+</style>
+<body class="A">
+<h1>도감 — 톱니 아래에 보기 전환 버튼 <span style="font-weight:400;font-size:14px;color:#3d4559">(기본: 타일)</span></h1>
+<p class="lead">톱니 ⚙ 바로 아래에 ▦(타일)·☰(리스트) 두 칸짜리 전환 버튼을 뒀어요. 처음에는 ▦ 타일이 켜져 있고, 누르면 바로 바뀌어요. 고른 값은 기억해서 다음에 열어도 유지돼요(실제 게임에서는 저장 필요). 위 버튼으로 테마도 바꿔 보세요.</p>
+<div class="themes"><button class="on" data-t="A">A 밝은 카드</button><button data-t="B">B 크림+도트</button><button data-t="C">C 다크</button></div>
+<div class="row">
+  <div class="col"><div class="phone view-tile" data-view="tile">
+    <div class="top"><span class="ttl">도감</span><div class="corner"><div class="gear">⚙</div><div class="vt"><span class="vt-tile on" title="타일로 보기">▦</span><span class="vt-list" title="리스트로 보기">☰</span></div></div></div>
+    <div class="body" style="margin-top:-26px">
+      <div style="padding-right:70px"><p class="big">3 / 12 발견</p><div class="prog"><i></i></div><div class="muted" style="margin-top:6px">완주 4회 · 최고 단계 프로 1부</div></div>
+      <div class="seg"><div class="on">엔딩</div><div>업적 5/27</div><div>명예의 전당</div></div>
+      <div class="grid only-tile">
+        <div class="card tile"><div class="th on">🏆</div><b>원클럽 레전드</b><span class="chip">1회</span></div>
+        <div class="card tile"><div class="th on">🥈</div><b>월드 준우승</b><span class="chip">2회</span></div>
+        <div class="card tile"><div class="th on">📺</div><b>스트리머</b><span class="chip">1회</span></div>
+        <div class="card tile"><div class="th lock">?</div><b>???</b><span>찾아보세요</span></div>
+        <div class="card tile"><div class="th lock">?</div><b>???</b><span>찾아보세요</span></div>
+        <div class="card tile"><div class="th lock">?</div><b>???</b><span>찾아보세요</span></div>
+      </div>
+      <div class="card only-list" style="padding:4px 13px">
+        <div class="li"><div class="th on">🏆</div><div class="t"><b>원클럽 레전드 <span class="chip">1회</span></b><span>처음 입단한 팀에서 월드 우승</span></div></div>
+        <div class="li"><div class="th on">🥈</div><div class="t"><b>월드 준우승 <span class="chip">2회</span></b><span>월드 결승에서 아쉽게 패배</span></div></div>
+        <div class="li"><div class="th on">📺</div><div class="t"><b>스트리머 <span class="chip">1회</span></b><span>은퇴 뒤 방송으로 제2의 인생</span></div></div>
+        <div class="li"><div class="th lock">?</div><div class="t"><b>???</b><span>직접 플레이하며 찾아보세요</span></div></div>
+        <div class="li"><div class="th lock">?</div><div class="t"><b>???</b><span>직접 플레이하며 찾아보세요</span></div></div>
+        <div class="li"><div class="th lock">?</div><div class="t"><b>???</b><span>직접 플레이하며 찾아보세요</span></div></div>
+      </div>
+    </div>
+    <div class="tabbar"><div><i>🏠</i>홈</div><div><i>📅</i>시즌</div><div><i>🧑</i>선수</div><div class="on"><i>🏆</i>기록</div></div>
+  </div><div class="cap">처음 열었을 때 (타일)</div><div class="dsc">▦가 켜진 기본 상태. 오른쪽 위 버튼을 눌러 보세요.</div></div>
+  <div class="col"><div class="phone view-list" data-view="list">
+    <div class="top"><span class="ttl">도감</span><div class="corner"><div class="gear">⚙</div><div class="vt"><span class="vt-tile" title="타일로 보기">▦</span><span class="vt-list on" title="리스트로 보기">☰</span></div></div></div>
+    <div class="body" style="margin-top:-26px">
+      <div style="padding-right:70px"><p class="big">3 / 12 발견</p><div class="prog"><i></i></div><div class="muted" style="margin-top:6px">완주 4회 · 최고 단계 프로 1부</div></div>
+      <div class="seg"><div class="on">엔딩</div><div>업적 5/27</div><div>명예의 전당</div></div>
+      <div class="grid only-tile">
+        <div class="card tile"><div class="th on">🏆</div><b>원클럽 레전드</b><span class="chip">1회</span></div>
+        <div class="card tile"><div class="th on">🥈</div><b>월드 준우승</b><span class="chip">2회</span></div>
+        <div class="card tile"><div class="th on">📺</div><b>스트리머</b><span class="chip">1회</span></div>
+        <div class="card tile"><div class="th lock">?</div><b>???</b><span>찾아보세요</span></div>
+        <div class="card tile"><div class="th lock">?</div><b>???</b><span>찾아보세요</span></div>
+        <div class="card tile"><div class="th lock">?</div><b>???</b><span>찾아보세요</span></div>
+      </div>
+      <div class="card only-list" style="padding:4px 13px">
+        <div class="li"><div class="th on">🏆</div><div class="t"><b>원클럽 레전드 <span class="chip">1회</span></b><span>처음 입단한 팀에서 월드 우승</span></div></div>
+        <div class="li"><div class="th on">🥈</div><div class="t"><b>월드 준우승 <span class="chip">2회</span></b><span>월드 결승에서 아쉽게 패배</span></div></div>
+        <div class="li"><div class="th on">📺</div><div class="t"><b>스트리머 <span class="chip">1회</span></b><span>은퇴 뒤 방송으로 제2의 인생</span></div></div>
+        <div class="li"><div class="th lock">?</div><div class="t"><b>???</b><span>직접 플레이하며 찾아보세요</span></div></div>
+        <div class="li"><div class="th lock">?</div><div class="t"><b>???</b><span>직접 플레이하며 찾아보세요</span></div></div>
+        <div class="li"><div class="th lock">?</div><div class="t"><b>???</b><span>직접 플레이하며 찾아보세요</span></div></div>
+      </div>
+    </div>
+    <div class="tabbar"><div><i>🏠</i>홈</div><div><i>📅</i>시즌</div><div><i>🧑</i>선수</div><div class="on"><i>🏆</i>기록</div></div>
+  </div><div class="cap">☰ 눌렀을 때 (리스트)</div><div class="dsc">같은 화면의 리스트 상태. 이쪽도 눌러서 바뀌어요.</div></div>
+</div>
+<script>
+  document.querySelectorAll('.themes button').forEach(b => b.onclick = () => {
+    document.body.className = b.dataset.t
+    document.querySelectorAll('.themes button').forEach(x => x.classList.toggle('on', x === b))
+  })
+  document.querySelectorAll('.phone').forEach(p => {
+    p.querySelector('.vt-tile').onclick = () => set(p, 'tile')
+    p.querySelector('.vt-list').onclick = () => set(p, 'list')
+  })
+  function set(p, v) {
+    p.classList.remove('view-tile', 'view-list'); p.classList.add('view-' + v)
+    p.querySelector('.vt-tile').classList.toggle('on', v === 'tile')
+    p.querySelector('.vt-list').classList.toggle('on', v === 'list')
+  }
+</script>
+</body>
+</html>

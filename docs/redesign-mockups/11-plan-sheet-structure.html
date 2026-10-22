@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>시즌 계획 시트 구조 시안</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#c9ced9; font-family:Pretendard,'Noto Sans KR','Malgun Gothic',system-ui,sans-serif; padding:24px 16px 60px; color:#1b2230; }
+  h1 { font-size:22px; margin:0 0 4px; } .lead { color:#3d4559; font-size:13.5px; margin:0 0 10px; max-width:820px; line-height:1.55; }
+  h2 { font-size:17px; margin:28px 0 4px; }
+  .themes { display:flex; gap:8px; margin:6px 0 4px; position:sticky; top:0; padding:8px 0; background:#c9ced9; z-index:5; }
+  .themes button { font:inherit; font-weight:700; padding:8px 14px; border-radius:10px; border:2px solid #1b2230; background:#fff; cursor:pointer; } .themes button.on { background:#1b2230; color:#fff; }
+  .row { display:flex; gap:22px; flex-wrap:wrap; align-items:flex-start; }
+  .col { text-align:center; } .cap { font-weight:700; font-size:13px; margin:8px 0 2px; } .dsc { font-size:12px; color:#3d4559; max-width:330px; margin:0 auto; line-height:1.45; }
+
+  body.A { --bg:#f2f4f6; --card:#fff; --text:#191f28; --sub:#8b95a1; --line:#eef0f3; --pri:#3182f6; --pritx:#fff; --soft:#e8f3ff; --softtx:#1b64da; --seg:#e5e8eb; --r:16px; --bd:1px solid #eef0f3; --sh:none; --gold:#fff6d6; --dis:#c3cad2; --bar:#fff; --bar-bd:1px solid #e5e8eb; }
+  body.B { --bg:#fff1d6; --card:#fffdf4; --text:#3b2a20; --sub:#8a6a55; --line:#e6cfa8; --pri:#ff8a3d; --pritx:#fff; --soft:#ffd45e; --softtx:#5b3a29; --seg:#f0dcc0; --r:10px; --bd:3px solid #5b3a29; --sh:0 4px 0 #5b3a29; --gold:#fff0b8; --dis:#cdb899; --bar:#fffdf4; --bar-bd:3px solid #5b3a29; }
+  body.C { --bg:#14172f; --card:rgba(36,42,92,.72); --text:#eef0ff; --sub:#9aa3d6; --line:#2f3880; --pri:#6c8cff; --pritx:#fff; --soft:rgba(255,207,90,.16); --softtx:#ffcf5a; --seg:#10132b; --r:16px; --bd:1px solid #3b4490; --sh:none; --gold:rgba(255,207,90,.14); --dis:#4b5499; --bar:#10132b; --bar-bd:1px solid #2f3880; }
+
+  .phone { width:340px; height:690px; border-radius:26px; overflow:hidden; position:relative; display:flex; flex-direction:column; text-align:left; box-shadow:0 8px 28px rgba(0,0,0,.25); background:var(--bg); color:var(--text); }
+  body.C .phone { background:radial-gradient(120% 60% at 50% 0%,#2b2f6b 0%,#14172f 60%); }
+  .top { display:flex; justify-content:space-between; align-items:center; padding:12px 16px 4px; font-size:12px; font-weight:700; color:var(--sub); }
+  .x { width:26px; height:26px; display:grid; place-items:center; font-size:15px; background:var(--card); border:var(--bd); border-radius:50%; box-shadow:var(--sh); }
+  .steps { display:flex; gap:5px; } .steps i { width:24px; height:4px; border-radius:2px; background:var(--seg); } .steps i.on { background:var(--pri); }
+  .body { flex:1; overflow:hidden; padding:4px 14px 0; display:flex; flex-direction:column; gap:9px; }
+  .big { font-size:19px; font-weight:800; margin:2px 0 0; } .muted { font-size:12px; line-height:1.45; color:var(--sub); }
+  .h { display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:800; margin:2px 0 0; } .h span { font-weight:500; font-size:11.5px; color:var(--sub); }
+  .card { background:var(--card); border:var(--bd); border-radius:var(--r); box-shadow:var(--sh); padding:10px 12px; }
+  .opts { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .opt { background:var(--card); border:var(--bd); border-radius:calc(var(--r) - 4px); padding:8px 10px; box-shadow:var(--sh); font-size:12px; }
+  .opt b { display:block; font-size:13px; } .opt span { color:var(--sub); font-size:11px; }
+  .opt.sel { outline:3px solid var(--pri); outline-offset:-3px; background:var(--soft); } body.B .opt.sel { outline-color:#d9480f; }
+  .tr { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 10px; background:var(--card); border:var(--bd); border-radius:calc(var(--r) - 4px); box-shadow:var(--sh); font-size:12.5px; }
+  .tr.sel { outline:3px solid var(--pri); outline-offset:-3px; background:var(--soft); } body.B .tr.sel { outline-color:#d9480f; }
+  .tr b { font-size:13px; } .tr small { display:block; color:var(--sub); font-size:11px; font-weight:400; margin-top:1px; }
+  .tag { font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:99px; background:var(--soft); color:var(--softtx); white-space:nowrap; }
+  .sw { width:38px; height:22px; border-radius:99px; background:var(--seg); position:relative; flex:none; } .sw::after { content:''; position:absolute; left:3px; top:3px; width:16px; height:16px; border-radius:50%; background:#fff; box-shadow:0 1px 2px #0004; } .sw.on { background:var(--pri); } .sw.on::after { left:19px; }
+  .seg { display:flex; padding:3px; gap:2px; background:var(--seg); border-radius:12px; } .seg div { flex:1; text-align:center; font-size:12px; font-weight:700; padding:7px 0; color:var(--sub); border-radius:9px; } .seg .on { background:var(--card); color:var(--text); box-shadow:0 1px 3px #0003; }
+  body.B .seg { border:3px solid #5b3a29; border-radius:10px; } body.B .seg .on { background:#ff8a3d; color:#fff; }
+  .it { display:flex; align-items:center; gap:10px; padding:8px 10px; background:var(--card); border:var(--bd); border-radius:calc(var(--r) - 4px); box-shadow:var(--sh); }
+  .it .ic { width:38px; height:38px; border-radius:8px; background:var(--seg); display:grid; place-items:center; font-size:19px; flex:none; } .it .t { flex:1; min-width:0; } .it b { font-size:12.5px; display:block; } .it small { font-size:11px; color:var(--sub); display:block; }
+  .it .pr { font-size:12px; font-weight:800; white-space:nowrap; } .it.off { opacity:.5; }
+  .bar { padding:10px 14px 14px; display:flex; gap:8px; background:linear-gradient(transparent,var(--bg) 30%); }
+  .btn { flex:1; text-align:center; padding:13px 6px; font-weight:800; font-size:14px; background:var(--bar); border:var(--bar-bd); border-radius:calc(var(--r) - 2px); box-shadow:var(--sh); color:var(--text); }
+  .btn.pri { flex:2; background:var(--pri); color:var(--pritx); border-color:var(--pri); } body.B .btn.pri { border:3px solid #5b3a29; } .btn.dis { background:var(--seg); color:var(--dis); box-shadow:none; border:0; }
+  .sum { display:flex; align-items:center; justify-content:space-between; padding:12px; background:var(--card); border:var(--bd); border-radius:var(--r); box-shadow:var(--sh); }
+  .sum .l { font-size:12px; color:var(--sub); } .sum b { display:block; font-size:14px; color:var(--text); margin-top:1px; } .sum .go { color:var(--sub); font-size:18px; } .sum .need { color:#f04452; font-weight:800; font-size:12px; }
+  .dim { position:absolute; inset:0; background:rgba(10,12,25,.55); } .sheet { position:absolute; left:0; right:0; bottom:0; padding:12px 14px 16px; background:var(--bg); border-radius:24px 24px 0 0; display:flex; flex-direction:column; gap:8px; } body.B .sheet { border:3px solid #5b3a29; border-bottom:0; border-radius:16px 16px 0 0; }
+  .grab { width:38px; height:4px; border-radius:2px; margin:0 auto 4px; opacity:.4; background:var(--text); }
+  .badge { display:inline-block; min-width:18px; text-align:center; font-size:10.5px; font-weight:800; padding:1px 6px; border-radius:99px; background:var(--pri); color:#fff; margin-left:4px; }
+</style>
+<body class="A">
+<h1>시즌 계획 시트 구조 시안 <span style="font-weight:400;font-size:14px;color:#3d4559">(지금 3,893px, 590px 시트 안에서 7화면 스크롤)</span></h1>
+<p class="lead">지금은 <b>꼭 정해야 하는 것</b>(방침·훈련·레슨)과 <b>돈을 쓰는 선택 사항</b>(장비 4·시설 9·광고·집)이 한 시트에 섞여 있어요. 두 가지로 나눠 봤어요. 위 버튼으로 테마를 바꿔 보세요.</p>
+<div class="themes"><button class="on" data-t="A">A 밝은 카드</button><button data-t="B">B 크림+도트</button><button data-t="C">C 다크</button></div>
+
+<h2>안 1. 두 단계 — ① 계획 → ② 지출 계획 (킥루식 점 단계)</h2>
+<p class="lead">① 한 화면에 방침·훈련·레슨만(스크롤 거의 없음). ② 지출 계획는 장비/시설/광고/집을 세그먼트로 나눠 한 번에 하나씩. 마지막 단계에서 "시즌 시작".</p>
+<div class="row">
+<div class="col"><div class="phone"><div class="top"><span>2026시즌 계획</span><div class="steps"><i class="on"></i><i class=""></i></div><div class="x">✕</div></div><div class="body">
+  <p class="big">이번 시즌 어떻게 보낼까요?</p>
+  <div class="h">방침</div><div class="opts"><div class="opt"><b>훈련 집중</b><span>컨디션 50↑ 훈련 2번</span></div><div class="opt sel"><b>균형</b><span>컨디션 60↑ 훈련 2번 · 기본</span></div><div class="opt"><b>컨디션 관리</b><span>최상일 때만 훈련 2번</span></div><div class="opt"><b>돈벌이 병행</b><span>훈련+아르바이트·방송</span></div></div>
+  <div class="h">이번 시즌 훈련 <span>후보 다시 뽑기 (1회)</span></div><div class="tr sel"><div><b>영상 분석</b><small>판단력·집중·멘탈 ↑</small></div><span class=tag>★ 추천</span></div><div class="tr"><div><b>에임 훈련</b><small>정확도·반응속도·집중 ↑</small></div></div><div class="tr"><div><b>팀 전술 연습</b><small>팀워크·판단력·멘탈 ↑</small></div></div><div class="tr"><div><b>멘탈 코칭</b><small>멘탈·집중·팀워크 ↑</small></div></div>
+  <div class="tr"><div><b>개인 레슨</b><small>컨디션 좋을 때 훈련 1번을 레슨으로 · 턴당 120만</small></div><div class="sw"></div></div>
+</div><div class="bar"><div class="btn pri">다음 · 지출 계획</div></div></div><div class="cap">① 계획</div><div class="dsc">방침은 2×2 카드, 훈련 후보 4개, 레슨 스위치. 필수 선택만.</div></div>
+<div class="col"><div class="phone"><div class="top"><span>2026시즌 계획</span><div class="steps"><i class="on"></i><i class="on"></i></div><div class="x">✕</div></div><div class="body">
+  <div class="h" style="font-size:15px">지출 계획 <span>보유 4억 3,230만</span></div>
+  <div class="seg"><div class="on">장비</div><div>시설 9</div><div>광고 2</div><div>집</div></div>
+  <div class="it"><div class="ic">🖱</div><div class="t"><b>마우스 Lv3 → Lv4</b><small>훈련 효율 +</small></div><div class="pr">1,920만</div></div>
+  <div class="it"><div class="ic">⌨</div><div class="t"><b>키보드 Lv2 → Lv3</b><small>훈련 효율 +</small></div><div class="pr">960만</div></div>
+  <div class="it"><div class="ic">🎧</div><div class="t"><b>헤드셋 Lv4 → Lv5</b><small>훈련 효율 +</small></div><div class="pr">3,840만</div></div>
+  <div class="it"><div class="ic">🖥</div><div class="t"><b>모니터 Lv1 → Lv2</b><small>훈련 효율 +</small></div><div class="pr">480만</div></div>
+  <div class="it"><div class="ic">💺</div><div class="t"><b>의자 Lv5 → Lv6</b><small>훈련 효율 +</small></div><div class="pr">7,680만</div></div>
+</div><div class="bar"><div class="btn">이전</div><div class="btn pri">이 계획으로 시즌 시작</div></div></div><div class="cap">② 지출 계획 · 장비</div><div class="dsc">아래 탭으로 장비·시설·광고·집 전환. 누르면 지금처럼 업그레이드 팝업.</div></div>
+<div class="col"><div class="phone"><div class="top"><span>2026시즌 계획</span><div class="steps"><i class="on"></i><i class="on"></i></div><div class="x">✕</div></div><div class="body">
+  <div class="h" style="font-size:15px">지출 계획 <span>보유 4억 3,230만</span></div>
+  <div class="seg"><div>장비</div><div class="on">시설 9</div><div>광고 2</div><div>집</div></div>
+  <div class="it"><div class="ic">🏠</div><div class="t"><b>숙소 Lv2 → Lv3</b><small>컨디션 회복 +1/턴</small></div><div class="pr">5,000만</div></div>
+  <div class="it"><div class="ic">👨‍🏫</div><div class="t"><b>개인 코치 Lv1 → Lv2</b><small>훈련 효율 +1.5%</small></div><div class="pr">2,500만</div></div>
+  <div class="it"><div class="ic">🩹</div><div class="t"><b>재활 트레이너 Lv0 → Lv1</b><small>부상·슬럼프 회복 +25%</small></div><div class="pr">1,000만</div></div>
+  <div class="it"><div class="ic">📣</div><div class="t"><b>홍보 에이전시 Lv1 → Lv2</b><small>명성 +0.3/턴</small></div><div class="pr">2,500만</div></div>
+  <div class="it off"><div class="ic">📊</div><div class="t"><b>분석관 Lv0 → Lv1</b><small>승률 보정</small></div><div class="pr">3,000만</div></div>
+  <div class="muted" style="text-align:center">스크롤해서 더 보기</div>
+</div><div class="bar"><div class="btn">이전</div><div class="btn pri">이 계획으로 시즌 시작</div></div></div><div class="cap">② 지출 계획 · 시설</div><div class="dsc">시설 9개도 한 종류씩 보여서 길이가 줄어요.</div></div>
+</div>
+
+<h2>안 2. 한 화면 요약 + 항목을 누르면 아래 시트</h2>
+<p class="lead">계획 전체를 한 줄씩 요약으로 보여 주고, 바꾸고 싶은 줄만 눌러서 해당 선택 시트를 열어요. 훈련을 안 고르면 시작 버튼이 막혀 있어요. 지출 계획는 이번에 안 쓰면 그냥 지나가도 돼요.</p>
+<div class="row">
+<div class="col"><div class="phone"><div class="top"><span>2026시즌 계획</span><div class="x">✕</div></div><div class="body">
+  <p class="big">이번 시즌 계획</p>
+  <div class="muted">필요한 것만 바꾸세요. 훈련만 고르면 바로 시작할 수 있어요.</div>
+  <div class="sum"><div><div class="l">방침</div><b>균형</b></div><span class="go">›</span></div>
+  <div class="sum"><div><div class="l">이번 시즌 훈련</div><b class="need">훈련을 골라 주세요</b></div><span class="go">›</span></div>
+  <div class="sum"><div><div class="l">개인 레슨</div><b>받지 않음</b></div><div class="sw"></div></div>
+  <div class="h" style="margin-top:6px">지출 계획 <span>보유 4억 3,230만</span></div>
+  <div class="sum"><div><div class="l">장비</div><b>4종 · 업그레이드 가능</b></div><span class="go">›</span></div>
+  <div class="sum"><div><div class="l">시설</div><b>9종 · 업그레이드 가능</b></div><span class="go">›</span></div>
+  <div class="sum"><div><div class="l">광고 제안<span class="badge">2</span></div><b>계약 가능</b></div><span class="go">›</span></div>
+</div><div class="bar"><div class="btn pri dis">이번 시즌 훈련을 골라 주세요</div></div></div><div class="cap">처음 열었을 때</div><div class="dsc">훈련을 안 골라서 시작 버튼이 비활성. 빨간 글씨로 안내.</div></div>
+<div class="col"><div class="phone"><div class="top"><span>2026시즌 계획</span><div class="x">✕</div></div><div class="body">
+  <p class="big">이번 시즌 계획</p>
+  <div class="sum"><div><div class="l">방침</div><b>균형</b></div><span class="go">›</span></div>
+  <div class="sum"><div><div class="l">이번 시즌 훈련</div><b class="need">훈련을 골라 주세요</b></div><span class="go">›</span></div>
+</div><div class="bar"><div class="btn pri dis">이번 시즌 훈련을 골라 주세요</div></div>
+<div class="dim"></div>
+<div class="sheet"><div class="grab"></div>
+  <div class="h" style="font-size:15px">이번 시즌 훈련 <span>후보 다시 뽑기 (1회)</span></div>
+  <div class="tr sel"><div><b>영상 분석</b><small>판단력·집중·멘탈 ↑</small></div><span class=tag>★ 추천</span></div><div class="tr"><div><b>에임 훈련</b><small>정확도·반응속도·집중 ↑</small></div></div><div class="tr"><div><b>팀 전술 연습</b><small>팀워크·판단력·멘탈 ↑</small></div></div><div class="tr"><div><b>멘탈 코칭</b><small>멘탈·집중·팀워크 ↑</small></div></div>
+  <div class="muted">★ 지금 실력치를 가장 많이 올려 주는 훈련이에요.</div>
+  <div class="btn pri" style="margin-top:2px">선택 완료</div></div></div><div class="cap">"이번 시즌 훈련"을 누르면</div><div class="dsc">훈련 후보 4개가 아래 시트로. 고르면 닫히고 요약에 반영.</div></div>
+<div class="col"><div class="phone"><div class="top"><span>2026시즌 계획</span><div class="x">✕</div></div><div class="body">
+  <p class="big">이번 시즌 계획</p>
+  <div class="sum"><div><div class="l">방침</div><b>균형</b></div><span class="go">›</span></div>
+  <div class="sum"><div><div class="l">이번 시즌 훈련</div><b>영상 분석 ★</b></div><span class="go">›</span></div>
+  <div class="sum"><div><div class="l">개인 레슨</div><b>받는다 · 턴당 120만</b></div><div class="sw on"></div></div>
+  <div class="h" style="margin-top:6px">지출 계획 <span>보유 4억 3,230만</span></div>
+  <div class="sum"><div><div class="l">장비</div><b>4종 · 업그레이드 가능</b></div><span class="go">›</span></div>
+  <div class="sum"><div><div class="l">시설</div><b>9종 · 업그레이드 가능</b></div><span class="go">›</span></div>
+  <div class="sum"><div><div class="l">광고 제안<span class="badge">2</span></div><b>계약 가능</b></div><span class="go">›</span></div>
+</div><div class="bar"><div class="btn pri">이 계획으로 시즌 시작</div></div></div><div class="cap">훈련을 고른 뒤</div><div class="dsc">요약만 보고 바로 "시즌 시작". 광고 제안은 배지로 알림.</div></div>
+</div>
+<script>
+  document.querySelectorAll('.themes button').forEach(b => b.onclick = () => {
+    document.body.className = b.dataset.t
+    document.querySelectorAll('.themes button').forEach(x => x.classList.toggle('on', x === b))
+  })
+</script>
+</body>
+</html>
