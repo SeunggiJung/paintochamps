@@ -224,7 +224,7 @@ export function sceneUrls(files: Record<string, string> = found): string[] | nul
 }
 
 const HERO_CSS = `
-.hi-frame { position: relative; width: 100%; aspect-ratio: 3 / 2; overflow: hidden; border-radius: var(--radius); background: #000; border: var(--border); box-shadow: var(--shadow); }
+.hi-frame { position: relative; width: 100%; max-width: 480px; margin-inline: auto; aspect-ratio: 3 / 2; overflow: hidden; border-radius: var(--radius); background: #000; border: var(--border); box-shadow: var(--shadow); }
 .hi-scene { position: absolute; inset: 0; opacity: 0; }
 .hi-zoom { position: absolute; inset: 0; animation: hiKb 8s ease-in-out infinite alternate; }
 .hi-art { position: absolute; inset: 0; background-size: 100% 100%; }
