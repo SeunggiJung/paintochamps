@@ -97,7 +97,7 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
         level,
         def.maxLevel,
         formatMoney(facilityCost(state, id)),
-        `${def.desc} (${def.unit}) · 지금 ${facilityEffectText(id, level)}${level < def.maxLevel ? ` → ${facilityEffectText(id, level + 1)}` : ''}${reason && level < def.maxLevel ? ` — ${reason}` : ''}`,
+        `${level >= def.maxLevel ? facilityEffectText(id, level) : level > 0 ? `${facilityEffectText(id, level)} → ${facilityEffectText(id, level + 1)}` : facilityEffectText(id, 1)}${reason && level < def.maxLevel ? ` — ${reason}` : ''}`,
         reason,
         `${def.desc} (${def.unit}) 현재: ${facilityEffectText(id, level)} → 다음: ${facilityEffectText(id, level + 1)}`,
         () => {

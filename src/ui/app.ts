@@ -5,7 +5,9 @@ import { hasSeenGuide, loadGame, loadMeta, markGuideSeen, type KeyValueStorage }
 import { codexScreen } from './codex.ts'
 import { endingScreen } from './ending.ts'
 import { createScreen, type NewGameDraft } from './create.ts'
+import { upcomingTest } from '../engine/routes.ts'
 import { seasonEnd } from './seasonEnd.ts'
+import { askCafeTeamName } from './teamNameSheet.ts'
 import { planFlow } from './planFlow.ts'
 import { runGuide } from './guide.ts'
 import { gachaScreen } from './gachaScreen.ts'
@@ -144,7 +146,11 @@ export function startApp(root: HTMLElement, storage: KeyValueStorage): void {
     },
     toSeason: (state) => show(seasonScreen(ctx, state), true),
     toEnding: (state, info) => show(endingScreen(ctx, state, info), true),
-    toSeasonEnd: (state) => show(seasonEnd(ctx, state), true),
+    toSeasonEnd(state) {
+      // 시험 준비를 고를 일이 없으면 시즌 종료 화면 없이 바로 결산으로 간다
+      if (upcomingTest(state)) show(seasonEnd(ctx, state), true)
+      else void askCafeTeamName(storage, state).then((next) => ctx.toSeason(next))
+    },
     toPlan: (state) => show(planFlow(ctx, state), true),
     showTab: (tab) => paintTab(tab),
     async showStartGuide() {
