@@ -8,11 +8,11 @@ afterEach(() => {
 })
 
 describe('openSheet', () => {
-  it('variant 없이는 가운데 카드, center:false는 결정 시트', () => {
-    void openSheet(() => h('p', {}, 'a'))
+  it('variant가 오버레이 클래스가 된다', () => {
+    void openSheet(() => h('p', {}, 'a'), { variant: 'center' })
     expect(document.querySelector('.overlay.center')).not.toBeNull()
     document.body.innerHTML = ''
-    void openSheet(() => h('p', {}, 'a'), { center: false })
+    void openSheet(() => h('p', {}, 'a'), { variant: 'decision' })
     expect(document.querySelector('.overlay.decision')).not.toBeNull()
   })
 

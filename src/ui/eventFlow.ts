@@ -36,8 +36,7 @@ export async function runEvent(state: GameState, event: GameEvent): Promise<Game
           open.has(i) ? h('span', { class: 'muted small' }, choiceHint(state, event, i)) : h('span', { class: 'muted small' }, '조건이 맞지 않아 고를 수 없다'),
         ),
       ),
-    ),
-  )
+    ), { variant: 'decision' })
 
   const after = applyEventChoice(state, event, picked)
   const outcomes = choiceOutcomes(state, event, picked)
@@ -49,7 +48,6 @@ export async function runEvent(state: GameState, event: GameEvent): Promise<Game
       h('p', { class: 'eyebrow' }, success === null ? event.choices[picked].label : success ? '성공!' : '실패...'),
       hasChange(state, after) ? turnChangeGraph(state, after, { onlyChanged: true }) : h('p', { class: 'muted' }, '눈에 띄는 변화는 없었다.'),
       h('button', { class: 'btn primary', onclick: () => close() }, '확인'),
-    ),
-  )
+    ), { variant: 'result' })
   return after
 }

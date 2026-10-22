@@ -106,8 +106,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         h('p', { class: 'event-text' }, '지금 은퇴하면 커리어가 끝나고 엔딩을 보게 된다. 되돌릴 수 없다.'),
         h('button', { class: 'btn primary', onclick: () => close(false) }, '계속 도전한다'),
         h('button', { class: 'btn ghost small', onclick: () => close(true) }, '은퇴한다'),
-      ),
-    )
+      ), { variant: 'decision' })
     if (!yes) return
     state = retire(state)
     void proceed()
@@ -337,8 +336,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
   if (report.pendingOffers?.kind === 'callup') {
     const n = report.pendingOffers.offers.length
     void openSheet<void>((close) =>
-      h('div', { class: 'stack-tight' }, h('p', { class: 'eyebrow' }, '콜업 알림'), h('p', { class: 'event-text' }, `프로 1부 팀 ${n}곳에서 콜업 제안이 도착했다! 제안 탭에서 확인하자.`), h('button', { class: 'btn primary', onclick: () => close() }, '확인')),
-    )
+      h('div', { class: 'stack-tight' }, h('p', { class: 'eyebrow' }, '콜업 알림'), h('p', { class: 'event-text' }, `프로 1부 팀 ${n}곳에서 콜업 제안이 도착했다! 제안 탭에서 확인하자.`), h('button', { class: 'btn primary', onclick: () => close() }, '확인')), { variant: 'decision' })
   }
   return root
 }

@@ -59,7 +59,7 @@ export async function openUpdateLog(): Promise<void> {
       h('button', { class: 'btn primary', onclick: () => close(false) }, '닫기'),
       h('button', { class: 'btn ghost small', onclick: () => close(true) }, '오늘 하루 안 보기'),
     )
-  }, { autofocus: false })
+  }, { variant: 'info', autofocus: false })
   if (hide) hideToday()
 }
 

@@ -73,6 +73,5 @@ export function openShop(initial: GameState): Promise<GameState> {
       draw()
       return root
     },
-    { autofocus: false },
-  )
+    { variant: 'info', autofocus: false })
 }

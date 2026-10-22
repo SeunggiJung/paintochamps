@@ -10,9 +10,7 @@ import { h } from './dom.ts'
 export type SheetVariant = 'decision' | 'result' | 'info' | 'center' | 'cinema'
 
 export interface SheetOptions {
-  variant?: SheetVariant
-  /** 옛 옵션: variant가 없을 때 false면 decision, 아니면 center */
-  center?: boolean
+  variant: SheetVariant
   autofocus?: boolean
   /** cinema의 왼쪽 위 칩 글자 */
   title?: string
@@ -25,9 +23,9 @@ const DRAG_CLOSE_PX = 80
  * 화면 위에 뜨는 팝업. build가 만든 내용을 보여 주고, close(값)을 부르면 닫히면서 그 값으로 resolve된다.
  * info는 ✕·바깥·끌기로 닫히며 값 없이(undefined) resolve된다.
  */
-export function openSheet<T>(build: (close: (value: T) => void) => HTMLElement, options: SheetOptions = {}): Promise<T> {
+export function openSheet<T>(build: (close: (value: T) => void) => HTMLElement, options: SheetOptions): Promise<T> {
   return new Promise((resolve) => {
-    const variant: SheetVariant = options.variant ?? (options.center === false ? 'decision' : 'center')
+    const variant = options.variant
     const previous = document.activeElement as HTMLElement | null
     const overlay = h('div', { class: `overlay ${variant}` })
     const close = (value: T) => {

@@ -67,6 +67,5 @@ export function playBroadcast(series: FinalSeries, genre: GenreId, seed: number,
       })()
       return root
     },
-    { center: true, autofocus: false },
-  )
+    { variant: 'cinema', autofocus: false })
 }

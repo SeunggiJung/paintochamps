@@ -120,8 +120,7 @@ export class GameSession {
         facilityEffectLines(next).length > 0 &&
           h('div', { class: 'stack-tight facility-effects' }, h('p', { class: 'eyebrow' }, '시설 덕분에'), ...facilityEffectLines(next).map((line) => h('p', { class: 'muted small' }, line))),
         h('button', { class: 'btn primary', onclick: () => close() }, '다음'),
-      ),
-    )
+      ), { variant: 'result' })
     const coach = coachSwapOffer(next, r.calendar.beats)
     if (coach) next = await this.askCoachSwap(next, coach)
     const event = rollEvent(next, turnRng(next))
@@ -212,8 +211,7 @@ export class GameSession {
           }),
         ),
         h('button', { class: 'btn ghost small', onclick: () => close(null) }, `지금 훈련(${ACTIONS[s.seasonTraining!].name})을 유지한다`),
-      ),
-    )
+      ), { variant: 'decision' })
     return applyCoachSwap(s, picked)
   }
 
@@ -230,8 +228,7 @@ export class GameSession {
         h('p', { class: 'event-text' }, `이번 시즌 활약을 본 ${stageName(stage)} 팀들에서 연락이 왔다. 시즌이 끝나길 기다리지 않고 지금 올라갈까?`),
         h('div', { class: 'choices vertical' }, ...pending.offers.map((o, i) => offerButton(s, o, () => close(i), stage, true))),
         h('button', { class: 'btn ghost small', onclick: () => close(null) }, `지금 팀에 남는다`),
-      ),
-    )
+      ), { variant: 'decision' })
     if (index !== null) await showContract(s, pending.offers[index], 'callup', stage)
     return acceptOffer(s, index)
   }
@@ -248,8 +245,7 @@ export class GameSession {
         h('p', { class: 'event-text' }, requested ? `이적을 요청하자 다른 팀들이 관심을 보인다. 지금 ${s.team?.name ?? '팀'}을(를) 떠날까?` : `시즌 도중에 다른 팀에서 연락이 왔다. 지금 ${s.team?.name ?? '팀'}을(를) 떠날까?`),
         h('div', { class: 'choices vertical' }, ...pending.offers.map((o, i) => offerButton(s, o, () => close(i), undefined, true))),
         h('button', { class: 'btn ghost small', onclick: () => close(null) }, '지금 팀에 남는다'),
-      ),
-    )
+      ), { variant: 'decision' })
     if (index !== null) await showContract(s, pending.offers[index], 'transfer')
     // 새 계약 직후에는 월급을 협상할 수 없다. 한 턴이 지나면 '연봉 협상'이 열린다.
     return acceptOffer(s, index)

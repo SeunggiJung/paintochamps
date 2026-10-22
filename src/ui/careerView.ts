@@ -70,5 +70,5 @@ export function careerSections(career: Career): HTMLElement[] {
 
 /** 육성 중에 경력을 보는 팝업 */
 export function openCareer(career: Career, title = '내 경력'): Promise<void> {
-  return openSheet<void>((close) => h('div', { class: 'stack-tight career-sheet' }, h('h3', {}, title), ...careerSections(career), h('button', { class: 'btn', onclick: () => close() }, '닫기')))
+  return openSheet<void>((close) => h('div', { class: 'stack-tight career-sheet' }, h('h3', {}, title), ...careerSections(career), h('button', { class: 'btn', onclick: () => close() }, '닫기')), { variant: 'info' })
 }

@@ -31,8 +31,7 @@ export async function openNegotiation(state: GameState): Promise<GameState> {
         ),
       ),
       h('button', { class: 'btn ghost small', onclick: () => close(null) }, '지금 조건대로 간다'),
-    ),
-  )
+    ), { variant: 'decision' })
   if (askId === null) return state
   const r = negotiateSalary(state, askId)
   await openSheet<void>((close) =>
@@ -42,7 +41,6 @@ export async function openNegotiation(state: GameState): Promise<GameState> {
       h('p', { class: 'eyebrow' }, '협상 결과'),
       h('p', { class: 'event-text' }, r.success ? `협상 성공! 월급이 3개월마다 ${formatMoney(r.salary)}으로 올랐다.` : `협상이 틀어졌다. 월급은 그대로 ${formatMoney(r.salary)}이다.${r.state.stats.mental < state.stats.mental ? ' 괜히 말을 꺼냈나 싶어 마음이 무겁다.' : ''}`),
       h('button', { class: 'btn primary', onclick: () => close() }, '확인'),
-    ),
-  )
+    ), { variant: 'result' })
   return r.state
 }

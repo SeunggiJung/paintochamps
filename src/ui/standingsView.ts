@@ -29,6 +29,5 @@ export function openStandings(state: GameState): Promise<void> {
       h('h3', {}, '이번 시즌 다른 팀 성적'),
       runs.length === 0 ? h('p', { class: 'muted small' }, '이번 시즌에 공개된 대회 기록이 없어요.') : h('div', { class: 'stack-tight' }, ...runs.map(runCard)),
       h('button', { class: 'btn', onclick: () => close() }, '닫기'),
-    ),
-  )
+    ), { variant: 'info' })
 }

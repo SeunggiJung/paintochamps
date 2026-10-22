@@ -108,7 +108,7 @@ export async function openResultCard(state: GameState): Promise<void> {
   try {
     canvas = await drawResultCard(state)
   } catch {
-    await openSheet<void>((close) => h('div', { class: 'stack-tight' }, h('p', { class: 'event-text' }, '결과 카드를 만들지 못했어요.'), h('button', { class: 'btn primary', onclick: () => close() }, '닫기')))
+    await openSheet<void>((close) => h('div', { class: 'stack-tight' }, h('p', { class: 'event-text' }, '결과 카드를 만들지 못했어요.'), h('button', { class: 'btn primary', onclick: () => close() }, '닫기')), { variant: 'info' })
     return
   }
   const fileName = `paintochamps-${state.name}.png`
@@ -149,5 +149,5 @@ export async function openResultCard(state: GameState): Promise<void> {
       typeof navigator.share === 'function' && h('button', { class: 'btn', onclick: () => void share() }, '공유하기'),
       h('button', { class: 'btn ghost small', onclick: () => close() }, '닫기'),
     )
-  })
+  }, { variant: 'info' })
 }

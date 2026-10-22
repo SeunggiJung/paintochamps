@@ -129,6 +129,5 @@ export function playAdShoot(info: AdShootInfo): Promise<void> {
       )
       return root
     },
-    { center: true },
-  )
+    { variant: 'cinema' })
 }

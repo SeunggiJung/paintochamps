@@ -36,8 +36,7 @@ export async function offerMiniGame(state: GameState, kind: MiniGameId): Promise
       h('p', { class: 'muted small' }, `잘하면 다음 턴 훈련 효율이 최대 ${pct(MINIGAME.bonus.great)} 오릅니다. 건너뛰어도 손해는 없어요.`),
       h('button', { class: 'btn primary', onclick: () => close(true) }, '해 본다'),
       h('button', { class: 'btn ghost small', onclick: () => close(false) }, '건너뛴다'),
-    ),
-  )
+    ), { variant: 'cinema' })
   if (!play) return state
   const rng = createRng(mixSeed(state.seed, state.turnCount, 0x3149))
   const { tier, summary } = await PLAYERS[kind](rng)
@@ -51,8 +50,7 @@ export async function offerMiniGame(state: GameState, kind: MiniGameId): Promise
       h('p', { class: 'event-text' }, TIER_TEXT[tier]),
       bonus > 0 && h('p', { class: 'minigame-bonus' }, `다음 턴 훈련 효율 ${pct(bonus)}`),
       h('button', { class: 'btn primary', onclick: () => close() }, '확인'),
-    ),
-  )
+    ), { variant: 'cinema' })
   return applyWarmup(state, tier)
 }
 
@@ -106,7 +104,7 @@ function playShooting(rng: Rng): Promise<MiniResult> {
       arena,
       h('button', { class: 'btn ghost small', onclick: () => finish() }, '그만둔다'),
     )
-  }, { autofocus: false })
+  }, { variant: 'cinema', autofocus: false })
 }
 
 const GLYPHS = [
@@ -167,7 +165,7 @@ function playPuzzle(rng: Rng): Promise<MiniResult> {
       h('div', { class: 'mg-grid' }, ...cards),
       h('button', { class: 'btn ghost small', onclick: () => close(quit()) }, '그만둔다'),
     )
-  }, { autofocus: false })
+  }, { variant: 'cinema', autofocus: false })
 }
 
 /** 반응속도: 화면이 초록으로 바뀌는 순간 누른다. 평균 반응 시간으로 평가하고, 너무 일찍 누르면 그 판을 다시 한다. */
@@ -221,7 +219,7 @@ function playReaction(rng: Rng): Promise<MiniResult> {
       pad,
       h('button', { class: 'btn ghost small', onclick: () => (clearTimeout(timer), close(quit())) }, '그만둔다'),
     )
-  }, { autofocus: false })
+  }, { variant: 'cinema', autofocus: false })
 }
 
 /** 숫자 순서 터치: 흩어진 숫자를 1부터 순서대로 누른다. 끝까지 걸린 시간으로 평가한다. */
@@ -261,7 +259,7 @@ function playNumbers(rng: Rng): Promise<MiniResult> {
       h('div', { class: 'mg-grid three' }, ...cells),
       h('button', { class: 'btn ghost small', onclick: () => close(quit()) }, '그만둔다'),
     )
-  }, { autofocus: false })
+  }, { variant: 'cinema', autofocus: false })
 }
 
 const PADS = [
@@ -343,7 +341,7 @@ function playPattern(rng: Rng): Promise<MiniResult> {
       h('div', { class: 'mg-grid two' }, ...pads),
       h('button', { class: 'btn ghost small', onclick: () => ((over = true), close(result())) }, '그만둔다'),
     )
-  }, { autofocus: false })
+  }, { variant: 'cinema', autofocus: false })
 }
 
 const PLAYERS: Record<MiniGameId, (rng: Rng) => Promise<MiniResult>> = {

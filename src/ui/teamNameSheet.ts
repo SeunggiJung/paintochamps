@@ -23,8 +23,7 @@ export async function askCafeTeamName(storage: KeyValueStorage, state: GameState
       h('p', { class: 'event-text' }, '친구들과 PC방 대회에 나가기로 했다. 팀 이름은 뭐로 할까?'),
       input,
       h('button', { class: 'btn primary', type: 'submit' }, '이 이름으로 출전'),
-    ),
-  )
+    ), { variant: 'decision' })
   const next = { ...state, cafeTeamName: name }
   saveGame(storage, next)
   return next

@@ -13,6 +13,5 @@ export function confirmSheet(opts: { title: string; message: string; ok: string;
         h('button', { class: 'btn primary', onclick: () => close(true) }, opts.ok),
         h('button', { class: 'btn ghost', onclick: () => close(false) }, opts.cancel ?? '취소'),
       ),
-    { center: true, autofocus: false },
-  )
+    { variant: 'decision', autofocus: false })
 }

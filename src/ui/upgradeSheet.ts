@@ -64,5 +64,5 @@ export function openUpgrade(input: UpgradeInput): Promise<boolean> {
 
     askView()
     return root
-  }, { center: true, autofocus: false })
+  }, { variant: 'decision', autofocus: false })
 }

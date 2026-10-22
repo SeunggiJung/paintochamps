@@ -51,7 +51,7 @@ export function supportButton(): HTMLElement | null {
             ),
             h('button', { class: 'btn ghost small', onclick: () => close() }, '닫기'),
           )
-        }),
+        }, { variant: 'info' }),
     },
     '🍚 개발자 밥사주기',
   )
