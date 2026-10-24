@@ -11,6 +11,32 @@ interface UpdateEntry {
 export const UPDATES = updates as UpdateEntry[]
 
 const HIDE_KEY = 'paintochamps:updatelog:hide'
+/** 마지막으로 본 업데이트 날짜. 없으면 첫 방문이다. */
+const SEEN_KEY = 'paintochamps:updatelog:seen'
+
+const latestDate = (): string => UPDATES[0]?.date ?? ''
+
+function lastSeen(): string | null {
+  try {
+    return localStorage.getItem(SEEN_KEY)
+  } catch {
+    return null
+  }
+}
+
+function markSeen(): void {
+  try {
+    localStorage.setItem(SEEN_KEY, latestDate())
+  } catch {
+    // 저장소를 쓸 수 없으면 배지가 계속 보일 뿐이다
+  }
+}
+
+/** 이전에 방문한 적이 있는데 아직 보지 않은 새 업데이트가 있는지 (타이틀 버튼의 배지용). 첫 방문에는 배지도 없다. */
+export function hasUnseenUpdate(): boolean {
+  const seen = lastSeen()
+  return UPDATES.length > 0 && seen !== null && seen !== latestDate()
+}
 
 /** 오늘 날짜 (사용자 시간대, YYYY-MM-DD) */
 function today(): string {
@@ -40,6 +66,7 @@ let shownThisLoad = false
 
 /** 업데이트 로그 팝업: 날짜별로 한 항목씩이고, 최신 날짜만 펼쳐져 있다. 하나를 열면 나머지는 접히고 내용은 스크롤로 본다. 닫기와 '오늘 하루 안 보기'가 있다. */
 export async function openUpdateLog(): Promise<void> {
+  markSeen()
   const hide = await openSheet<boolean>((close) => {
     const entries = UPDATES.map((u, i) =>
       h(
@@ -63,9 +90,17 @@ export async function openUpdateLog(): Promise<void> {
   if (hide) hideToday()
 }
 
-/** 접속(페이지를 연) 뒤 타이틀을 처음 보여 줄 때 한 번만, 오늘 안 보기를 누르지 않았다면 업데이트 로그를 띄운다. */
+/**
+ * 접속 뒤 타이틀을 처음 보여 줄 때 한 번만, 이전에 방문한 적이 있고 새 업데이트가 있으며 오늘 안 보기를 누르지 않았다면 업데이트 로그를 띄운다.
+ * 첫 방문에는 타이틀 그림을 가리지 않도록 띄우지 않고(타이틀 버튼 배지로만 알린다) 지금까지의 업데이트를 본 것으로 처리한다.
+ */
 export function maybeShowUpdateLog(): void {
   if (shownThisLoad || hiddenToday() || UPDATES.length === 0) return
   shownThisLoad = true
+  if (lastSeen() === null) {
+    markSeen()
+    return
+  }
+  if (lastSeen() === latestDate()) return
   void openUpdateLog()
 }

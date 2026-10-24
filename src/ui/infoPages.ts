@@ -1,5 +1,6 @@
 import site from '../data/site.json'
 import support from '../data/support.json'
+import { ENDINGS } from '../engine/endings.ts'
 import { h } from './dom.ts'
 import type { Ctx } from './app.ts'
 
@@ -26,7 +27,7 @@ const PAGES: Record<InfoPageId, InfoPage> = {
       {
         paragraphs: [
           `「${site.name}」은 16세 겜돌이가 방구석 랭커에서 시작해 프로 계약, 월드 챔피언십 우승, 은퇴까지 걸어가는 웹 육성 시뮬레이션입니다. 설치와 로그인 없이 브라우저에서 한 판에 15~25분이면 끝나도록 만들었습니다.`,
-          '능력치 뽑기로 시작하고, 시즌마다 훈련과 방침을 정한 뒤 이벤트와 이적, 계약 같은 굵직한 선택으로 커리어를 이끌어 갑니다. 같은 길은 한 번도 없고, 엔딩 11종과 업적을 모으는 재미가 있습니다.',
+          `능력치 뽑기로 시작하고, 시즌마다 훈련과 방침을 정한 뒤 이벤트와 이적, 계약 같은 굵직한 선택으로 커리어를 이끌어 갑니다. 같은 길은 한 번도 없고, 엔딩 ${ENDINGS.length}종과 업적을 모으는 재미가 있습니다.`,
         ],
       },
       {

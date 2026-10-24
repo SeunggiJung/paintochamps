@@ -16,6 +16,8 @@ import { endingSceneSvg } from './endingScenes.ts'
 import { MODE_INFO } from './labels.ts'
 import { formatMoney } from './format.ts'
 import { openResultCard } from './resultCard.ts'
+import { dismissAllSheets } from './confirm.ts'
+import { endingSupportCard } from './support.ts'
 
 /**
  * 엔딩 그림 자리. 지금은 코드로 그린 도트 장면(`endingScenes.ts`)이고, 일러스트가 준비되면 이미지로 바꾼다.
@@ -48,6 +50,7 @@ const RECENT_SEASONS = 6
 export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements, tokens }: EndingInfo): HTMLElement {
   const id = state.finished
   if (!id) throw new Error('끝나지 않은 판이다')
+  dismissAllSheets()
   const def = endingDef(id)
   const best = bestStageOf(state)
   const parts = careerParts(buildCareer(state))
@@ -144,6 +147,7 @@ export function endingScreen(ctx: Ctx, state: GameState, { isNew, achievements, 
         h('button', { class: 'btn primary', type: 'button', onclick: () => void openResultCard(state) }, '결과 카드 만들기'),
         h('div', { class: 'btn-row' }, h('button', { class: 'btn', type: 'button', onclick: () => ctx.toCodex(() => ctx.toTitle()) }, '엔딩 도감 보기'), h('button', { class: 'btn', type: 'button', onclick: () => ctx.toTitle() }, '타이틀로')),
       ),
+      endingSupportCard() ?? '',
     )
   }
   draw()
