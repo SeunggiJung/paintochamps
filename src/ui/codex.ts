@@ -2,7 +2,7 @@ import genres from '../data/genres.json'
 import { ACHIEVEMENTS } from '../engine/achievements.ts'
 import { endingDef, ENDINGS } from '../engine/endings.ts'
 import { stageName } from '../engine/season.ts'
-import type { FinishSummary } from '../save/storage.ts'
+import { hasHint, useHint, type FinishSummary, type HintKind } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
 import { openCareer } from './careerView.ts'
 import { segmented } from './components.ts'
@@ -19,6 +19,7 @@ const lastLine = (last: FinishSummary) => `최근: ${last.name} · ${genres[last
 /**
  * 도감: 엔딩 / 업적 / 명예의 전당. 엔딩·업적은 타일·리스트 두 보기.
  * 본 항목은 설명과 마지막 기록을, 못 본 항목은 조건을 숨기고 ???로만 보여 준다.
+ * 못 본 항목을 눌러 업적 상점에서 산 힌트를 쓰면 그 항목의 조건이 열린다.
  */
 export function codexScreen(ctx: Ctx, back: () => void): HTMLElement {
   const { endings, achievements, finishedRuns, bestStage } = ctx.meta
@@ -33,7 +34,43 @@ export function codexScreen(ctx: Ctx, back: () => void): HTMLElement {
       { variant: 'info' },
     )
 
-  const lockedBody = () => h('div', { class: 'codex-body' }, h('b', {}, '???'), h('span', { class: 'muted small' }, '직접 플레이하며 찾아보세요.'))
+  const ticketOf = (kind: HintKind) => ctx.meta.inventory[kind === 'ending' ? 'hint_ending' : 'hint_achievement'] ?? 0
+
+  /** 못 본 항목: 힌트로 열어 본 조건이 있으면 보여 주고, 없으면 직접 찾아보라고만 한다. */
+  const lockedBody = (kind: HintKind, id: string, desc: string) =>
+    h('div', { class: 'codex-body' }, h('b', {}, '???'), h('span', { class: 'muted small' }, hasHint(ctx.meta, kind, id) ? `💡 ${desc}` : '직접 플레이하며 찾아보세요.'))
+
+  /** 못 본 항목을 누르면 힌트 시트: 조건을 열어 보거나(힌트 1장), 힌트가 없으면 상점 안내 */
+  const lockedItem = (kind: HintKind, id: string, desc: string, art: HTMLElement) => {
+    const label = kind === 'ending' ? '엔딩' : '업적'
+    return h(
+      'button',
+      {
+        class: 'codex-item locked',
+        type: 'button',
+        onclick: () =>
+          void openSheet<void>(
+            (close) => {
+              const opened = hasHint(ctx.meta, kind, id)
+              const tickets = ticketOf(kind)
+              return h(
+                'div',
+                { class: 'stack-tight' },
+                art.cloneNode(true) as HTMLElement,
+                h('h2', {}, '???'),
+                opened ? h('p', { class: 'muted' }, `💡 ${desc}`) : h('p', { class: 'muted' }, `아직 못 본 ${label}예요. 힌트를 쓰면 달성 조건을 볼 수 있어요. (보유 ${tickets}장)`),
+                !opened && tickets > 0 && h('button', { class: 'btn primary', type: 'button', onclick: () => ((ctx.meta = useHint(ctx.storage, kind, id) ?? ctx.meta), close(), render()) }, `${label} 힌트 쓰기`),
+                !opened && tickets === 0 && h('p', { class: 'muted small' }, '업적 상점에서 토큰으로 힌트를 살 수 있어요.'),
+                h('button', { class: 'btn ghost small', type: 'button', onclick: () => close() }, '닫기'),
+              )
+            },
+            { variant: 'info' },
+          ),
+      },
+      art,
+      lockedBody(kind, id, desc),
+    )
+  }
   const badge = (locked: boolean) => h('div', { class: `ending-art thumb small-art${locked ? ' locked' : ''}` }, locked ? '?' : '🏅')
 
   const items = (): HTMLElement[] => {
@@ -41,7 +78,7 @@ export function codexScreen(ctx: Ctx, back: () => void): HTMLElement {
     if (tab === 'endings') {
       return ENDINGS.map((e) => {
         const rec = endings[e.id]
-        if (!rec) return h('div', { class: 'codex-item locked' }, endingArt(e.id, true, view === 'tile' ? 'hero' : 'thumb'), lockedBody())
+        if (!rec) return lockedItem('ending', e.id, e.desc, endingArt(e.id, true, view === 'tile' ? 'hero' : 'thumb'))
         return h(
           'button',
           { class: 'codex-item', type: 'button', onclick: () => void detail(e.name, endingArt(e.id, false, 'hero'), e.desc, rec.count, rec.last) },
@@ -52,7 +89,7 @@ export function codexScreen(ctx: Ctx, back: () => void): HTMLElement {
     }
     return ACHIEVEMENTS.map((a) => {
       const rec = achievements[a.id]
-      if (!rec) return h('div', { class: 'codex-item locked' }, badge(true), lockedBody())
+      if (!rec) return lockedItem('achievement', a.id, a.desc, badge(true))
       return h(
         'button',
         { class: 'codex-item', type: 'button', onclick: () => void detail(a.name, badge(false), a.desc, rec.count, rec.last) },

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createInitialState, type GameState } from '../engine/state.ts'
 import { negotiationChance, ASKS } from '../engine/negotiation.ts'
 import { rollAtMin } from '../ui/newGame.ts'
-import { buyItem, loadMeta, META_KEY, perksFromMeta, recordFinish, tokensFor, useSrTicket, type KeyValueStorage } from './storage.ts'
+import { buyItem, loadMeta, META_KEY, perksFromMeta, hasHint, recordFinish, tokensFor, useHint, useSrTicket, type KeyValueStorage } from './storage.ts'
 
 class MemoryStorage implements KeyValueStorage {
   data = new Map<string, string>()
@@ -78,5 +78,18 @@ describe('업적 토큰과 상점', () => {
     expect(useSrTicket(storage)!.inventory.sr_ticket).toBe(0)
     for (let i = 0; i < 15; i++) expect(['SR', 'SSR', 'UR']).toContain(rollAtMin(123, 'fps', i).grade)
     expect(rollAtMin(123, 'fps', 3)).toEqual(rollAtMin(123, 'fps', 3))
+  })
+
+  it('도감 힌트는 힌트 한 장으로 항목 하나의 조건을 열고, 같은 항목에는 다시 쓰지 않는다', () => {
+    expect(useHint(storage, 'ending', 'legend')).toBeNull()
+    withTokens(20)
+    buyItem(storage, 'hint_ending')
+    buyItem(storage, 'hint_achievement')
+    const opened = useHint(storage, 'ending', 'legend')!
+    expect(opened.inventory.hint_ending).toBe(0)
+    expect(hasHint(opened, 'ending', 'legend')).toBe(true)
+    expect(hasHint(opened, 'achievement', 'legend')).toBe(false)
+    expect(useHint(storage, 'ending', 'goat')).toBeNull()
+    expect(useHint(storage, 'achievement', 'dynasty')!.inventory.hint_achievement).toBe(0)
   })
 })

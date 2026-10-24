@@ -137,6 +137,8 @@ export interface MetaSave {
   tokensEarned: number
   /** 업적 상점에서 산 것: 소모품은 개수, 영구 강화는 단계 */
   inventory: Inventory
+  /** 힌트로 조건을 열어 본 도감 항목. 키는 'ending:<id>'·'achievement:<id>' (옛 도감에는 없을 수 있다) */
+  hints: Record<string, true>
   /** 끝낸 커리어의 경력 기록, 최근 것이 앞 */
   careers: CareerSnapshot[]
 }
@@ -164,7 +166,7 @@ export function finishSummary(state: GameState): FinishSummary {
 }
 
 export function emptyMeta(): MetaSave {
-  return { version: 1, tutorialDone: false, guideDone: false, guidesSeen: {}, endings: {}, achievements: {}, bestStage: 'basement', finishedRuns: 0, tokens: 0, tokensEarned: 0, inventory: {}, careers: [] }
+  return { version: 1, tutorialDone: false, guideDone: false, guidesSeen: {}, endings: {}, achievements: {}, bestStage: 'basement', finishedRuns: 0, tokens: 0, tokensEarned: 0, inventory: {}, hints: {}, careers: [] }
 }
 
 export function loadMeta(storage: KeyValueStorage): MetaSave {
@@ -172,7 +174,7 @@ export function loadMeta(storage: KeyValueStorage): MetaSave {
     const text = storage.getItem(META_KEY)
     if (!text) return emptyMeta()
     const m = JSON.parse(text) as Partial<MetaSave>
-    return m && m.version === 1 && typeof m.endings === 'object' ? { ...emptyMeta(), ...m, guidesSeen: { ...(m.guidesSeen ?? {}) } } : emptyMeta()
+    return m && m.version === 1 && typeof m.endings === 'object' ? { ...emptyMeta(), ...m, guidesSeen: { ...(m.guidesSeen ?? {}) }, hints: { ...(m.hints ?? {}) } } : emptyMeta()
   }, emptyMeta())
 }
 
@@ -243,6 +245,26 @@ export function useSrTicket(storage: KeyValueStorage): MetaSave | null {
   const owned = meta.inventory.sr_ticket ?? 0
   if (owned <= 0) return null
   const next: MetaSave = { ...meta, inventory: { ...meta.inventory, sr_ticket: owned - 1 } }
+  safe(() => storage.setItem(META_KEY, JSON.stringify(next)), undefined)
+  return next
+}
+
+/** 도감 힌트의 종류와 쓰는 물건 */
+export type HintKind = 'ending' | 'achievement'
+const HINT_ITEM: Record<HintKind, string> = { ending: 'hint_ending', achievement: 'hint_achievement' }
+
+export const hintKey = (kind: HintKind, id: string): string => `${kind}:${id}`
+
+/** 이미 조건을 열어 본 항목인지 */
+export const hasHint = (meta: MetaSave, kind: HintKind, id: string): boolean => Boolean(meta.hints[hintKey(kind, id)])
+
+/** 힌트를 한 장 써서 도감 항목의 조건을 연다. 이미 열었거나 가진 힌트가 없으면 null. */
+export function useHint(storage: KeyValueStorage, kind: HintKind, id: string): MetaSave | null {
+  const meta = loadMeta(storage)
+  const item = HINT_ITEM[kind]
+  const owned = meta.inventory[item] ?? 0
+  if (owned <= 0 || hasHint(meta, kind, id)) return null
+  const next: MetaSave = { ...meta, inventory: { ...meta.inventory, [item]: owned - 1 }, hints: { ...meta.hints, [hintKey(kind, id)]: true } }
   safe(() => storage.setItem(META_KEY, JSON.stringify(next)), undefined)
   return next
 }

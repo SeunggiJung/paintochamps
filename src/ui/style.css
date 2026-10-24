@@ -544,7 +544,7 @@ input[type='text'] {
 .codex-grid.tile { grid-template-columns: 1fr 1fr; }
 .codex-grid.list { grid-template-columns: 1fr; }
 .codex-item { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: var(--border); border-radius: var(--radius); background: var(--panel); color: var(--text); font: inherit; text-align: left; cursor: pointer; box-shadow: var(--shadow); }
-.codex-item.locked { cursor: default; opacity: 0.8; }
+.codex-item.locked { cursor: pointer; opacity: 0.8; }
 .codex-grid.list .codex-item { flex-direction: row; align-items: center; gap: 12px; }
 .codex-grid.tile .ending-art.thumb { width: 100%; height: auto; aspect-ratio: 16 / 10; }
 .codex-grid.tile .small-art { aspect-ratio: 16 / 10; }
