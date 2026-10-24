@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://paintochamps.tmdrl8336.workers.dev/sitemap.xml
