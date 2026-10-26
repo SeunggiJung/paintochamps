@@ -12,7 +12,7 @@ const QR_URL = Object.values(QR_FILES)[0] as string | undefined
 /** 휴대폰이면 QR을 스캔할 수 없으니 송금 앱을 바로 여는 버튼을, 컴퓨터면 QR을 보여 준다. */
 const isMobile = (): boolean => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
-async function copyText(text: string): Promise<boolean> {
+export async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text)
     return true

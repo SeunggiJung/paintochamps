@@ -1,4 +1,5 @@
 import type { Ctx } from './app.ts'
+import { openBackup } from './backupSheet.ts'
 import { segmented } from './components.ts'
 import { h } from './dom.ts'
 import type { FontId, MotionPref, ThemePref } from './prefs.ts'
@@ -42,6 +43,7 @@ export function openSettings(ctx: Ctx, opts: { inGame: boolean }): Promise<void>
           row('글자', segmented(FONT_ITEMS, ctx.prefs.font, (font) => (ctx.updatePrefs({ font }), render()))),
           row('움직임', segmented(MOTION_ITEMS, ctx.prefs.motion, (motion) => (ctx.updatePrefs({ motion }), render()))),
           sound,
+          link('저장 코드 (백업·불러오기)', () => void openBackup(ctx)),
           link('업데이트 로그', () => void openUpdateLog()),
           link('가이드 모아 보기', () => void openGuideList(ctx), `${listGuides(ctx).filter((g) => g.seen).length}/${listGuides(ctx).length}`),
           ...(opts.inGame ? [link('타이틀로', () => (close(undefined), ctx.toTitle()))] : []),

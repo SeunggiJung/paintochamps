@@ -272,6 +272,7 @@ input[type='text'] {
 .offer-line.verdict { font-size: 0.85rem; }
 .offer-line.verdict.caution b { color: var(--danger); }
 .offer-line.verdict.good b { color: var(--up, #2a9d4a); }
+.backup-code { width: 100%; box-sizing: border-box; padding: 8px; border-radius: 10px; border: var(--border); background: var(--panel); color: var(--text); font: inherit; font-size: 0.75rem; word-break: break-all; resize: vertical; }
 .qr-box { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .qr-crop { width: 200px; aspect-ratio: 1; overflow: hidden; border-radius: 12px; border: var(--border); background: #fff; }
 /* 원본(1442px) 가운데 QR(약 620px)과 여백만 남기도록 확대해 자른다 */
