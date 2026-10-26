@@ -41,6 +41,20 @@ describe('가이드', () => {
     expect(overlays()).toBe(0)
   })
 
+  it('처음 자동으로 뜰 때는 핵심 줄만, 다시 볼 때는 전부 보여 준다', async () => {
+    const all = (guideData as Record<string, { lines: string[] }>).plan.lines.length
+    const ctx = fakeCtx()
+    const first = showGuideOnce(ctx, 'plan')
+    expect(document.querySelectorAll('.guide-lines li').length).toBe(3)
+    expect(document.querySelector('.guide-sheet')?.textContent).toContain('나머지 설명은')
+    closeSheet()
+    await first
+    const again = showGuide(ctx, 'plan')
+    expect(document.querySelectorAll('.guide-lines li').length).toBe(all)
+    closeSheet()
+    await again
+  })
+
   it('showGuide(다시 보기)는 이미 본 가이드를 열되 본 기록을 바꾸지 않는다', async () => {
     const ctx = fakeCtx()
     const p = showGuideOnce(ctx, 'spend')

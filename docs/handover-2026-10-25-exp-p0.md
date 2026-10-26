@@ -30,14 +30,14 @@
 3. **도메인**: 사용자가 `paintochamps.kro.kr`을 설정 중인 듯하다(`public/도메인.png`는 캡처, 추적하지 않음). 연결되면 `index.html`의 `canonical`·`og:url`·`og:image`·`twitter:image`, `robots.txt`·`sitemap.xml`의 주소를 새 도메인으로 바꾸고 Cloudflare 설정과 맞는지 확인한다.
 4. **og 이미지 용량**: `og.png`가 1.5MB다. 미리보기가 느리면 JPG 품질 85(`og.jpg`)로 바꾸고 `index.html` 주소 2곳을 고친다(선택).
 
-**P1 (사용자 자료 없이 진행 가능, 이 순서 권장)**
+**P1 — 2026-10-26에 7개 모두 구현 완료** (아래 번호 순서. 직접 플레이 확인과 푸시만 남음)
 1. ✅(2026-10-26 완료, `engine/guidance.ts` `nextGoal`·`seasonScreen.ts` `goalCard`) 결산의 상위권 길잡이: 다음 단계 조건·상위 팀 전력 대비 내 실력 격차·월드 진출 조건 한 줄(`seasonScreen.ts` 결산 화면, `season.ts`·`teams.ts`).
 2. ✅(2026-10-26 완료, `RunRecord.strength`·`leagueReason`·`reasonCard`) 리그 결과 이유: 팀 전력 대비 내 팀 전력, 코치 한 줄(`standingsView.ts`·결산).
-3. 이적 카드 추천/주의 태그와 국내 이적 확인창 손익 요약(`offerView.ts`, `session.ts` 이적 확인).
-4. 장비·레슨 효과 수치 표시(`planFlow.ts` 지출 카드·`playerTab.ts`).
-5. 콜업 연속 거절 불이익(`season.ts` `makeCallupOffers`, `stages.json`, **봇 결과·밸런스 리포트 재확인**).
-6. 저장 코드 백업(내보내기/불러오기, `storage.ts`·설정 시트)과 도전 코드(결과 카드에 시드 표기, 새 판 입력).
-7. 가이드 팝업 정리(첫 시즌 핵심 3줄만 — `data/guides.json`).
+3. ✅ 이적 카드 추천/주의 태그와 국내 이적 확인창 손익 요약(`offerView.ts`, `session.ts` 이적 확인).
+4. ✅ 장비·레슨 효과 수치 표시(`planFlow.ts` 지출 카드·`playerTab.ts`).
+5. ✅ 콜업 연속 거절 불이익(`season.ts` `makeCallupOffers`, `stages.json`, **봇 결과·밸런스 리포트 재확인**).
+6. ✅ 저장 코드 백업(내보내기/불러오기, `storage.ts`·설정 시트)과 도전 코드(결과 카드에 시드 표기, 새 판 입력).
+7. ✅ 가이드 팝업 정리(첫 시즌 핵심 3줄만 — `data/guides.json`).
 
 **검증 못 한 것**: 이번 화면 변경(엔딩 후원 카드·도감 힌트 시트·N 배지)을 브라우저에서 직접 열어 보지 못했다. 다음 세션에서 Playwright로 한 번 훑는다(`docs/handover-2026-10-22-wrapup.md` §4 방법). 배포 후 카카오톡 등에서 링크 미리보기가 뜨는지 확인(카카오는 캐시가 있어 디버거에서 갱신해야 할 수 있다).
 
@@ -48,6 +48,12 @@
 - 후원 문구는 약관 7조("후원에 대가가 없다")를 깨지 않아야 한다. 혜택을 주는 안(닉네임 명단 등)은 약관 수정이 먼저다.
 - 업적 상점은 능력치·판정을 올리는 방향으로 넓히지 않는다(편의 위주).
 - 난이도 방침(숙련은 20대 중반 월드 제패)은 그대로. 길잡이를 넣어도 수치는 건드리지 않는다.
+
+## 4-1. 2026-10-26 P1 구현 요약 (직접 플레이 확인 필요)
+
+- 다음 목표 카드·리그 결과 분석(`engine/guidance.ts`, `RunRecord.strength`), 아카데미 초대 구단 표시(`GameState.academyOrg`, `testName(id, state)`, 이벤트 문구 `{academy}`), 이적 제안 추천/주의 태그와 손해 확인(`offerVerdict`, `contracts.json offerVerdict`, `offerView.ts confirmOffer`), 장비 효율 수치(`planFlow.ts`·`playerTab.ts`), 콜업 연속 거절 명성 감소(`stages.json offers.callupRefusal`, `GameState.callupRefusals`, `callupRefusalCost`), 저장 코드(`save/backup.ts`·`ui/backupSheet.ts`, 설정 시트), 도전 코드(`engine/challenge.ts`, 결과 카드·캐릭터 만들기), 첫 가이드 짧게(`guides.json` `brief`).
+- 화면(결산 카드·이적 카드·설정의 저장 코드·도전 코드 입력)은 렌더 테스트만 했고 브라우저로 보지 않았다.
+- 남은 선택 과제(P2 이후): `docs/exp-review-2026-10-25.md` §5.
 
 ## 5. graphify 메모
 
