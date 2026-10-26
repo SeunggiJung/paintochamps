@@ -28,4 +28,9 @@ describe('seasonLine', () => {
     expect(line({}, 40)).toContain('늘었다')
     expect(line({}, 5)).not.toContain('늘었다')
   })
+  it('연속된 시즌에는 같은 성적이어도 문장이 겹치지 않고 자리표시자가 남지 않는다', () => {
+    const lines = [0, 1, 2, 3, 4].map((season) => line({ events: [event(5)] }, 0, season))
+    expect(new Set(lines).size).toBe(5)
+    for (const l of lines) expect(l).not.toMatch(/[{}]/)
+  })
 })
