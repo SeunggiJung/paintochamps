@@ -236,6 +236,8 @@ export interface GameState {
   cafeAttempts: number
   /** PC방 대회 상위 성적으로 아카데미 입단 테스트 초대를 받았는지 */
   academyInvite: boolean
+  /** 1부 콜업 제안을 연달아 거절한 횟수 (콜업을 받아들이면 0). 옛 세이브에는 없다 */
+  callupRefusals?: number
   /** 초대장을 보낸 구단(아카데미의 모회사). 초대를 받는 시점에 정해져 입단 테스트에 합격하면 이 구단의 아카데미로 간다. 옛 세이브에는 없다 */
   academyOrg?: TeamRef | null
   /** 아카데미 입단 테스트에서 떨어져 재도전한 횟수 */
@@ -349,6 +351,7 @@ export function createInitialState({ name, genre, mode, gacha, seed, rerolls = 0
     path: 'rookie',
     cafeAttempts: 0,
     academyInvite: false,
+    callupRefusals: 0,
     academyOrg: null,
     academyRetries: 0,
     testPrep: null,

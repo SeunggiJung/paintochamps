@@ -7,7 +7,7 @@ import { rollMiniGame } from '../engine/minigame.ts'
 import { canNegotiate } from '../engine/negotiation.ts'
 import { autoTurn } from '../engine/plan.ts'
 import { genrePower } from '../engine/power.ts'
-import { acceptOffer, requestTransfer, rollMidSeasonOffer, rollMidSeasonPromotion, stageName, transferBlocker } from '../engine/season.ts'
+import { acceptOffer, callupRefusalCost, requestTransfer, rollMidSeasonOffer, rollMidSeasonPromotion, stageName, transferBlocker } from '../engine/season.ts'
 import type { ActionId, GameState } from '../engine/state.ts'
 import { applyCoachSwap, coachSwapOffer, trainingValue, type CoachOffer } from '../engine/training.ts'
 import { ACTIONS, ageShiftPerTurn, turnsPerSeason } from '../engine/turn.ts'
@@ -237,7 +237,7 @@ export class GameSession {
         h('p', { class: 'eyebrow' }, `${stageName(stage)} 승급 제안`),
         h('p', { class: 'event-text' }, `이번 시즌 활약을 본 ${stageName(stage)} 팀들에서 연락이 왔다. 시즌이 끝나길 기다리지 않고 지금 올라갈까?`),
         h('div', { class: 'choices vertical' }, ...pending.offers.map((o, i) => offerButton(s, o, () => close(i), stage, true))),
-        h('button', { class: 'btn ghost small', onclick: () => close(null) }, `지금 팀에 남는다`),
+        h('button', { class: 'btn ghost small', onclick: () => close(null) }, `지금 팀에 남는다${callupRefusalCost(s) > 0 ? ` (명성 −${callupRefusalCost(s)})` : ''}`),
       ), { variant: 'decision' })
     if (index !== null) await showContract(s, pending.offers[index], 'callup', stage)
     return acceptOffer(s, index)

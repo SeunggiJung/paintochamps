@@ -3,7 +3,7 @@ import { evaluateEnding } from './endings.ts'
 import { makeOpponents } from './field.ts'
 import { createRng } from './rng.ts'
 import { createInitialState, type GameState, type StageId } from './state.ts'
-import { acceptOffer, eventsFor, requestTransfer, rollMidSeasonPromotion, retire, settleSeason, transferBlocker, transferSuccessChance } from './season.ts'
+import { acceptOffer, callupRefusalCost, eventsFor, requestTransfer, rollMidSeasonPromotion, retire, settleSeason, transferBlocker, transferSuccessChance } from './season.ts'
 import { applyTurn, startNextSeason } from './turn.ts'
 import type { GenreId, Stats } from './types.ts'
 
@@ -111,6 +111,19 @@ describe('승급과 강등', () => {
     expect(state.pendingOffers?.offers[0].team).toEqual(PARENT)
     expect(new Set(state.pendingOffers?.offers.map((o) => o.team.id)).size).toBe(state.pendingOffers?.offers.length)
     expect(() => startNextSeason(state)).toThrow()
+  })
+
+  it('콜업을 처음 거절하는 건 공짜지만 연달아 거절하면 명성이 깎이고, 받아들이면 횟수가 0이 된다', () => {
+    const { state } = settleSeason(atSeasonEnd({ stage: 'pro2', team: TEAM, power: 900, everPro: true, fame: 50 }))
+    expect(callupRefusalCost(state)).toBe(0)
+    const first = acceptOffer(state, null)
+    expect(first.callupRefusals).toBe(1)
+    expect(first.fame).toBe(state.fame)
+    const again = { ...state, callupRefusals: first.callupRefusals }
+    expect(callupRefusalCost(again)).toBeGreaterThan(0)
+    const second = acceptOffer(again, null)
+    expect(second.fame).toBe(state.fame - callupRefusalCost(again))
+    expect(acceptOffer(again, 0).callupRefusals).toBe(0)
   })
 
   it('콜업을 받아들이면 1부로 올라가고 그 팀이 1부 데뷔 팀이 된다. 거절하면 2부에 남는다', () => {

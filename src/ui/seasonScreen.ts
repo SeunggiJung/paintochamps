@@ -2,7 +2,7 @@ import endings from '../data/endings.json'
 import genres from '../data/genres.json'
 import { genrePower } from '../engine/power.ts'
 import { earnedAchievements } from '../engine/achievements.ts'
-import { acceptOffer, eventsFor, requestTransfer, retire, settleSeason, stageName, transferBlocker, type EventResult, type SeasonReport } from '../engine/season.ts'
+import { acceptOffer, callupRefusalCost, eventsFor, requestTransfer, retire, settleSeason, stageName, transferBlocker, type EventResult, type SeasonReport } from '../engine/season.ts'
 import type { GameState } from '../engine/state.ts'
 import { startNextSeason } from '../engine/turn.ts'
 import { recordFinish, saveGame, tokensFor } from '../save/storage.ts'
@@ -244,7 +244,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         { class: 'choices vertical' },
         ...pending.offers.map((o, i) => offerButton(state, o, () => choose(i))),
       ),
-      pending.kind !== 'scout' && h('button', { class: 'btn ghost small', onclick: () => choose(null) }, pending.kind === 'callup' ? '콜업을 거절하고 2부에 남는다' : pending.kind === 'overseas' ? (pending.offers.some((o) => o.checkMult !== undefined) ? '거절하고 이곳에 남는다' : '지금 리그에 남는다') : '이적하지 않는다'),
+      pending.kind !== 'scout' && h('button', { class: 'btn ghost small', onclick: () => choose(null) }, pending.kind === 'callup' ? `콜업을 거절하고 2부에 남는다${callupRefusalCost(state) > 0 ? ` (명성 −${callupRefusalCost(state)})` : ''}` : pending.kind === 'overseas' ? (pending.offers.some((o) => o.checkMult !== undefined) ? '거절하고 이곳에 남는다' : '지금 리그에 남는다') : '이적하지 않는다'),
     )
   }
 

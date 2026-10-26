@@ -11,5 +11,5 @@
     "amateur_team": { "to": "pro2", "events": ["amateur_league"], "topRatio": 0.34, "minPower": 250, "minFame": 0 },
     "pro2":         { "to": "pro1", "events": ["pro2_spring", "pro2_autumn"], "topRatio": 0.34, "minPower": 330, "minFame": 10 }
   },
-  "offers": { "count": 3, "callupCount": 3, "salaryMoney": 40, "playtimeFame": 8, "transferMinFame": 50, "transferChance": 0.35, "midMinFame": 30, "midChance": 0.2, "request": { "base": 0.35, "perFame": 0.004, "min": 0.2, "max": 0.9 } }
+  "offers": { "callupRefusal": { "free": 1, "famePenalty": 8 }, "count": 3, "callupCount": 3, "salaryMoney": 40, "playtimeFame": 8, "transferMinFame": 50, "transferChance": 0.35, "midMinFame": 30, "midChance": 0.2, "request": { "base": 0.35, "perFame": 0.004, "min": 0.2, "max": 0.9 } }
 }

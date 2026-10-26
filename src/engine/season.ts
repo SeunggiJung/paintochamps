@@ -348,6 +348,12 @@ function leagueUnderdog(runs: readonly { expected?: number; fieldSize: number }[
   return !!league && league.expected! > league.fieldSize / 2
 }
 
+/** 이번에 콜업을 거절하면 깎이는 명성 (처음 몇 번은 공짜, 연달아 거절하면 대가가 붙는다). 깎이지 않으면 0. */
+export function callupRefusalCost(state: GameState): number {
+  const { free, famePenalty } = OFFERS.callupRefusal
+  return (state.callupRefusals ?? 0) + 1 > free ? famePenalty : 0
+}
+
 /** 스카우트·이적 제안 하나를 고른다. index가 null이면 거절(이적 제안만 거절할 수 있다). */
 export function acceptOffer(state: GameState, index: number | null): GameState {
   const pending = state.pendingOffers
@@ -355,7 +361,14 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
   if (index === null) {
     if (pending.kind === 'scout') throw new Error('입단 제안은 하나를 골라야 한다')
     // 이적·콜업 제안은 거절할 수 있다 (콜업을 거절하면 2부에 남는다). 백지수표를 거절하면 기록해 둔다.
-    return { ...state, pendingOffers: null, blankCheckDeclined: state.blankCheckDeclined || pending.offers.some((o) => o.checkMult !== undefined) }
+    const refusedCallup = pending.kind === 'callup'
+    return {
+      ...state,
+      pendingOffers: null,
+      blankCheckDeclined: state.blankCheckDeclined || pending.offers.some((o) => o.checkMult !== undefined),
+      // 콜업을 연달아 거절하면 명성이 깎인다 (2부에 남아 훈련만 쌓는 파밍을 막는다)
+      ...(refusedCallup ? { callupRefusals: (state.callupRefusals ?? 0) + 1, fame: Math.max(0, state.fame - callupRefusalCost(state)) } : {}),
+    }
   }
   const offer = pending.offers[index]
   if (!offer) throw new Error('없는 제안이다')
@@ -390,6 +403,7 @@ export function acceptOffer(state: GameState, index: number | null): GameState {
     salaryMult,
     negotiatedSeason: 0,
     pendingOffers: null,
+    callupRefusals: pending.kind === 'callup' ? 0 : (state.callupRefusals ?? 0),
   }
   const signed = changeTeam(result, offer.team, isSettled(state))
   // 시즌 도중에 같은 단계 안에서 팀을 옮겼다면 진행 중인 대회는 새 팀의 전력으로 다시 정한다
