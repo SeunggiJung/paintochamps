@@ -271,7 +271,7 @@
     "id": "invite_letter_day",
     "when": { "stages": ["basement"], "invited": true },
     "weight": 8,
-    "text": "PC방 대회 활약을 본 아카데미에서 입단 테스트 초대장이 왔다. 가슴이 두근거린다. 시험까지 무엇부터 준비할까?",
+    "text": "PC방 대회 활약을 본 {academy}에서 입단 테스트 초대장이 왔다. 가슴이 두근거린다. 시험까지 무엇부터 준비할까?",
     "choices": [
       { "label": "아카데미 출신 선배를 찾아가 후기를 듣는다", "effects": { "stats": { "mental": 60, "teamwork": 30 }, "money": -5 } },
       { "label": "밤새 영상 속 프로 선수의 플레이를 따라 한다", "effects": { "stats": { "judgment": 60, "accuracy": 40 }, "condition": -10 } },

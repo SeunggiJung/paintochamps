@@ -1,4 +1,5 @@
 import { applyEventChoice, availableChoices, choiceOutcomes, type GameEvent } from '../engine/events.ts'
+import { academyName } from '../engine/field.ts'
 import type { GameState } from '../engine/state.ts'
 import { h } from './dom.ts'
 import { STAT_LABEL } from './labels.ts'
@@ -27,7 +28,7 @@ export async function runEvent(state: GameState, event: GameEvent): Promise<Game
       'div',
       { class: 'stack-tight' },
       h('p', { class: 'eyebrow' }, '이벤트'),
-      h('p', { class: 'event-text' }, event.text),
+      h('p', { class: 'event-text' }, event.text.replaceAll('{academy}', state.academyOrg ? academyName(state.academyOrg) : '아카데미')),
       ...event.choices.map((c, i) =>
         h(
           'button',

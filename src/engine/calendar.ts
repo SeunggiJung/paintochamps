@@ -3,7 +3,7 @@ import routes from '../data/routes.json'
 import { eventsFor, isInvited, midPhase, playerPower, type EventDef } from './competitions.ts'
 import { moneyScale } from './economy.ts'
 import { analystBonus } from './facilities.ts'
-import { academyName, isPro2Team, makeOpponents } from './field.ts'
+import { academyName, isPro2Team, makeOpponents, pickTeams } from './field.ts'
 import { adaptationPenalty, isOverseas, leagueIdOf, leagueOfState, OVERSEAS_RULES, worldHost } from './leagues.ts'
 import { finalSeries, type FinalSeries } from './broadcast.ts'
 import { createRng, mixSeed } from './rng.ts'
@@ -236,8 +236,10 @@ export function advanceCalendar(state: GameState, toPhase: number, startState: G
       const advancedNotes = [...rec.advanced]
       // PC방 대회에서 상위 성적을 내면 그 자리에서 아카데미 입단 테스트에 초대된다 (이번 시즌 결산에서 시험을 본다)
       if (ev.field?.names === 'cafe' && rec.placement <= routes.cafe.inviteTop && !next.academyInvite) {
-        next = { ...next, academyInvite: true }
-        advancedNotes.push('아카데미에서 입단 테스트 초대장이 날아왔다!')
+        // 초대장을 보낸 구단은 이때 정해 둔다 (시즌·판마다 같은 값이라 저장 없이도 다시 열면 같다)
+        const org = pickTeams(createRng(mixSeed(state.seed, state.season, 0xacad)), 'pro1', 1, new Set(), state.genre)[0]
+        next = { ...next, academyInvite: true, academyOrg: org }
+        advancedNotes.push(`${academyName(org)}에서 입단 테스트 초대장이 날아왔다!`)
       }
       beats.push({
         kind: 'end',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { nextGoal, focusStat, leagueReason } from './guidance.ts'
+import { nextGoal, focusStat, leagueReason, offerVerdict } from './guidance.ts'
 import type { RunRecord } from './state.ts'
 import { createInitialState, type GameState } from './state.ts'
 
@@ -55,5 +55,23 @@ describe('leagueReason (리그 결과 분석)', () => {
   it('팀 전력이 평균보다 낮으면 그 차이를 알려 준다', () => {
     expect(leagueReason(run({ strength: { mine: 400, avg: 500, top: 760 } }))!.join(' ')).toContain('100 낮아')
     expect(leagueReason(run({}))!.join(' ')).not.toContain('낮아 처음부터')
+  })
+})
+
+describe('offerVerdict (이적 제안 추천/주의)', () => {
+  it('월급이 내려가면 주의다', () => {
+    const v = offerVerdict({ salaryDelta: -3000, boost: 20 })
+    expect(v.level).toBe('caution')
+    expect(v.salaryDrop).toBe(3000)
+  })
+  it('대회 전력이 크게 깎이면 월급이 올라도 주의다', () => {
+    const v = offerVerdict({ salaryDelta: 500, boost: -80 })
+    expect(v.level).toBe('caution')
+    expect(v.weak).toBe(true)
+  })
+  it('월급이 오르고 대회 전력도 오르면 추천, 그 사이는 평범하다', () => {
+    expect(offerVerdict({ salaryDelta: 100, boost: 30 }).level).toBe('good')
+    expect(offerVerdict({ salaryDelta: 100, boost: 0 }).level).toBe('neutral')
+    expect(offerVerdict({ salaryDelta: 0, boost: 0 }).salaryDrop).toBe(0)
   })
 })

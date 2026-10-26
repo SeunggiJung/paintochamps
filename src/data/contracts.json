@@ -6,6 +6,7 @@
   "leagueSize": { "amateur_team": 6, "pro2": 6, "pro1": 10 },
   "strengthSpread": { "min": 0.9, "max": 1.2 },
   "teamWeight": 0.3,
+  "offerVerdict": { "cautionBoost": -10, "goodBoost": 5 },
   "negotiation": {
     "fameChance": 0.002,
     "maxFameChance": 0.25,

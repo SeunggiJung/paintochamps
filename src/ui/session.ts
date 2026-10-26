@@ -23,7 +23,7 @@ import { h } from './dom.ts'
 import { runEvent } from './eventFlow.ts'
 import { offerMiniGame } from './miniGame.ts'
 import { openNegotiation } from './negotiationView.ts'
-import { offerButton } from './offerView.ts'
+import { confirmOffer, offerButton } from './offerView.ts'
 import { actionTags } from './preview.ts'
 import { outfitLook } from './roomScene.ts'
 import { openSheet } from './sheet.ts'
@@ -248,7 +248,19 @@ export class GameSession {
     const pending = s.pendingOffers
     if (!pending) return s
     await showGuideOnce(this.ctx, 'midOffer')
-    const index = await openSheet<number | null>((close) =>
+    // 손해가 있는 제안을 골랐다가 '다시 생각한다'를 누르면 제안 목록으로 돌아간다
+    let index: number | null
+    for (;;) {
+      index = await this.pickMidSeasonOffer(s, pending, requested)
+      if (index === null || (await confirmOffer(s, pending.offers[index]))) break
+    }
+    if (index !== null) await showContract(s, pending.offers[index], 'transfer')
+    // 새 계약 직후에는 월급을 협상할 수 없다. 한 턴이 지나면 '연봉 협상'이 열린다.
+    return acceptOffer(s, index)
+  }
+
+  private pickMidSeasonOffer(s: GameState, pending: NonNullable<GameState['pendingOffers']>, requested: boolean): Promise<number | null> {
+    return openSheet<number | null>((close) =>
       h(
         'div',
         { class: 'stack-tight' },
@@ -257,9 +269,6 @@ export class GameSession {
         h('div', { class: 'choices vertical' }, ...pending.offers.map((o, i) => offerButton(s, o, () => close(i), undefined, true))),
         h('button', { class: 'btn ghost small', onclick: () => close(null) }, '지금 팀에 남는다'),
       ), { variant: 'decision' })
-    if (index !== null) await showContract(s, pending.offers[index], 'transfer')
-    // 새 계약 직후에는 월급을 협상할 수 없다. 한 턴이 지나면 '연봉 협상'이 열린다.
-    return acceptOffer(s, index)
   }
 
   /** 일정이 된 광고 촬영을 연출과 함께 치른다 */

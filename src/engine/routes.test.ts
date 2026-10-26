@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { EVENTS, isEligible } from './events.ts'
 import { advanceCalendar } from './calendar.ts'
-import { choosePrep, expectedScore, upcomingTest } from './routes.ts'
+import { choosePrep, expectedScore, testName, upcomingTest } from './routes.ts'
 import { settleSeason } from './season.ts'
 import { createInitialState, type GameState } from './state.ts'
 import { applyTurn } from './turn.ts'
@@ -28,6 +28,15 @@ describe('초반 루트: PC방 대회', () => {
     if (!end || end.kind !== 'end') throw new Error('대회 결과가 없다')
     expect(end.advanced.join(' ')).toContain('초대장')
     expect(cup.state.academyInvite).toBe(true)
+    // 초대장을 보낸 구단이 정해지고 안내 문구와 테스트 이름에 나온다
+    const org = cup.state.academyOrg!
+    expect(org).toBeTruthy()
+    expect(end.advanced.join(' ')).toContain(`${org.name} 아카데미`)
+    expect(testName('academy_test', cup.state)).toBe(`${org.name} 아카데미 입단 테스트`)
+    // 합격하면 그 구단의 아카데미로 간다
+    const passed = settleSeason({ ...at(900), academyInvite: true, academyOrg: org })
+    expect(passed.state.team?.name).toBe(`${org.name} 아카데미`)
+    expect(passed.state.academyOrg).toBeNull()
     const { state, report } = settleSeason(at(900))
     expect(report.tests).toHaveLength(1)
     expect(state.stage).toBe('amateur_team')

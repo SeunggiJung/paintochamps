@@ -1,4 +1,5 @@
 import competitions from '../data/competitions.json'
+import contracts from '../data/contracts.json'
 import genres from '../data/genres.json'
 import routes from '../data/routes.json'
 import rules from '../data/rules.json'
@@ -99,4 +100,27 @@ export function leagueReason(run: RunRecord): string[] | null {
   else lines.push('전력 순위와 비슷한 성적이에요. 전력이 곧 결과로 이어진 시즌이에요.')
   if (mine < avg) lines.push(`팀 전력이 리그 평균보다 ${avg - mine} 낮아 처음부터 불리했어요. 실력치를 올리거나 더 강한 팀으로 옮기면 전력이 올라가요.`)
   return lines
+}
+
+/** 이적·입단 제안 카드의 추천/주의 판정 */
+export interface OfferVerdict {
+  level: 'good' | 'caution' | 'neutral'
+  /** 지금보다 월급이 낮아지는 양 (오르거나 같으면 0) */
+  salaryDrop: number
+  /** 이 팀에서 받는 대회 전력 보정 */
+  boost: number
+  /** 팀 전력이 리그 평균보다 많이 낮아 대회 전력이 깎이는가 */
+  weak: boolean
+}
+
+/**
+ * 제안의 손익을 한눈에 가른다: 월급이 내려가거나 대회 전력이 크게 깎이면 주의, 둘 다 문제없고 대회 전력이 오르면 추천.
+ * 기준은 contracts.json의 offerVerdict. 팀이 없는 선수의 입단 제안은 월급 하락이 없다(salaryDelta가 늘 양수).
+ */
+export function offerVerdict(terms: { salaryDelta: number; boost: number }): OfferVerdict {
+  const { cautionBoost, goodBoost } = contracts.offerVerdict
+  const salaryDrop = terms.salaryDelta < 0 ? -terms.salaryDelta : 0
+  const weak = terms.boost <= cautionBoost
+  const level = salaryDrop > 0 || weak ? 'caution' : terms.boost >= goodBoost ? 'good' : 'neutral'
+  return { level, salaryDrop, boost: terms.boost, weak }
 }

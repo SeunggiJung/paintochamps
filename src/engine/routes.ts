@@ -54,7 +54,9 @@ export interface TestResult {
 
 export const pathOf = (s: Pick<GameState, 'path'>): PathId => s.path ?? 'rookie'
 
-export function testName(id: TestId): string {
+export function testName(id: TestId, state?: GameState): string {
+  // 아카데미 입단 테스트는 초대장을 보낸 구단의 아카데미 이름을 붙인다
+  if (id === 'academy_test' && state?.academyOrg) return `${academyName(state.academyOrg)} 입단 테스트`
   return TESTS[id].name
 }
 
@@ -111,7 +113,7 @@ export function takeTest(state: GameState, id: TestId, rng: Rng): TestResult {
   const prep = PREP.find((p) => p.id === state.testPrep) ?? null
   const bonus = prep && rng() < prep.chance ? prep.bonus : 0
   const score = items.reduce((sum, it) => sum + it.ratio * it.weight, 0) + bonus + def.noise * gaussian(rng)
-  return { id, name: def.name, items, score, passed: score >= 1, prep: prep?.id ?? null }
+  return { id, name: testName(id, state), items, score, passed: score >= 1, prep: prep?.id ?? null }
 }
 
 export interface RouteStep {
@@ -154,16 +156,17 @@ export function routeStep(before: GameState, after: GameState, { placementOf, sc
       const t = takeTest(before, 'academy_test', rng)
       tests.push(t)
       if (t.passed) {
-        const org = pickTeams(rng, 'pro1', 1, new Set(), after.genre)[0]
+        // 초대장을 보낸 구단의 아카데미로 간다 (옛 세이브처럼 구단이 정해지지 않았으면 이때 뽑는다)
+        const org = before.academyOrg ?? pickTeams(rng, 'pro1', 1, new Set(), after.genre)[0]
         move('amateur_team', 'academy')
-        s = changeTeam({ ...s, academyInvite: false }, { id: org.id, name: academyName(org) }, true)
+        s = changeTeam({ ...s, academyInvite: false, academyOrg: null }, { id: org.id, name: academyName(org) }, true)
         notes.push(`아카데미 입단 테스트 합격! ${academyName(org)}의 연습생이 되었다.`)
       } else if ((before.academyRetries ?? 0) < R.academy.retryMax) {
         s = { ...s, academyRetries: (before.academyRetries ?? 0) + 1 }
-        notes.push('아카데미 입단 테스트에서 떨어졌다. 내년에 한 번 더 도전할 수 있다.')
+        notes.push(`${before.academyOrg ? academyName(before.academyOrg) : '아카데미'} 입단 테스트에서 떨어졌다. 내년에 한 번 더 도전할 수 있다.`)
       } else {
         move('local_cup', 'open')
-        s = { ...s, academyInvite: false }
+        s = { ...s, academyInvite: false, academyOrg: null }
         notes.push('아카데미 입단은 끝내 이루지 못했다. 이제 지역 대회에서 길을 찾는다.')
       }
     } else if ((attempts >= R.cafe.toLocalAfter && power >= R.cafe.toLocalMinPower) || attempts >= R.cafe.maxAttempts) {

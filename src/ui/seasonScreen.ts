@@ -15,7 +15,7 @@ import { h } from './dom.ts'
 import { formatMoney, formatMoneyDelta } from './format.ts'
 import { changeLine, statChangeBars } from './turnResult.ts'
 import { showContract } from './contractScene.ts'
-import { offerButton } from './offerView.ts'
+import { confirmOffer, offerButton } from './offerView.ts'
 import { LEVEL_TEXT } from '../engine/highlights.ts'
 import { canNegotiate } from '../engine/negotiation.ts'
 import { openNegotiation } from './negotiationView.ts'
@@ -127,7 +127,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
         cancel: '다시 생각한다',
       })
       if (!ok) return
-    }
+    } else if (offer && state.pendingOffers?.kind === 'transfer' && !(await confirmOffer(state, offer))) return
     const pending = state
     state = acceptOffer(state, index)
     if (offer && pending.pendingOffers) {

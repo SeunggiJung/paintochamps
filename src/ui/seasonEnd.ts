@@ -25,7 +25,7 @@ export function seasonEnd(ctx: Ctx, initial: GameState): HTMLElement {
     return h(
       'section',
       { class: 'card prep-card' },
-      h('div', { class: 'row' }, h('h3', {}, testName(upcoming.id)), h('span', { class: 'power' }, '예상 ', h('b', {}, `${score}`), ' / 합격 100')),
+      h('div', { class: 'row' }, h('h3', {}, testName(upcoming.id, state)), h('span', { class: 'power' }, '예상 ', h('b', {}, `${score}`), ' / 합격 100')),
       !upcoming.certain && h('p', { class: 'muted small' }, '지역 대회 성적이 좋으면 응시할 수 있다.'),
       ...items.map((it) =>
         h(
@@ -67,7 +67,7 @@ export function seasonEnd(ctx: Ctx, initial: GameState): HTMLElement {
     const test = upcomingTest(state)
     if (test && !state.testPrep) {
       const ok = await confirmSheet({
-        title: `${testName(test.id)} 준비를 안 했어요`,
+        title: `${testName(test.id, state)} 준비를 안 했어요`,
         message: '시험 준비(집중·컨디션·조언)를 고르지 않고 결산으로 넘어갈까요? 준비하면 합격 확률이 올라갑니다.',
         ok: '준비 없이 넘어가기',
         cancel: '돌아가서 준비하기',
