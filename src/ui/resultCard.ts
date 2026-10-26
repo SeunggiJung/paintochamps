@@ -1,3 +1,4 @@
+import { encodeChallenge } from '../engine/challenge.ts'
 import genres from '../data/genres.json'
 import { endingDef } from '../engine/endings.ts'
 import { assetGrade } from '../engine/life.ts'
@@ -81,6 +82,7 @@ export async function drawResultCard(state: GameState): Promise<HTMLCanvasElemen
     ['월드 챔피언십', state.worldTitles > 0 ? `우승 ${state.worldTitles}회` : state.worldAppearances > 0 ? `진출 ${state.worldAppearances}회` : '진출 없음'],
     ['최종 자산', assetGrade(state)],
     ['모드 · 시즌', `${MODE_INFO[state.mode].name} · ${state.season}시즌`],
+    ['도전 코드', encodeChallenge({ seed: state.seed, genre: state.genre, mode: state.mode })],
   ]
   ctx.font = `500 34px ${font}`
   rows.forEach(([label, value], i) => {

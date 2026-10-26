@@ -1,4 +1,5 @@
 import modes from '../data/modes.json'
+import { decodeChallenge } from '../engine/challenge.ts'
 import type { ModeId } from '../engine/state.ts'
 import type { GenreId } from '../engine/types.ts'
 import type { Ctx } from './app.ts'
@@ -30,6 +31,7 @@ export function createScreen(ctx: Ctx): HTMLElement {
     value: '겜돌이',
     autocomplete: 'off',
   })
+  const codeInput = h('input', { type: 'text', maxLength: 12, placeholder: '예: FS-1Z141Z3', autocomplete: 'off', 'aria-label': '도전 코드' })
   const error = h('p', { class: 'error', role: 'alert' })
 
   const genreBox = h('div', { class: 'choices' })
@@ -80,6 +82,26 @@ export function createScreen(ctx: Ctx): HTMLElement {
       nameInput.focus()
       return
     }
+    // 도전 코드가 있으면 친구와 같은 시드·장르·모드로 시작한다
+    const raw = codeInput.value.trim()
+    if (raw) {
+      const challenge = decodeChallenge(raw)
+      if (!challenge) {
+        error.textContent = '도전 코드를 읽을 수 없어요. 결과 카드에 적힌 코드를 그대로 입력해 주세요.'
+        codeInput.focus()
+        return
+      }
+      if (!playableGenres().some((g) => g.id === challenge.genre)) {
+        error.textContent = '아직 열리지 않은 장르의 코드예요.'
+        return
+      }
+      if (!unlocked(challenge.mode)) {
+        error.textContent = '이 코드는 표준 모드예요. 튜토리얼을 한 번 끝내면 쓸 수 있어요.'
+        return
+      }
+      ctx.toGacha({ name, ...challenge })
+      return
+    }
     ctx.toGacha({ name, genre, mode, seed: newSeed() })
   }
 
@@ -92,6 +114,7 @@ export function createScreen(ctx: Ctx): HTMLElement {
     error,
     h('section', {}, h('h3', {}, '장르'), genreBox),
     h('section', {}, h('h3', {}, '모드'), modeBox),
+    h('label', { class: 'field' }, h('span', {}, '도전 코드 (선택)'), codeInput, h('span', { class: 'muted small' }, '친구의 결과 카드에 적힌 코드를 넣으면 같은 조건으로 시작해요. 장르와 모드는 코드를 따라가요.')),
     h('div', { class: 'plan-cta' }, h('button', { class: 'btn primary', type: 'button', onclick: next }, '능력치 뽑기')),
   )
 }
