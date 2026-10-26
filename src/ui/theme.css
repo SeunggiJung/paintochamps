@@ -4,22 +4,38 @@
   --bg: #14172f;
   --bg-image: radial-gradient(120% 60% at 50% 0%, #2b2f6b 0%, #14172f 60%);
   --page-bg: #0b0d1f;
-  --panel: rgba(36, 42, 92, 0.72);
+  --panel: #1d2250; /* 투명 패널은 배경에 따라 대비가 흔들려 불투명으로 */
   --panel-2: #232a5c;
   --line: #3b4490;
   --text: #eef0ff;
-  --muted: #9aa3d6;
-  --accent: #6c8cff;
-  --accent-text: #fff;
+  --muted: #a9b1e0;
+  --accent: #7f9cff; /* 이전 #6c8cff는 흰 글자 대비 3.2 */
+  --accent-text: #0b1030;
   --accent-soft: #2f3a85;
   --track: #10132b;
   --danger: #ff6b7a;
   --up: #4cd18a;
   --warn-bg: rgba(240, 68, 82, 0.22);
-  --warn-text: #ff8a9a;
+  --warn-text: #ff9aa6;
   --gold: #ffcf5a;
   --overlay: #000a;
   --tab-bg: #181c3c;
+  --sunk: #171b3d;
+  --ok-bg: rgba(76, 209, 138, 0.16);
+  --ok-text: #6fe0a5;
+  --info-bg: rgba(127, 156, 255, 0.18);
+  --info-text: #b4c4ff;
+  --gold-bg: rgba(255, 207, 90, 0.16);
+  --gold-text: #ffcf5a;
+  --tier-2: #ffcf5a;
+  --focus: #ffcf5a;
+  --hairline: #2f3880;
+  --edge: #3b4490;
+  --bw: 1px;
+  --press: 0px;
+  --sun-a: #f5a37c;
+  --sun-b: #d76a8c;
+  --sun-c: #5a4aa8;
   --radius: 16px;
   --radius-sm: 10px;
   --border: 1px solid var(--line);
@@ -40,18 +56,39 @@
   --panel-2: #eef0f3;
   --line: #e5e8eb;
   --text: #191f28;
-  --muted: #6b7684; /* 시안 #8b95a1은 대비 2.8 */
-  --accent: #3182f6;
+  --muted: #5d6876; /* 시안 #8b95a1은 대비 2.8 */
+  --accent: #1f6feb; /* 이전 #3182f6은 흰 글자 대비 3.7 */
   --accent-text: #fff;
-  --accent-soft: #e8f3ff;
-  --track: #e5e8eb;
-  --danger: #f04452;
-  --up: #17913f; /* 시안 #1ba34a는 대비 2.98 */
+  --accent-soft: #e8f1ff;
+  --track: #e1e5ea;
+  --danger: #d6293a;
+  --up: #17803a; /* 시안 #1ba34a는 대비 2.98 */
   --warn-bg: #ffe1e4;
-  --warn-text: #d6293a;
+  --warn-text: #b4172a;
   --gold: #d6870a;
   --overlay: #000a;
   --tab-bg: #fff;
+  --sunk: #f6f7f9;
+  --ok-bg: #dff5e6;
+  --ok-text: #11692d;
+  --info-bg: #e8f1ff;
+  --info-text: #1459c7;
+  --gold-bg: #fff1cc;
+  --gold-text: #7d5200;
+  --tier-2: #c77700;
+  --focus: #1f6feb;
+  --hairline: #e5e8eb;
+  --edge: #e5e8eb;
+  --bw: 1px;
+  --press: 0px;
+  --sun-a: #ffc59a;
+  --sun-b: #ff9a82;
+  --sun-c: #9b73d6;
+  --grade-N: #5d6876;
+  --grade-R: #11692d;
+  --grade-SR: #1459c7;
+  --grade-SSR: #6a2fb5;
+  --grade-UR: #8a5200;
   --radius: 16px;
   --radius-sm: 10px;
   --border: 1px solid var(--line);
@@ -67,22 +104,45 @@
   --panel-2: #f7e4bd;
   --line: #e6cfa8;
   --text: #3b2a20;
-  --muted: #8a6a55;
+  --muted: #765541;
   --accent: #ff8a3d;
   --accent-text: #3b2a20; /* 시안 흰색은 주황 위에서 대비 2.3 */
   --accent-soft: #ffd45e;
   --track: #f0dcc0;
-  --danger: #d9480f;
-  --up: #2f8a3a;
+  --danger: #b8340a;
+  --up: #2a7a35;
   --warn-bg: #ffd9c9;
-  --warn-text: #b83a14;
+  --warn-text: #9e2f0c;
   --gold: #a47500;
   --overlay: #000a;
   --tab-bg: #fffdf4;
-  --radius: 10px;
-  --radius-sm: 6px;
+  --radius: 0px;
+  --radius-sm: 0px;
   --border: 3px solid #5b3a29;
-  --shadow: 0 4px 0 #5b3a29;
+  --shadow: none; /* 그림자는 style.css의 drop-shadow(계단 모서리를 따라간다) */
+  --sunk: #fbefd0;
+  --ok-bg: #dcefc9;
+  --ok-text: #25662d;
+  --info-bg: #ffe9a8;
+  --info-text: #5b3a29;
+  --gold-bg: #ffe9a8;
+  --gold-text: #6e4d00;
+  --tier-2: #c98a00;
+  --focus: #5b3a29;
+  --hairline: #e6cfa8;
+  --edge: #5b3a29;
+  --bw: 3px;
+  --press: 4px;
+  --px-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' shape-rendering='crispEdges'%3E%3Cg fill='%235b3a29'%3E%3Crect x='3' width='3' height='3'/%3E%3Crect x='3' y='6' width='3' height='3'/%3E%3Crect y='3' width='3' height='3'/%3E%3Crect x='6' y='3' width='3' height='3'/%3E%3C/g%3E%3C/svg%3E");
+  --px-img-sel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' shape-rendering='crispEdges'%3E%3Cg fill='%23ff8a3d'%3E%3Crect x='3' width='3' height='3'/%3E%3Crect x='3' y='6' width='3' height='3'/%3E%3Crect y='3' width='3' height='3'/%3E%3Crect x='6' y='3' width='3' height='3'/%3E%3C/g%3E%3C/svg%3E");
+  --sun-a: #ffd08a;
+  --sun-b: #ff9561;
+  --sun-c: #c2587a;
+  --grade-N: #765541;
+  --grade-R: #25662d;
+  --grade-SR: #1d4fa0;
+  --grade-SSR: #6a2fb5;
+  --grade-UR: #8a4a00;
   color-scheme: light;
 }
 
