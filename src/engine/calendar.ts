@@ -155,11 +155,14 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
 
   let order: Team[]
   let expected: number | undefined
+  let strength: RunRecord['strength']
   let mid: StandingRow[] | null = null
   let table: StandingRow[] | null = null
   if (ev.format === 'league') {
     // 코치의 시즌 목표: 지금 팀 전력과 실력으로 본 전력 순위 (같으면 유리한 쪽으로 친다)
     expected = 1 + teams.filter((t) => !t.isPlayer && t.power > power).length
+    const others = teams.filter((t) => !t.isPlayer)
+    strength = { mine: Math.round(power), avg: Math.round(others.reduce((sum, t) => sum + t.power, 0) / Math.max(1, others.length)), top: Math.round(Math.max(...others.map((t) => t.power))) }
     const { final, mid: midStandings } = runLeagueDetailed(rng, teams, ev.rounds ?? 1, ev.bestOf)
     order = final.map((s) => s.team)
     mid = rows(midStandings)
@@ -175,7 +178,7 @@ function playEvent(state: GameState, ev: EventDef, index: number, run: SeasonRun
   // 해외 리그는 리그마다 대회 명성 보상 배율이 다르다 (국내 1.0)
   const fame = isOverseas(state) ? Math.round(reward.fame * leagueOfState(state).prestige) : reward.fame
   return {
-    record: { id: ev.id, name: ev.name, placement, fieldSize: order.length, fame, money: reward.money * moneyScale(state.stage), order, expected, mid, table, advanced, revealed: 'none' },
+    record: { id: ev.id, name: ev.name, placement, fieldSize: order.length, fame, money: reward.money * moneyScale(state.stage), order, expected, strength, mid, table, advanced, revealed: 'none' },
     qualified,
     points,
   }

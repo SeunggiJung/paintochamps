@@ -24,7 +24,7 @@ import { openStandings } from './standingsView.ts'
 import { seasonLine } from '../engine/seasonLine.ts'
 import { segmented } from './components.ts'
 import { showGuideOnce } from './guides.ts'
-import { nextGoal } from '../engine/guidance.ts'
+import { leagueReason, nextGoal } from '../engine/guidance.ts'
 import { STAT_LABEL } from './labels.ts'
 import { canStartNextSeason, settleAlerts, startLabel, type SettleTab } from './seasonFlow.ts'
 
@@ -223,6 +223,15 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     )
   }
 
+  /** 이번 시즌 마지막 공식 리그의 결과 분석 (전력 대비 순위) */
+  const reasonCard = () => {
+    const run = state.seasonRun
+    const league = run && run.season === state.season ? [...run.runs].reverse().find((r) => r.table && r.revealed === 'end') : undefined
+    const lines = league ? leagueReason(league) : null
+    if (!league || !lines) return null
+    return h('section', { class: 'card' }, h('h3', {}, `${league.name} 결과 분석`), ...lines.map((l) => h('p', { class: 'muted small' }, l)))
+  }
+
   const offersCard = () => {
     const pending = state.pendingOffers
     if (!pending) return joined ? h('section', { class: 'card' }, h('h3', {}, '입단·이적'), h('p', { class: 'muted' }, joined)) : null
@@ -287,6 +296,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
               h('span', { class: 'muted small' }, report.rival.won ? '명성 보너스를 얻었다.' : '아쉽게 졌다.'),
             ),
         ),
+        reasonCard(),
         goalCard(),
         state.seasonRun && h('button', { class: 'settings-link', type: 'button', onclick: () => void openStandings(state) }, h('span', {}, '다른 팀 성적 보기'), h('span', { class: 'muted' }, '›')),
         h('section', { class: 'card' }, h('h3', {}, '이번 시즌 합계'), changeLine('명성', String(Math.round(before.fame)), String(Math.round(settled.fame)), fameGain === 0 ? '±0' : signed(fameGain), fameGain), changeLine('돈', formatMoney(before.money), formatMoney(settled.money), moneyGain === 0 ? '±0' : formatMoneyDelta(moneyGain), moneyGain)),

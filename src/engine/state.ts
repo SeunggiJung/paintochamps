@@ -103,6 +103,8 @@ export interface RunRecord {
   order: Team[]
   /** 리그: 대회가 시작될 때 팀 전력과 플레이어 실력으로 본 기대 순위 (코치의 시즌 목표). 옛 세이브에는 없을 수 있다 */
   expected?: number
+  /** 리그: 대회가 시작될 때 내 팀 전력과 상대 팀들의 평균·최강 전력 (결산의 '결과 분석'용, 옛 세이브에는 없다) */
+  strength?: { mine: number; avg: number; top: number }
   /** 리그: 절반 시점의 순위표와 최종 순위표 */
   mid: StandingRow[] | null
   table: StandingRow[] | null

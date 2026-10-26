@@ -5,7 +5,7 @@ import rules from '../data/rules.json'
 import stages from '../data/stages.json'
 import { domesticLeagueId, leagueDef } from './leagues.ts'
 import { genrePower } from './power.ts'
-import type { GameState } from './state.ts'
+import type { GameState, RunRecord } from './state.ts'
 import { STAT_KEYS, type StatKey } from './types.ts'
 
 /** 시즌 결산 화면의 '다음 목표' 카드 내용 */
@@ -83,4 +83,20 @@ export function nextGoal(state: GameState): Guidance | null {
     }
   }
   return null
+}
+
+/**
+ * 리그 결과의 이유를 전력과 순위로 풀어 쓴다 (코치의 한 줄 분석). 전력 정보가 없는 옛 기록이나 리그가 아닌 대회는 null.
+ * 순위는 승패의 운이 섞이므로, 기대 순위와 크게 다를 때만 '운·접전' 탓으로 돌린다.
+ */
+export function leagueReason(run: RunRecord): string[] | null {
+  if (!run.table || !run.strength || run.expected === undefined) return null
+  const { mine, avg, top } = run.strength
+  const gap = run.placement - run.expected
+  const lines = [`우리 팀 전력 ${mine} · 리그 평균 ${avg} · 최강 팀 ${top} → 전력 순위 ${run.expected}위`]
+  if (gap >= 2) lines.push(`전력 순위보다 ${gap}계단 낮은 ${run.placement}위로 끝났어요. 전력 차이보다는 접전을 내주었거나 운이 따르지 않은 시즌이에요.`)
+  else if (gap <= -2) lines.push(`전력 순위보다 ${-gap}계단 높은 ${run.placement}위예요. 접전을 잘 가져간 시즌이었어요.`)
+  else lines.push('전력 순위와 비슷한 성적이에요. 전력이 곧 결과로 이어진 시즌이에요.')
+  if (mine < avg) lines.push(`팀 전력이 리그 평균보다 ${avg - mine} 낮아 처음부터 불리했어요. 실력치를 올리거나 더 강한 팀으로 옮기면 전력이 올라가요.`)
+  return lines
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { nextGoal, focusStat } from './guidance.ts'
+import { nextGoal, focusStat, leagueReason } from './guidance.ts'
+import type { RunRecord } from './state.ts'
 import { createInitialState, type GameState } from './state.ts'
 
 const stats = { reaction: 100, accuracy: 100, focus: 100, judgment: 100, mental: 100, teamwork: 100 }
@@ -37,5 +38,22 @@ describe('nextGoal (결산의 다음 목표)', () => {
   })
   it('키울 능력치는 장르 비중이 크고 여유가 많은 것이다', () => {
     expect(focusStat(make({ genre: 'fps', stats: { ...stats, accuracy: 900 } }))).toBe('reaction')
+  })
+})
+
+describe('leagueReason (리그 결과 분석)', () => {
+  const run = (o: Partial<RunRecord>) => ({ id: 'x', name: '리그', placement: 4, fieldSize: 10, fame: 0, money: 0, order: [], expected: 4, strength: { mine: 600, avg: 500, top: 760 }, mid: null, table: [], advanced: [], revealed: 'end', ...o }) as RunRecord
+  it('전력 정보가 없거나 리그가 아니면 null', () => {
+    expect(leagueReason(run({ strength: undefined }))).toBeNull()
+    expect(leagueReason(run({ table: null }))).toBeNull()
+  })
+  it('기대 순위보다 크게 낮으면 접전·운 탓으로 설명한다', () => {
+    expect(leagueReason(run({ placement: 6 }))!.join(' ')).toMatch(/2계단 낮은 6위/)
+    expect(leagueReason(run({ placement: 2 }))!.join(' ')).toMatch(/2계단 높은 2위/)
+    expect(leagueReason(run({ placement: 5 }))!.join(' ')).toMatch(/비슷/)
+  })
+  it('팀 전력이 평균보다 낮으면 그 차이를 알려 준다', () => {
+    expect(leagueReason(run({ strength: { mine: 400, avg: 500, top: 760 } }))!.join(' ')).toContain('100 낮아')
+    expect(leagueReason(run({}))!.join(' ')).not.toContain('낮아 처음부터')
   })
 })

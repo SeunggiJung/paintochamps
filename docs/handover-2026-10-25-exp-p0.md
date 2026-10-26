@@ -31,8 +31,8 @@
 4. **og 이미지 용량**: `og.png`가 1.5MB다. 미리보기가 느리면 JPG 품질 85(`og.jpg`)로 바꾸고 `index.html` 주소 2곳을 고친다(선택).
 
 **P1 (사용자 자료 없이 진행 가능, 이 순서 권장)**
-1. 결산의 상위권 길잡이: 다음 단계 조건·상위 팀 전력 대비 내 실력 격차·월드 진출 조건 한 줄(`seasonScreen.ts` 결산 화면, `season.ts`·`teams.ts`).
-2. 리그 결과 이유: 팀 전력 대비 내 팀 전력, 코치 한 줄(`standingsView.ts`·결산).
+1. ✅(2026-10-26 완료, `engine/guidance.ts` `nextGoal`·`seasonScreen.ts` `goalCard`) 결산의 상위권 길잡이: 다음 단계 조건·상위 팀 전력 대비 내 실력 격차·월드 진출 조건 한 줄(`seasonScreen.ts` 결산 화면, `season.ts`·`teams.ts`).
+2. ✅(2026-10-26 완료, `RunRecord.strength`·`leagueReason`·`reasonCard`) 리그 결과 이유: 팀 전력 대비 내 팀 전력, 코치 한 줄(`standingsView.ts`·결산).
 3. 이적 카드 추천/주의 태그와 국내 이적 확인창 손익 요약(`offerView.ts`, `session.ts` 이적 확인).
 4. 장비·레슨 효과 수치 표시(`planFlow.ts` 지출 카드·`playerTab.ts`).
 5. 콜업 연속 거절 불이익(`season.ts` `makeCallupOffers`, `stages.json`, **봇 결과·밸런스 리포트 재확인**).
