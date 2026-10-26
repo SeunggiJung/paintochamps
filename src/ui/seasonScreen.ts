@@ -24,6 +24,8 @@ import { openStandings } from './standingsView.ts'
 import { seasonLine } from '../engine/seasonLine.ts'
 import { segmented } from './components.ts'
 import { showGuideOnce } from './guides.ts'
+import { nextGoal } from '../engine/guidance.ts'
+import { STAT_LABEL } from './labels.ts'
 import { canStartNextSeason, settleAlerts, startLabel, type SettleTab } from './seasonFlow.ts'
 
 const ENDING_NAME = Object.fromEntries(endings.order.map((e) => [e.id, e.name]))
@@ -208,6 +210,19 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     )
   }
 
+  /** 다음 단계의 기준과 지금 내 실력의 차이, 키울 능력치 */
+  const goalCard = () => {
+    const goal = nextGoal(state)
+    if (!goal) return null
+    return h(
+      'section',
+      { class: 'card' },
+      h('h3', {}, goal.title),
+      ...goal.lines.map((l) => h('p', { class: 'muted small' }, l)),
+      h('p', { class: 'small' }, `지금 가장 키울 가치가 큰 능력치: `, h('b', {}, `${STAT_LABEL[goal.focus]} ${Math.round(state.stats[goal.focus])}`)),
+    )
+  }
+
   const offersCard = () => {
     const pending = state.pendingOffers
     if (!pending) return joined ? h('section', { class: 'card' }, h('h3', {}, '입단·이적'), h('p', { class: 'muted' }, joined)) : null
@@ -272,6 +287,7 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
               h('span', { class: 'muted small' }, report.rival.won ? '명성 보너스를 얻었다.' : '아쉽게 졌다.'),
             ),
         ),
+        goalCard(),
         state.seasonRun && h('button', { class: 'settings-link', type: 'button', onclick: () => void openStandings(state) }, h('span', {}, '다른 팀 성적 보기'), h('span', { class: 'muted' }, '›')),
         h('section', { class: 'card' }, h('h3', {}, '이번 시즌 합계'), changeLine('명성', String(Math.round(before.fame)), String(Math.round(settled.fame)), fameGain === 0 ? '±0' : signed(fameGain), fameGain), changeLine('돈', formatMoney(before.money), formatMoney(settled.money), moneyGain === 0 ? '±0' : formatMoneyDelta(moneyGain), moneyGain)),
       ]
