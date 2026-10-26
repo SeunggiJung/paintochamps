@@ -4,6 +4,7 @@ import genres from '../../data/genres.json'
 import rules from '../../data/rules.json'
 import { FACILITIES, FACILITY_IDS, facilityLevel } from '../../engine/facilities.ts'
 import { canNegotiate } from '../../engine/negotiation.ts'
+import { equipmentEfficiency } from '../../engine/growth.ts'
 import { genrePower } from '../../engine/power.ts'
 import { transferBlocker } from '../../engine/season.ts'
 import type { EquipmentId } from '../../engine/state.ts'
@@ -63,6 +64,7 @@ export function playerTab(session: GameSession): HTMLElement {
       ...(Object.keys(EQUIPMENT) as EquipmentId[]).map((id) => h('li', {}, `${EQUIPMENT[id].name} Lv${state.equipment[id]}/${rules.equipment.maxLevel}`)),
       ...FACILITY_IDS.filter((id) => !FACILITIES[id].onlyOverseas || facilityLevel(state, id) > 0).map((id) => h('li', {}, `${FACILITIES[id].name} Lv${facilityLevel(state, id)}/${FACILITIES[id].maxLevel}`)),
     ),
+    h('p', { class: 'small' }, `장비 효과: 훈련 효율 +${((equipmentEfficiency(state.equipment) - 1) * 100).toFixed(1)}%`),
     h('p', { class: 'muted small' }, '구매는 시즌 시작 때 지출 계획에서 해요.'),
   )
 

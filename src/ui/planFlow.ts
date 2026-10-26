@@ -2,6 +2,7 @@ import equipmentData from '../data/equipment.json'
 import rules from '../data/rules.json'
 import { adOffersFor, adsOf, adTypeName, AD_TYPES, finishAdOffers, shootTurn, signAd, type AdOffer } from '../engine/ads.ts'
 import { equipmentCost } from '../engine/economy.ts'
+import { equipmentEfficiency } from '../engine/growth.ts'
 import { buyFacility, checkFacility, facilityCost, facilityEffectText, FACILITIES, FACILITY_IDS, facilityLevel } from '../engine/facilities.ts'
 import { isOverseas } from '../engine/leagues.ts'
 import { assetGrade, buyHome, HOMES, homeBlocker, homeLevel, netWorth } from '../engine/life.ts'
@@ -79,7 +80,12 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
     (Object.keys(EQUIPMENT) as EquipmentId[]).map((item) => {
       const level = state.equipment[item]
       const reason = checkEquipment(state, item)
-      return upgradeRow(item, EQUIPMENT[item].name, level, rules.equipment.maxLevel, formatMoney(equipmentCost(item, level)), reason ?? '', reason, '훈련 효율이 올라갑니다.', () => {
+      // 이 장비를 한 단계 올릴 때 훈련 효율이 얼마나 오르는지 (전체 장비 평균 기준)
+      const now = equipmentEfficiency(state.equipment)
+      const next = equipmentEfficiency({ ...state.equipment, [item]: Math.min(level + 1, rules.equipment.maxLevel) })
+      const pct = (e: number) => `+${((e - 1) * 100).toFixed(1)}%`
+      const effect = level >= rules.equipment.maxLevel ? `훈련 효율 ${pct(now)} (최고 단계)` : `훈련 효율 ${pct(now)} → ${pct(next)}`
+      return upgradeRow(item, EQUIPMENT[item].name, level, rules.equipment.maxLevel, formatMoney(equipmentCost(item, level)), reason ? `${effect} — ${reason}` : effect, reason, effect, () => {
         const r = buyEquipment(state, item)
         if (r.ok) state = r.state
         return r.ok
@@ -221,7 +227,7 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
         'button',
         { class: `choice${lesson ? ' selected' : ''}`, type: 'button', role: 'switch', 'aria-checked': String(lesson), onclick: () => ((lesson = !lesson), draw()) },
         h('strong', {}, lesson ? '개인 레슨 받는다' : '개인 레슨 받지 않는다'),
-        h('span', { class: 'muted small' }, `컨디션이 좋을 때 훈련 한 번을 레슨으로 바꿔 지금 실력치를 가장 많이 올려 주는 능력치 3개(${actionTags({ id: 'private_lesson' }, state).filter((t) => t.endsWith('↑') && !t.startsWith('컨디션')).join('·')})를 올립니다. 턴마다 ${formatMoney(lessonCost)}`),
+        h('span', { class: 'muted small' }, `컨디션이 좋을 때 훈련 한 번을 레슨으로 바꿔 지금 실력치를 가장 많이 올려 주는 능력치 3개(${actionTags({ id: 'private_lesson' }, state).filter((t) => t.endsWith('↑') && !t.startsWith('컨디션')).join('·')})를 각 +${ACTIONS.private_lesson.bestGainStats?.amount ?? 0}씩 올립니다(성장 속도 반영 전 기본값). 한 번에 ${formatMoney(lessonCost)}, 시즌에 몇 번 받을지는 컨디션에 따라 정해져요.`),
       ),
       h(
         'div',
