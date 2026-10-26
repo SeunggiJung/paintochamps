@@ -5,6 +5,13 @@ import { openSheet } from './sheet.ts'
 /** 후원 계좌가 data/support.json에 채워져 있는지. 비어 있으면 버튼을 보여 주지 않는다. */
 export const hasSupport = (): boolean => support.account.trim().length > 0
 
+/** 송금 QR 이미지(src/assets/support/qr.jpg). 파일이 없으면 QR은 보여 주지 않는다. 원본이 큰 흰 여백 안에 QR이 있어 CSS로 잘라 보여 준다(.qr-crop). */
+const QR_FILES = import.meta.glob('../assets/support/qr.jpg', { eager: true, query: '?url', import: 'default' }) as Record<string, string>
+const QR_URL = Object.values(QR_FILES)[0] as string | undefined
+
+/** 휴대폰이면 QR을 스캔할 수 없으니 송금 앱을 바로 여는 버튼을, 컴퓨터면 QR을 보여 준다. */
+const isMobile = (): boolean => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+
 async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text)
@@ -31,11 +38,14 @@ export function openSupportSheet(): Promise<void> {
       h('p', { class: 'eyebrow' }, `🍚 ${support.title}`),
       h('p', { class: 'muted' }, support.message),
       h('div', { class: 'account-box' }, h('span', { class: 'muted small' }, support.bank), h('b', { class: 'account' }, support.account), support.holder && h('span', { class: 'muted small' }, `예금주 ${support.holder}`)),
+      isMobile() && support.transferLink
+        ? h('a', { class: 'btn primary', href: support.transferLink }, '토스로 송금하기')
+        : QR_URL && h('div', { class: 'qr-box' }, h('div', { class: 'qr-crop' }, h('img', { src: QR_URL, alt: '토스 송금 QR 코드' })), h('span', { class: 'muted small' }, '토스 앱으로 스캔하면 송금 화면이 열려요')),
       status,
       h(
         'button',
         {
-          class: 'btn primary',
+          class: 'btn',
           onclick: async () => {
             status.textContent = (await copyText(accountText)) ? '계좌번호를 복사했어요. 고맙습니다!' : '복사하지 못했어요. 번호를 직접 길게 눌러 복사해 주세요.'
           },

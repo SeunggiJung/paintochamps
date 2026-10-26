@@ -25,7 +25,7 @@
 ## 3. 남은 일 (이어서 할 때 바로)
 
 **사용자 자료·결정이 필요한 것 (먼저 물어본다)**
-1. **송금 링크·QR**: 토스 송금 링크나 QR 이미지를 받으면 `support.json`에 `link`(및 QR은 `src/assets`나 `public`)을 추가하고 `openSupportSheet`에 '송금하기' 버튼·QR을 붙인다. 계좌 정보 공개 범위(개인 계좌·GitHub 주소 노출)도 이때 후원 전용 계좌·링크로 분리할지 묻는다.
+1. ✅ **송금 링크·QR(2026-10-26 완료)**: 사용자가 `docs/images/qr.jpg`를 줬고(토스 송금 딥링크 `supertoss://send?...`, 계좌는 `support.json`과 같다) `src/assets/support/qr.jpg`로 옮겨 후원 팝업에 넣었다. 컴퓨터는 QR(CSS로 여백을 잘라 표시, `.qr-crop`), 휴대폰은 '토스로 송금하기' 버튼(`support.json` `transferLink`). 이 항목의 나머지(개인 계좌·GitHub 주소 노출 분리)는 아직 사용자 결정 대기. (원래 설명:) 토스 송금 링크나 QR 이미지를 받으면 `support.json`에 `link`(및 QR은 `src/assets`나 `public`)을 추가하고 `openSupportSheet`에 '송금하기' 버튼·QR을 붙인다. 계좌 정보 공개 범위(개인 계좌·GitHub 주소 노출)도 이때 후원 전용 계좌·링크로 분리할지 묻는다.
 2. **구단명·로고 방침**(원본의 최대 리스크): 1 현행 유지 / 2 로고만 제거 / 3 가상 구단. 후원·홍보를 넓히기 전에 사용자가 정한다. 정해지면 `CLAUDE.md` §3-4와 정보 페이지 권리 고지를 함께 고친다.
 3. **도메인**: 사용자가 `paintochamps.kro.kr`을 설정 중인 듯하다(`public/도메인.png`는 캡처, 추적하지 않음). 연결되면 `index.html`의 `canonical`·`og:url`·`og:image`·`twitter:image`, `robots.txt`·`sitemap.xml`의 주소를 새 도메인으로 바꾸고 Cloudflare 설정과 맞는지 확인한다.
 4. **og 이미지 용량**: `og.png`가 1.5MB다. 미리보기가 느리면 JPG 품질 85(`og.jpg`)로 바꾸고 `index.html` 주소 2곳을 고친다(선택).

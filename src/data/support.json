@@ -2,6 +2,7 @@
   "title": "개발자 밥사주기",
   "message": "방구석 겜돌이를 즐겨 주셔서 감사합니다. 서버비와 개발에 큰 힘이 됩니다. 부담 없이, 마음만 받아도 충분해요!",
   "endingMessage": "15년의 이야기가 즐거웠다면 밥 한 끼로 응원해 주세요. 후원은 개발 시간에 쓰이고, 마음만 받아도 충분해요.",
+  "transferLink": "supertoss://send?amount=0&bank=%ED%86%A0%EC%8A%A4%EB%B1%85%ED%81%AC&accountNo=100048181773&origin=qr",
   "bank": "토스뱅크",
   "account": "1000-4818-1773",
   "holder": ""
