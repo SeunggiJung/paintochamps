@@ -2,6 +2,16 @@
 
 새 세션이 가장 먼저 읽는 문서는 `CLAUDE.md`(§0)이고, 그다음 이 문서다. 리뷰 원문의 분류·우선순위는 `docs/exp-review-2026-10-25.md`에 있다. 앞선 흐름은 `docs/handover-2026-10-22-wrapup.md`(UI 리디자인·타이틀 이미지).
 
+## ⭐ 다음 세션 시작 시 가장 먼저 (사용자 지시 2026-10-26)
+
+사용자가 새 대화를 시작하면 **에이전트 관련 내용부터 이어 간다.** 이전 대화에서 나온 질문과 합의:
+
+- **하려는 일**: 계약 연출·엔딩 일러스트(12장)·광고 촬영·결승 중계 장면 등 **그림을 새로 그린다**(지금은 SVG 도트 임시 그림). 필요한 장면 목록은 `docs/ending-images.md`·`docs/image-replacement-plan.md`.
+- **추천한 에이전트(아직 설치 안 함, 사용자 확인 대기)**: `~/agency-agents/`에 받아 둔 목록에서 — ① **Image Prompt Engineer**(`design/design-image-prompt-engineer.md`, 사진 중심 설명이라 도트풍 결정을 넣어서 시켜야 한다) ② **Visual Storyteller**(`design/design-visual-storyteller.md`, 장면 구성·연출 문법 통일) ③ **Narrative Designer**(`game-development/narrative-designer.md`, 엔딩 문구·에필로그 톤). 선택: Whimsy Injector, Brand Guardian. 불필요: Technical Artist, Game/Level/Economy Designer. 설치는 파일을 `~/.claude/agents/`에 복사하고 `/reload-plugins`. **먼저 "세 개 설치할까요?"에 대한 사용자 답을 받는다.**
+- **이미 설치된 에이전트(사용자 폴더)**: UI Designer·Frontend Developer·Content Creator. 에이전트는 사용자가 요청할 때만 호출한다(CLAUDE.md §0-4).
+- **진행 순서 제안**: Visual Storyteller가 계약·엔딩 장면 구성 → Image Prompt Engineer가 프롬프트 → promptpilot(`gptimage`)으로 시안 생성 → 사용자가 anypictoanypic.com에서 변환(크기·형식은 설정값만 안내). 이미지 톤 결정(3.5등신 점 눈·노을빛 도트·뒷모습 구도, 어둡거나 너무 귀여운 톤은 퇴짜)은 `docs/handover-2026-10-22-wrapup.md` §2.
+- **에이전트는 그림을 직접 못 그린다.** 장면 기획과 프롬프트 작성만 맡는다. promptpilot 키는 사용자가 채팅으로 주며 어디에도 적지 않는다.
+
 ## 0. 지금 상태 (한 줄)
 
 외부 플레이 리뷰(`claude-exp.pdf`)를 분류하고 **P0 5개 + 도감 힌트 + 미리보기 이미지**를 구현해 `master`에 푸시했다. 남은 것은 사용자 자료가 필요한 **송금 링크·QR**, 사용자 결정이 필요한 **구단명·로고 방침**, 그리고 **P1 6개**다.
