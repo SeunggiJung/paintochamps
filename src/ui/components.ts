@@ -28,7 +28,7 @@ export function stepDots(total: number, active: number): HTMLElement {
   return h('div', { class: 'step-dots', role: 'img', 'aria-label': `${total}단계 중 ${active}단계` }, ...Array.from({ length: total }, (_, i) => h('i', { class: i < active ? 'on' : '' })))
 }
 
-export function chip(text: string, tone: 'default' | 'alert' | 'award' = 'default'): HTMLElement {
+export function chip(text: string, tone: 'default' | 'alert' | 'award' | 'info' | 'ok' | 'gold' = 'default'): HTMLElement {
   return h('span', { class: `chip ${tone}` }, text)
 }
 
