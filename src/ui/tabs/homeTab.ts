@@ -2,6 +2,7 @@ import genres from '../../data/genres.json'
 import rules from '../../data/rules.json'
 import { adsOf, adTypeName, AD_TYPES, shootTurn, type AdType } from '../../engine/ads.ts'
 import { conditionTier } from '../../engine/growth.ts'
+import { conditionWarning } from '../../engine/guidance.ts'
 import { adaptationOf, isOverseas, leagueOfState } from '../../engine/leagues.ts'
 import { canNegotiate } from '../../engine/negotiation.ts'
 import { planChoice, planOf, presetDef } from '../../engine/plan.ts'
@@ -91,9 +92,12 @@ export function homeTab(session: GameSession): HTMLElement {
   // 부상·슬럼프를 처음 볼 때 한 번 (연출 중에는 띄우지 않는다)
   if (!session.busy && warnChips.some((c) => c.startsWith('부상') || c.startsWith('슬럼프'))) void showGuideOnce(session.ctx, 'injury')
 
+  const lowCondition = conditionWarning(state)
+
   const cta = h(
     'div',
     { class: 'turn-cta', 'data-guide': 'go' },
+    lowCondition && h('p', { class: 'notice cond-warn', role: 'status' }, `컨디션 ${lowCondition.condition}(${lowCondition.label}): 지금은 훈련 성과가 ×${lowCondition.coef}로 떨어져요. ${lowCondition.slumpAt} 이하면 슬럼프, ${lowCondition.injuryAt} 이하면 부상 이벤트 위험이 있어요.`),
     session.error && h('p', { class: 'error', role: 'alert' }, session.error),
     h('button', { class: 'btn primary', type: 'button', disabled: session.busy || !state.seasonTraining, onclick: () => void session.playTurn() }, '다음 턴 진행'),
   )

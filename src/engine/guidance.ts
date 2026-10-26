@@ -1,12 +1,15 @@
 import competitions from '../data/competitions.json'
 import contracts from '../data/contracts.json'
+import events from '../data/events.json'
 import genres from '../data/genres.json'
 import routes from '../data/routes.json'
 import rules from '../data/rules.json'
 import stages from '../data/stages.json'
+import { conditionTier } from './growth.ts'
 import { domesticLeagueId, leagueDef } from './leagues.ts'
 import { genrePower } from './power.ts'
-import type { GameState, RunRecord } from './state.ts'
+import type { ActionId, GameState, RunRecord } from './state.ts'
+import { trainingGains } from './training.ts'
 import { STAT_KEYS, type StatKey } from './types.ts'
 
 /** 시즌 결산 화면의 '다음 목표' 카드 내용 */
@@ -123,4 +126,51 @@ export function offerVerdict(terms: { salaryDelta: number; boost: number }): Off
   const weak = terms.boost <= cautionBoost
   const level = salaryDrop > 0 || weak ? 'caution' : terms.boost >= goodBoost ? 'good' : 'neutral'
   return { level, salaryDrop, boost: terms.boost, weak }
+}
+
+/** 낮은 컨디션 경고에 쓰는 수치 */
+export interface ConditionWarning {
+  condition: number
+  label: string
+  /** 이 단계의 훈련 성과 배율 */
+  coef: number
+  /** 이 값 이하에서 슬럼프 이벤트가 날 수 있다 */
+  slumpAt: number
+  /** 이 값 이하에서 부상 이벤트가 날 수 있다 */
+  injuryAt: number
+}
+
+const eventCondMax = (id: string): number => (events as { id: string; when?: { condition?: { max?: number } } }[]).find((e) => e.id === id)?.when?.condition?.max ?? 0
+
+/**
+ * 컨디션이 낮을 때 보여 줄 경고. 훈련 성과 배율과 슬럼프·부상 위험선을 알려 준다(결과를 미리 계산해 보여 주는 게 아니라 위험만 알린다).
+ * 기준은 rules.conditionWarnAt. 이미 부상 중이면 쉬며 재활하므로 경고하지 않는다.
+ */
+export function conditionWarning(state: Pick<GameState, 'condition' | 'injuredMonths'>): ConditionWarning | null {
+  if (state.injuredMonths > 0 || state.condition > rules.conditionWarnAt) return null
+  const tier = conditionTier(state.condition)
+  return { condition: Math.round(state.condition), label: tier.label, coef: tier.coef, slumpAt: eventCondMax('slump'), injuryAt: eventCondMax('injury') }
+}
+
+/** 고른 훈련이 가장 뒤처진 능력치를 올려 주지 않을 때의 경고 */
+export interface TrainingBalance {
+  /** 장르 비중에 비해 가장 뒤처진 능력치 */
+  lagging: StatKey
+  /** 가장 높은 능력치와의 차이 */
+  gap: number
+  /** 이번 후보 중 그 능력치를 올려 주는 다른 훈련 */
+  fixers: ActionId[]
+}
+
+/**
+ * 이 훈련을 고르면 가장 뒤처진 능력치가 계속 방치되는지 본다. 뒤처진 정도는 (가장 높은 능력치와의 차이 × 장르 비중)이 가장 큰 능력치로 정하고,
+ * 차이가 rules.trainingBalance.minGap 이상인데 이 훈련이 그 능력치를 올리지 않을 때만 경고한다. 추천(★) 계산은 건드리지 않는다.
+ */
+export function trainingBalance(state: GameState, id: ActionId, menu: readonly ActionId[]): TrainingBalance | null {
+  const weights = genres[state.genre].weights
+  const best = Math.max(...STAT_KEYS.map((k) => state.stats[k]))
+  const lagging = STAT_KEYS.reduce((a, k) => (weights[k] * (best - state.stats[k]) > weights[a] * (best - state.stats[a]) ? k : a), STAT_KEYS[0])
+  const gap = best - state.stats[lagging]
+  if (gap < rules.trainingBalance.minGap || (trainingGains(state, id)[lagging] ?? 0) > 0) return null
+  return { lagging, gap, fixers: menu.filter((m) => m !== id && (trainingGains(state, m)[lagging] ?? 0) > 0) }
 }

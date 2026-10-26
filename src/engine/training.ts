@@ -61,11 +61,8 @@ export function slumpGap(size: number): number {
   return Math.max(rules.coachSwap.minGap, Math.round(size * rules.coachSwap.gapRatio))
 }
 
-/**
- * 이 훈련이 선수의 부족한 능력치를 얼마나 채워 주는가.
- * 능력치별 (가장 높은 능력치와의 차이 × 장르 비중) × 훈련이 올리는 양을 더한다.
- */
-function fillScore(state: GameState, id: ActionId): number {
+/** 훈련 하나가 올려 주는 능력치와 기본 상승량 (장르 핵심 능력치를 올리는 훈련은 지금 장르 기준으로 정해진다) */
+export function trainingGains(state: Pick<GameState, 'genre'>, id: ActionId): Partial<Record<StatKey, number>> {
   const def = (actionData as Record<string, { stats?: Partial<Record<StatKey, number>>; topGenreStats?: { count: number; amount: number } }>)[id]
   const weights = genres[state.genre].weights
   const gains: Partial<Record<StatKey, number>> = { ...def.stats }
@@ -73,6 +70,16 @@ function fillScore(state: GameState, id: ActionId): number {
     const top = [...STAT_KEYS].sort((a, b) => weights[b] - weights[a]).slice(0, def.topGenreStats.count)
     for (const key of top) gains[key] = def.topGenreStats.amount
   }
+  return gains
+}
+
+/**
+ * 이 훈련이 선수의 부족한 능력치를 얼마나 채워 주는가.
+ * 능력치별 (가장 높은 능력치와의 차이 × 장르 비중) × 훈련이 올리는 양을 더한다.
+ */
+function fillScore(state: GameState, id: ActionId): number {
+  const weights = genres[state.genre].weights
+  const gains = trainingGains(state, id)
   const best = Math.max(...STAT_KEYS.map((k) => state.stats[k]))
   return STAT_KEYS.reduce((sum, k) => sum + (gains[k] ?? 0) * weights[k] * (best - state.stats[k]), 0)
 }
@@ -83,13 +90,8 @@ function fillScore(state: GameState, id: ActionId): number {
  * 시즌 동안 같은 훈련을 하므로 이 값이 큰 훈련이 이번 시즌 실력치를 가장 많이 올려 준다.
  */
 export function trainingValue(state: GameState, id: ActionId): number {
-  const def = (actionData as Record<string, { stats?: Partial<Record<StatKey, number>>; topGenreStats?: { count: number; amount: number } }>)[id]
   const weights = genres[state.genre].weights
-  const gains: Partial<Record<StatKey, number>> = { ...def.stats }
-  if (def.topGenreStats) {
-    const top = [...STAT_KEYS].sort((a, b) => weights[b] - weights[a]).slice(0, def.topGenreStats.count)
-    for (const key of top) gains[key] = def.topGenreStats.amount
-  }
+  const gains = trainingGains(state, id)
   return STAT_KEYS.reduce((sum, k) => {
     const base = gains[k]
     if (base === undefined) return sum

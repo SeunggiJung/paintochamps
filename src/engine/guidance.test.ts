@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { nextGoal, focusStat, leagueReason, offerVerdict } from './guidance.ts'
+import { conditionWarning, nextGoal, focusStat, leagueReason, offerVerdict, trainingBalance } from './guidance.ts'
+import { TRAINING_POOL, trainingGains } from './training.ts'
 import type { RunRecord } from './state.ts'
 import { createInitialState, type GameState } from './state.ts'
 
@@ -73,5 +74,35 @@ describe('offerVerdict (이적 제안 추천/주의)', () => {
     expect(offerVerdict({ salaryDelta: 100, boost: 30 }).level).toBe('good')
     expect(offerVerdict({ salaryDelta: 100, boost: 0 }).level).toBe('neutral')
     expect(offerVerdict({ salaryDelta: 0, boost: 0 }).salaryDrop).toBe(0)
+  })
+})
+
+describe('conditionWarning (낮은 컨디션 경고)', () => {
+  it('컨디션이 기준 이하이면 단계와 위험선을 알려 준다', () => {
+    const w = conditionWarning({ condition: 20, injuredMonths: 0 })!
+    expect(w.label).toBe('부진')
+    expect(w.coef).toBe(0.5)
+    expect(w.slumpAt).toBe(29)
+    expect(w.injuryAt).toBe(34)
+  })
+  it('컨디션이 충분하거나 이미 부상 중이면 경고하지 않는다', () => {
+    expect(conditionWarning({ condition: 70, injuredMonths: 0 })).toBeNull()
+    expect(conditionWarning({ condition: 10, injuredMonths: 3 })).toBeNull()
+  })
+})
+
+describe('trainingBalance (훈련 균형 경고)', () => {
+  const lopsided = make({ stats: { reaction: 400, accuracy: 100, focus: 400, judgment: 400, mental: 400, teamwork: 400 } })
+  const without = TRAINING_POOL.find((id) => !(trainingGains(lopsided, id).accuracy ?? 0))!
+  const withIt = TRAINING_POOL.find((id) => (trainingGains(lopsided, id).accuracy ?? 0) > 0)!
+  it('가장 뒤처진 능력치를 올려 주지 않는 훈련이면 경고하고, 올려 주는 후보를 알려 준다', () => {
+    const b = trainingBalance(lopsided, without, [without, withIt])!
+    expect(b.lagging).toBe('accuracy')
+    expect(b.gap).toBe(300)
+    expect(b.fixers).toEqual([withIt])
+  })
+  it('그 능력치를 올려 주는 훈련이거나 격차가 작으면 경고하지 않는다', () => {
+    expect(trainingBalance(lopsided, withIt, [without, withIt])).toBeNull()
+    expect(trainingBalance(make(), without, [without])).toBeNull()
   })
 })

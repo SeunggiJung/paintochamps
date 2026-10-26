@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { chooseSeasonTraining, trainingMenuOf } from '../engine/training.ts'
+import { chooseSeasonTraining, trainingGains, trainingMenuOf } from '../engine/training.ts'
 import { createInitialState, type GameState } from '../engine/state.ts'
 import type { KeyValueStorage } from '../save/storage.ts'
 import type { Ctx } from './app.ts'
@@ -42,6 +42,11 @@ function session(state: GameState): GameSession {
 const find = (root: HTMLElement, text: string) => [...root.querySelectorAll<HTMLElement>('button, .chip')].find((b) => b.textContent?.includes(text))
 
 describe('홈 탭', () => {
+  it('컨디션이 낮으면 경고 문구가 뜨고 충분하면 없다', () => {
+    const low = homeTab(session(baseState({ condition: 20 })))
+    expect(low.querySelector('.cond-warn')?.textContent).toContain('부진')
+    expect(homeTab(session(baseState({ condition: 75 }))).querySelector('.cond-warn')).toBeNull()
+  })
   it('다음 턴 진행 버튼이 있고 busy면 비활성', () => {
     const s = session(baseState())
     const btn = find(homeTab(s), '다음 턴 진행') as HTMLButtonElement
@@ -170,6 +175,20 @@ describe('시즌 계획 흐름', () => {
     const menu = trainingMenuOf(s)
     find(root, ACTIONS[menu[0]].name)!.click()
     expect(next()!.disabled).toBe(false)
+  })
+
+  it('가장 뒤처진 능력치를 올려 주지 않는 훈련을 고르면 균형 경고가 뜬다', () => {
+    const { ctx } = planCtx()
+    const s = { ...fresh(), stats: { reaction: 100, accuracy: 400, focus: 400, judgment: 400, mental: 400, teamwork: 400 } }
+    const root = planFlow(ctx, s)
+    document.body.append(root)
+    expect(root.querySelector('.balance-warn')).toBeNull()
+    const menu = trainingMenuOf(s)
+    for (const id of menu) {
+      find(root, ACTIONS[id].name)!.click()
+      const warned = root.querySelector('.balance-warn') !== null
+      expect(warned).toBe(!(trainingGains(s, id).reaction ?? 0))
+    }
   })
 
   it('② 단계의 시작 버튼이 seasonTraining을 정해 toHome을 부른다', () => {

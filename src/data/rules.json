@@ -19,6 +19,8 @@
     { "max": 100, "coef": 1.15, "label": "완벽", "desc": "훈련 성과가 가장 좋다" }
   ],
   "conditionRecoveryPerBase": 8,
+  "conditionWarnAt": 40,
+  "trainingBalance": { "minGap": 150 },
   "equipment": {
     "maxEfficiencyBonus": 0.2,
     "baseLevels": 10,

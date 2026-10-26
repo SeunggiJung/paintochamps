@@ -8,6 +8,7 @@ import { isOverseas } from '../engine/leagues.ts'
 import { assetGrade, buyHome, HOMES, homeBlocker, homeLevel, netWorth } from '../engine/life.ts'
 import { planOf, PRESETS, setSeasonPlan, type PresetId } from '../engine/plan.ts'
 import type { ActionId, EquipmentId, GameState } from '../engine/state.ts'
+import { trainingBalance } from '../engine/guidance.ts'
 import { bestTraining, canRerollTraining, chooseSeasonTraining, rerollTrainingMenu, TRAINING_POOL, trainingMenuOf } from '../engine/training.ts'
 import { ACTIONS, buyEquipment, checkEquipment } from '../engine/turn.ts'
 import { saveGame } from '../save/storage.ts'
@@ -178,6 +179,13 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
   const stepOne = (): HTMLElement[] => {
     const menu = trainingMenuOf(state)
     const best = bestTraining(state, menu)
+    // 고른 훈련이 가장 뒤처진 능력치를 방치하면 알려 준다(고르는 건 막지 않는다)
+    const balanceNotice = (): HTMLElement | null => {
+      const b = training ? trainingBalance(state, training, menu) : null
+      if (!b) return null
+      const fix = b.fixers.length > 0 ? ` 이번 후보 중 ${b.fixers.map((f) => ACTIONS[f].name).join('·')} 훈련이 올려 줘요.` : ' 이번 후보에는 올려 주는 훈련이 없어요. 다시 뽑기나 개인 레슨을 고려해 보세요.'
+      return h('p', { class: 'notice balance-warn', role: 'status' }, `뒤처진 능력치 · ${STAT_LABEL[b.lagging]}: 가장 높은 능력치보다 ${Math.round(b.gap)} 낮은데 이 훈련은 올려 주지 않아요.${fix}`)
+    }
     const lessonCost = Math.ceil(actionCost({ id: 'private_lesson' }, state))
     return [
       h('div', { class: 'row' }, h('p', { class: 'eyebrow' }, `${state.season}시즌 계획`), guideHelp(ctx, 'plan')),
@@ -222,6 +230,7 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
           ),
         ),
       ),
+      ...[balanceNotice()].filter((n): n is HTMLElement => n !== null),
       h('h3', {}, '개인 레슨'),
       h(
         'button',
