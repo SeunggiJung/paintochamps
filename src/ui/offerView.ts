@@ -45,6 +45,7 @@ export async function confirmOffer(state: GameState, offer: Offer, stage: StageI
 export function offerButton(state: GameState, offer: Offer, onPick: () => void, stage: StageId = state.pendingOffers?.stage ?? state.stage, midSeason = false): HTMLElement {
   const terms = offerTerms(state, offer, stage)
   const lines: HTMLElement[] = []
+  let verdictTag: HTMLElement | null = null
   if (terms) {
     const { profile, gap, salaryDelta, strength, boost, offerSalary } = terms
     const m = profile.market
@@ -55,7 +56,8 @@ export function offerButton(state: GameState, offer: Offer, onPick: () => void, 
     const verdict = offerVerdict(terms)
     if (verdict.level !== 'neutral') {
       const reasons = verdict.level === 'caution' ? cautionReasons(terms) : [`대회 전력 ${signed(boost)}${terms.salaryDelta > 0 && state.team ? ', 월급도 올라요' : ''}`]
-      lines.push(h('span', { class: `offer-line verdict ${verdict.level}` }, h('b', {}, verdict.level === 'caution' ? '⚠ 주의' : '👍 추천'), ` ${reasons.join(' · ')}`))
+      verdictTag = h('span', { class: `tag ${verdict.level === 'caution' ? 'caution' : 'rec'}` }, verdict.level === 'caution' ? '주의' : '추천')
+      lines.push(h('span', { class: `offer-line verdict ${verdict.level}` }, reasons.join(' · ')))
     }
     lines.push(
       h('span', { class: 'offer-line' }, `전력 ${Math.round(profile.power)} · ${STRENGTH_LABEL[strength]} (${gapText})`),
@@ -85,5 +87,5 @@ export function offerButton(state: GameState, offer: Offer, onPick: () => void, 
       lines.push(h('span', { class: 'offer-line muted' }, `적응 난이도 ${lg.adaptHard} (적응도 ${lg.adaptStart}에서 시작, 시즌마다 +${OVERSEAS_RULES.adaptGain}) · 이적 계약금 ${terms ? formatMoney(terms.offerSalary * OVERSEAS_RULES.signingBonusTurns) : '-'}`))
     }
   }
-  return h('button', { class: 'choice offer', onclick: onPick }, teamIcon(offer.team.id, 44), h('span', { class: 'offer-body' }, h('b', {}, offer.team.name), ...lines))
+  return h('button', { class: 'choice offer', onclick: onPick }, teamIcon(offer.team.id, 44), h('span', { class: 'offer-body' }, h('span', { class: 'opt-title' }, offer.team.name, verdictTag), ...lines))
 }

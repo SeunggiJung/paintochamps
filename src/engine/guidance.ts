@@ -20,6 +20,8 @@ export interface Guidance {
   lines: string[]
   /** 지금 키울 가치가 가장 큰 능력치 (장르 비중 × 남은 여유) */
   focus: StatKey
+  /** 실력치 기준이 있는 단계의 진행도 (지금 실력치와 목표 실력치) */
+  progress?: { now: number; need: number; label: string }
 }
 
 /** 장르 비중이 크고 아직 오를 자리가 많이 남은 능력치. 이걸 키우면 실력치 R이 가장 많이 오른다. */
@@ -65,25 +67,25 @@ export function nextGoal(state: GameState): Guidance | null {
     case 'local_cup': {
       const { scoutTop, scoutMinPower, openTestTop, maxAge } = routes.local
       lines.push(`지역 대회 ${scoutTop}강 이상에 실력치 ${scoutMinPower} 이상이면 스카우트 제안이 와요. (지금 ${power})`, `${openTestTop}강 이상이면 공개 입단 테스트를 볼 수 있어요.`, `지역 대회는 ${maxAge}세까지만 나갈 수 있어요.`)
-      return { title: '다음 목표: 아마추어 팀 입단', lines, focus }
+      return { title: '다음 목표: 아마추어 팀 입단', lines, focus, progress: { now: power, need: scoutMinPower, label: '스카우트 기준 실력치' } }
     }
     case 'amateur_team': {
       const m = stages.midPromotion.amateur_team
       lines.push(`아마추어 리그 상위 ${pct(m.topRatio)}에 실력치 ${m.minPower} 이상이면 시즌 도중에도 프로 2부 제안이 와요. (지금 ${power})`)
-      return { title: '다음 목표: 프로 2부', lines, focus }
+      return { title: '다음 목표: 프로 2부', lines, focus, progress: { now: power, need: m.minPower, label: '프로 2부 제안 기준 실력치' } }
     }
     case 'pro2': {
       const m = stages.midPromotion.pro2
       const need = stages.stages.pro2.next.minPower
       lines.push(`시즌 결산 때 실력치 ${need} 이상이면 1부 콜업 제안이 와요. (지금 ${power}${power >= need ? ' · 충족' : ` · ${need - power} 부족`})`, `시즌 도중에는 리그 상위 ${pct(m.topRatio)}에 실력치 ${m.minPower}, 명성 ${m.minFame} 이상이 필요해요.`)
-      return { title: '다음 목표: 프로 1부 콜업', lines, focus }
+      return { title: '다음 목표: 프로 1부 콜업', lines, focus, progress: { now: power, need, label: '콜업 기준 실력치' } }
     }
     case 'pro1': {
       const top = competitions.tiers.pro1.grades[0].mean
       const world = competitions.tiers.intl.mean
       lines.push(`지금 실력치 ${power} · 1부 강호 평균 ${top} · 국제전 상대 평균 ${world}`, power >= world ? '국제전 상대와 비슷하거나 앞서요. 월드 우승을 노릴 만해요.' : `국제전 상대 평균까지 ${world - power} 부족해요. 월드 우승에는 이만큼을 더 채워야 해요.`, worldRoute(state.genre))
       if (state.age >= rules.ageDecline.fromAge) lines.push(`${rules.ageDecline.fromAge}세부터 피지컬이 해마다 떨어져요. 경험 능력치(판단력·멘탈·팀워크)로 보완하세요.`)
-      return { title: '다음 목표: 월드 챔피언십', lines, focus }
+      return { title: '다음 목표: 월드 챔피언십', lines, focus, progress: { now: power, need: world, label: '국제전 상대 평균 실력치' } }
     }
   }
   return null

@@ -184,7 +184,7 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
       const b = training ? trainingBalance(state, training, menu) : null
       if (!b) return null
       const fix = b.fixers.length > 0 ? ` 이번 후보 중 ${b.fixers.map((f) => ACTIONS[f].name).join('·')} 훈련이 올려 줘요.` : ' 이번 후보에는 올려 주는 훈련이 없어요. 다시 뽑기나 개인 레슨을 고려해 보세요.'
-      return h('p', { class: 'notice balance-warn', role: 'status' }, `뒤처진 능력치 · ${STAT_LABEL[b.lagging]}: 가장 높은 능력치보다 ${Math.round(b.gap)} 낮은데 이 훈련은 올려 주지 않아요.${fix}`)
+      return h('div', { class: 'notice balance-warn', role: 'status' }, h('span', { class: 'ic', 'aria-hidden': 'true' }, '⚖'), h('div', {}, h('b', {}, '훈련이 한쪽으로 치우쳤어요'), `뒤처진 능력치 · ${STAT_LABEL[b.lagging]}: 가장 높은 능력치보다 ${Math.round(b.gap)} 낮은데 이 훈련은 올려 주지 않아요.${fix}`))
     }
     const lessonCost = Math.ceil(actionCost({ id: 'private_lesson' }, state))
     return [
@@ -193,9 +193,14 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
       h('h3', {}, '방침'),
       h(
         'div',
-        { class: 'preset-grid' },
+        { class: 'choices vertical', role: 'radiogroup', 'aria-label': '방침' },
         ...PRESETS.map((p) =>
-          h('button', { class: `choice${preset === p.id ? ' selected' : ''}`, type: 'button', 'aria-pressed': String(preset === p.id), onclick: () => ((preset = p.id), draw()) }, h('strong', {}, p.name), h('span', { class: 'muted small' }, p.short)),
+          h(
+            'button',
+            { class: `choice opt-card${preset === p.id ? ' selected' : ''}`, type: 'button', role: 'radio', 'aria-checked': String(preset === p.id), onclick: () => ((preset = p.id), draw()) },
+            h('span', { class: 'radio', 'aria-hidden': 'true' }),
+            h('span', { class: 'opt-body' }, h('span', { class: 'opt-title' }, p.name), h('span', { class: 'muted' }, p.short)),
+          ),
         ),
       ),
       h(
@@ -220,13 +225,18 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
       h('p', { class: 'muted small' }, '시즌 동안 이 훈련을 합니다. 훈련은 시즌마다 무작위 후보가 나옵니다. ★ 표시는 지금 실력치를 가장 많이 올려 주는 훈련이에요.'),
       h(
         'div',
-        { class: 'choices vertical' },
+        { class: 'choices vertical', role: 'radiogroup', 'aria-label': '이번 시즌 훈련' },
         ...menu.map((id) =>
           h(
             'button',
-            { class: `choice${training === id ? ' selected' : ''}${id === best ? ' best' : ''}`, type: 'button', 'aria-pressed': String(training === id), onclick: () => ((training = id), draw()) },
-            h('strong', {}, id === best && h('span', { class: 'best-star', title: '실력치를 가장 많이 올려 주는 훈련' }, '★ '), ACTIONS[id].name, id === best && h('span', { class: 'best-tag' }, '추천')),
-            h('span', { class: 'muted small' }, `${statOrder(id)} · ${actionTags({ id }, state).filter((t) => t.includes('컨디션') || !t.endsWith('↑')).join(' · ')}`.replace(/ · $/, '')),
+            { class: `choice opt-card${training === id ? ' selected' : ''}${id === best ? ' best' : ''}`, type: 'button', role: 'radio', 'aria-checked': String(training === id), onclick: () => ((training = id), draw()) },
+            h('span', { class: 'radio', 'aria-hidden': 'true' }),
+            h(
+              'span',
+              { class: 'opt-body' },
+              h('span', { class: 'opt-title' }, ACTIONS[id].name, id === best && h('span', { class: 'tag rec', title: '실력치를 가장 많이 올려 주는 훈련' }, '추천'), trainingBalance(state, id, menu) && h('span', { class: 'tag caution', title: '가장 뒤처진 능력치를 올려 주지 않아요' }, '쏠림')),
+              h('span', { class: 'muted' }, `${statOrder(id)} · ${actionTags({ id }, state).filter((t) => t.includes('컨디션') || !t.endsWith('↑')).join(' · ')}`.replace(/ · $/, '')),
+            ),
           ),
         ),
       ),
@@ -256,8 +266,15 @@ export function planFlow(ctx: Ctx, initial: GameState): HTMLElement {
     if (!tabs.some((t) => t.id === spend)) spend = 'equipment'
     const list = spend === 'equipment' ? equipmentList() : spend === 'facility' ? facilityList() : spend === 'ads' ? adList() : homeList()
     return [
-      h('div', { class: 'row' }, h('h2', {}, '지출 계획', guideHelp(ctx, 'spend')), h('span', { class: 'muted small' }, `보유 돈 ${formatMoney(state.money)}`)),
+      h('div', { class: 'row' }, h('h2', {}, '지출 계획', guideHelp(ctx, 'spend'))),
       h('p', { class: 'muted small' }, '시즌 시작에 돈이 되는 만큼 살 수 있어요. 시즌 중에는 바꿀 수 없어요.'),
+      h(
+        'div',
+        { class: 'budget', 'aria-label': '예산 요약' },
+        h('div', { class: 'stat-tile' }, h('span', { class: 'l' }, '보유'), h('span', { class: 'v' }, formatMoney(initial.money))),
+        h('div', { class: 'stat-tile' }, h('span', { class: 'l' }, '계획 지출'), h('span', { class: 'v' }, formatMoney(Math.max(0, initial.money - state.money)))),
+        h('div', { class: 'stat-tile' }, h('span', { class: 'l' }, '남는 돈'), h('span', { class: 'v' }, formatMoney(state.money))),
+      ),
       segmented(tabs, spend, (id) => ((spend = id), draw())),
       h('div', { class: 'choices vertical' }, ...list),
       h(

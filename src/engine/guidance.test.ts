@@ -18,6 +18,12 @@ describe('nextGoal (결산의 다음 목표)', () => {
     const titles = (['basement', 'local_cup', 'amateur_team', 'pro2', 'pro1'] as const).map((stage) => nextGoal(make({ stage }))!.title)
     expect(new Set(titles).size).toBe(5)
   })
+  it('실력치 기준이 있는 단계에는 진행도가 붙는다', () => {
+    const p = nextGoal(make({ stage: 'pro2' }))!.progress!
+    expect(p.need).toBe(250)
+    expect(p.now).toBeGreaterThan(0)
+    expect(nextGoal(make({ stage: 'basement' }))!.progress).toBeUndefined()
+  })
   it('프로 2부는 콜업 기준 실력치와 부족한 양을 알려 준다', () => {
     const low = nextGoal(make({ stage: 'pro2' }))!
     expect(low.lines[0]).toContain('250')

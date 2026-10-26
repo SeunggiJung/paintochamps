@@ -217,7 +217,14 @@ export function seasonScreen(ctx: Ctx, before: GameState): HTMLElement {
     return h(
       'section',
       { class: 'card' },
-      h('h3', {}, goal.title),
+      h('div', { class: 'card-title' }, h('h3', {}, goal.title)),
+      goal.progress &&
+        h(
+          'div',
+          { class: 'goal-progress' },
+          h('div', { class: 'bar', role: 'img', 'aria-label': `${goal.progress.label} ${goal.progress.now} / ${goal.progress.need}` }, h('div', { class: 'bar-fill', style: `width:${Math.min(100, Math.round((goal.progress.now / goal.progress.need) * 100))}%` })),
+          h('div', { class: 'cap' }, h('span', {}, goal.progress.label), h('b', {}, `${goal.progress.now} / ${goal.progress.need}`)),
+        ),
       ...goal.lines.map((l) => h('p', { class: 'muted small' }, l)),
       h('p', { class: 'small' }, `지금 가장 키울 가치가 큰 능력치: `, h('b', {}, `${STAT_LABEL[goal.focus]} ${Math.round(state.stats[goal.focus])}`)),
     )
